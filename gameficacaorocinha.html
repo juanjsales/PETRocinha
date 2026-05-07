@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel da Aluna | Profissão Pet Rocinha 2026</title>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Syne:wght@800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
+
+    <style>
+        :root {
+            --pet-purple: #6366f1;
+            --pet-indigo: #1a1b4b;
+            --pet-pink: #f8a5c2;
+            --pet-light: #f3f4f6;
+            --pet-card: #ffffff;
+            --pet-text-main: #111827;
+            --pet-text-sub: #4b5563;
+            --pet-green: #059669;
+            --pet-gold: #FFD700;
+            --radius-lg: 32px;
+            --radius-md: 20px;
+            --shadow-lg: 0 30px 60px rgba(0,0,0,0.15);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(150deg, var(--pet-indigo) 0%, #0c056d 45%, #c084b8 80%, var(--pet-pink) 100%);
+            background-attachment: fixed;
+            font-family: 'Baloo 2', cursive;
+            color: var(--pet-text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        *, *::before, *::after { 
+            box-sizing: border-box; 
+            font-family: inherit;
+        }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+
+        h1, h2, h3, h4, h5, h6 { 
+            margin-top: 0; 
+            line-height: 1.2; 
+        }
+        
+        p { 
+            line-height: 1.5; 
+        }
+        
+        button { 
+            cursor: pointer; 
+            border: none; 
+            outline: none; 
+        }
+        
+        a { 
+            text-decoration: none; 
+            transition: var(--transition); 
+        }
+        
+        a:hover { 
+            opacity: 0.8; 
+        }
+
+        /* ── VIDEO GATE ── */
+        #video-gate {
+            display: none;
+            position: fixed;
+            top: 0; 
+            left: 0;
+            width: 100%; 
+            height: 100%;
+            background: rgba(15, 12, 55, 0.98);
+            backdrop-filter: blur(12px);
+            z-index: 9999;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            padding: 24px;
+            text-align: center;
+        }
+
+        .video-box-small {
+            width: 100%;
+            max-width: 420px;
+            aspect-ratio: 16 / 9;
+            margin: 20px auto;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            border: 4px solid var(--pet-purple);
+            position: relative;
+            background: #000;
+            box-shadow: 0 0 30px rgba(99, 102, 241, 0.3);
+        }
+
+        .video-box-small iframe {
+            position: absolute;
+            top: -55px; 
+            left: 0;
+            width: 100%; 
+            height: calc(100% + 110px);
+            border: none;
+        }
+
+        /* ── MODAL RECOMPENSA ── */
+        .modal-overlay {
+            display: none; 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%;
+            background: rgba(0,0,0,0.7); 
+            z-index: 10000;
+            align-items: center; 
+            justify-content: center; 
+            padding: 20px;
+        }
+        
+        .modal-card {
+            background: white; 
+            padding: 30px; 
+            border-radius: var(--radius-lg);
+            max-width: 400px; 
+            width: 100%; 
+            text-align: center; 
+            position: relative;
+            box-shadow: var(--shadow-lg); 
+            animation: modalIn 0.4s ease;
+        }
+        
+        @keyframes modalIn { 
+            from { transform: scale(0.8); opacity: 0; } 
+            to { transform: scale(1); opacity: 1; } 
+        }
+
+        /* ── HEADER ── */
+        .lp-header {
+            width: 100%;
+            min-height: 40vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 40px 20px 80px;
+            position: relative;
+        }
+
+        .hero-logo {
+            width: 100px; 
+            height: 100px;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 8px 24px rgba(248,165,194,0.5));
+            animation: logoPulse 4s ease-in-out infinite;
+        }
+
+        @keyframes logoPulse {
+            0%, 100% { transform: scale(1); filter: drop-shadow(0 8px 24px rgba(248,165,194,0.5)); }
+            50% { transform: scale(1.05); filter: drop-shadow(0 12px 32px rgba(248,165,194,0.8)); }
+        }
+
+        .hero-content h1 {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: clamp(2.2rem, 8vw, 3.5rem);
+            text-transform: uppercase;
+            color: white;
+            text-shadow: 0 4px 24px rgba(0,0,0,0.4);
+        }
+
+        .hero-content h1 span { 
+            color: var(--pet-pink); 
+            display: block; 
+            margin-top: 5px; 
+        }
+
+        /* ── DASHBOARD WRAPPER ── */
+        .dash-wrapper {
+            margin-top: -80px;
+            padding: 0 16px 60px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        .main-card {
+            width: 100%;
+            max-width: 500px;
+            background: #ffffff;
+            border: 1px solid rgba(99,102,241,0.1);
+            border-radius: var(--radius-lg);
+            padding: 40px 24px;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            z-index: 10;
+        }
+
+        /* ── INPUTS & BUTTONS ── */
+        .glass-input {
+            width: 100%;
+            padding: 18px 24px;
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: var(--radius-md);
+            color: var(--pet-text-main);
+            font-size: 20px;
+            font-weight: 700;
+            text-align: center;
+            outline: none;
+            margin-bottom: 16px;
+            transition: var(--transition);
+        }
+
+        .glass-input:focus { 
+            border-color: var(--pet-purple); 
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); 
+        }
+
+        .btn-glow {
+            width: 100%;
+            padding: 18px;
+            background: var(--pet-purple);
+            color: white;
+            border-radius: var(--radius-md);
+            font-size: 18px;
+            font-weight: 800;
+            transition: var(--transition);
+            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .btn-glow:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 12px 32px rgba(99, 102, 241, 0.4); 
+            filter: brightness(1.1);
+        }
+
+        .btn-glow:active { 
+            transform: translateY(0); 
+        }
+
+        /* ── TABS ── */
+        .tabs {
+            display: flex;
+            gap: 6px;
+            margin: 24px 0;
+            padding: 6px;
+            background: #f1f5f9;
+            border-radius: 20px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        
+        .tabs::-webkit-scrollbar { 
+            display: none; 
+        }
+
+        .tab-btn {
+            flex: 0 0 auto;
+            padding: 12px 20px;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--pet-text-sub);
+            background: transparent;
+            border-radius: 16px;
+            transition: var(--transition);
+            white-space: nowrap;
+        }
+
+        .tab-btn.active {
+            background: #ffffff;
+            color: var(--pet-purple);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+        }
+
+        .tab-btn:hover:not(.active) {
+            color: var(--pet-purple);
+            background: rgba(255,255,255,0.6);
+        }
+
+        /* ── INFO BOXES ── */
+        .info-box {
+            background: #f8fafc;
+            border-radius: var(--radius-md);
+            padding: 24px;
+            margin-bottom: 16px;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+            transition: var(--transition);
+        }
+
+        .info-box:hover { 
+            border-color: var(--pet-purple); 
+            transform: translateY(-2px); 
+        }
+
+        /* ── PROGRESS BAR ── */
+        .progress-bar {
+            width: 100%; 
+            height: 14px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 12px 0;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .progress-fill {
+            height: 100%; 
+            width: 0%;
+            background: linear-gradient(90deg, var(--pet-purple), var(--pet-pink));
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 10px;
+        }
+
+        /* ── JORNADA ── */
+        .horiz-container { 
+            overflow-x: auto; 
+            padding: 10px 0; 
+            scrollbar-width: none; 
+            width: 100%; 
+        }
+        
+        .horiz-container::-webkit-scrollbar { 
+            display: none; 
+        }
+        
+        .horiz-map { 
+            display: flex; 
+            align-items: center; 
+            position: relative; 
+            min-width: 650px; 
+            padding: 30px 0; 
+        }
+        
+        .horiz-line { 
+            position: absolute; 
+            left: 50px; 
+            right: 50px; 
+            height: 6px; 
+            background: #e2e8f0; 
+            border-radius: 3px; 
+        }
+        
+        .horiz-line-active { 
+            position: absolute; 
+            left: 50px; 
+            height: 6px; 
+            background: var(--pet-purple); 
+            transition: width 1.2s; 
+            border-radius: 3px; 
+        }
+        
+        .step-item { 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            width: 130px; 
+            position: relative; 
+            z-index: 1; 
+        }
+        
+        .step-circle {
+            width: 60px; 
+            height: 60px;
+            background: white;
+            border: 4px solid #e2e8f0;
+            border-radius: 50%;
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            font-size: 24px; 
+            transition: var(--transition);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+        
+        .unlocked .step-circle { 
+            border-color: var(--pet-purple); 
+            background: #f5f3ff; 
+            transform: scale(1.1); 
+            box-shadow: 0 8px 20px rgba(99,102,241,0.2); 
+        }
+        
+        .step-label { 
+            font-size: 11px; 
+            font-weight: 700; 
+            text-align: center; 
+            margin-top: 12px; 
+            color: var(--pet-text-sub); 
+            width: 100px; 
+            line-height: 1.2; 
+        }
+        
+        .unlocked .step-label { 
+            color: var(--pet-purple); 
+            font-weight: 800; 
+        }
+
+        /* ── STAGE CARDS ── */
+        .modelo-3a-box { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 10px; 
+            margin: 20px 0; 
+        }
+        
+        .stage-card {
+            padding: 12px 8px; 
+            border-radius: 16px; 
+            text-align: center;
+            font-size: 11px; 
+            background: #f8fafc; 
+            border: 1px solid #e2e8f0; 
+            transition: var(--transition);
+        }
+        
+        .stage-card.active { 
+            background: var(--pet-indigo); 
+            color: white; 
+            border-color: var(--pet-indigo); 
+            transform: scale(1.05); 
+        }
+        
+        .stage-card h5 { 
+            margin-bottom: 4px; 
+            font-size: 12px; 
+            font-weight: 800; 
+        }
+
+        /* ── LISTS ── */
+        ul, ol { 
+            list-style: none; 
+            padding: 0; 
+            margin: 0; 
+        }
+        
+        .list-item {
+            display: flex; 
+            align-items: center; 
+            background: #fff; 
+            padding: 14px;
+            border-radius: 16px; 
+            margin-bottom: 10px; 
+            border: 1px solid #f1f5f9;
+            transition: var(--transition);
+        }
+        
+        .list-item:hover { 
+            border-color: var(--pet-purple); 
+            transform: translateX(4px); 
+            cursor: pointer;
+        }
+
+        /* ── LOADER ── */
+        #loader {
+            display: none; 
+            position: absolute; 
+            inset: 0;
+            background: rgba(255,255,255,0.95); 
+            z-index: 100;
+            border-radius: var(--radius-lg); 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+        
+        .spinner { 
+            border: 5px solid #f1f5f9; 
+            border-top: 5px solid var(--pet-purple); 
+            border-radius: 50%; 
+            width: 50px; 
+            height: 50px; 
+            animation: spin 1s linear infinite; 
+        }
+        
+        @keyframes spin { 
+            to { transform: rotate(360deg); } 
+        }
+
+        /* ── CHART ── */
+        .chart-container { 
+            height: 220px; 
+            margin: 24px 0; 
+            background: #f8fafc; 
+            border-radius: var(--radius-md); 
+            padding: 10px; 
+        }
+
+        /* ── POST-ITS ── */
+        .muro-container { 
+            background: #fffbeb; 
+            border: 2px dashed #fcd34d; 
+            border-radius: var(--radius-md); 
+            padding: 20px; 
+            margin-top: 24px; 
+        }
+        
+        .post-it-list { 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 10px; 
+            justify-content: center; 
+            margin-top: 15px; 
+        }
+        
+        .post-it {
+            background: #fef08a; 
+            padding: 10px; 
+            border-radius: 4px; 
+            font-size: 12px; 
+            font-weight: 700;
+            width: 90px; 
+            box-shadow: 3px 3px 8px rgba(0,0,0,0.08); 
+            transform: rotate(-2deg); 
+            transition: var(--transition);
+        }
+        
+        .post-it:nth-child(even) { 
+            transform: rotate(2deg); 
+            background: #fde68a; 
+        }
+        
+        .post-it:hover { 
+            transform: scale(1.1) rotate(0); 
+            z-index: 2; 
+        }
+
+        .sair-btn {
+            margin-top: 30px; 
+            background: none; 
+            color: var(--pet-text-sub); 
+            font-size: 13px; 
+            font-weight: 700; 
+            text-decoration: underline; 
+            width: 100%; 
+            opacity: 0.6; 
+            transition: var(--transition);
+        }
+        
+        .sair-btn:hover { 
+            opacity: 1; 
+            color: var(--pet-purple); 
+        }
+
+        @media (max-width: 480px) {
+            .lp-header { min-height: 35vh; padding-bottom: 60px; }
+            .hero-logo { width: 80px; height: 80px; }
+            .main-card { padding: 30px 16px; border-radius: 24px; }
+            .tabs { gap: 4px; padding: 4px; }
+            .tab-btn { padding: 10px 14px; font-size: 13px; }
+            .modelo-3a-box { grid-template-columns: 1fr; }
+            .stage-card { display: flex; align-items: center; justify-content: space-between; padding: 15px 20px; }
+            .stage-card h5 { margin: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="reward-modal" class="modal-overlay">
+    <div class="modal-card">
+        <div style="font-size: 50px;">🎁</div>
+        <h3 id="modal-title" style="color: var(--pet-indigo);">Recompensa do ranking</h3>
+        <p id="modal-text" style="color: var(--pet-text-sub); font-size: 18px; font-weight: 600;"></p>
+        <button onclick="closeModal()" class="btn-glow" style="background: var(--pet-indigo); margin-top: 20px;">Fechar</button>
+    </div>
+</div>
+
+<main id="painel-pet-exclusivo">
+    <div id="video-gate">
+        <h2>É HORA DE ARRASAR! 🚀</h2>
+        <p>A Arrasa celebra a mulher que gera sua própria renda no morro.</p>
+        <div class="video-box-small">
+            <iframe id="video-iframe" src="" allow="autoplay"></iframe>
+        </div>
+        <button id="btn-video-continue" onclick="closeVideoGate()" class="btn-glow" style="max-width: 300px">VOU ARRASAR!</button>
+    </div>
+
+    <header class="lp-header">
+        <img class="hero-logo" src="https://github.com/juanjsales/map_rocinha/blob/main/pet%20(1).png?raw=true" alt="Logo Profissão Pet">
+        <div class="hero-content">
+            <h1>Painel da Aluna <span>Profissão Pet</span></h1>
+        </div>
+    </header>
+
+    <section class="dash-wrapper">
+        <article class="main-card">
+            <div id="loader">
+                <div class="spinner"></div>
+                
+            </div>
+
+            <div id="auth-section">
+                <h2 style="text-align: center; color: var(--pet-indigo); margin-bottom: 8px;">Bem-vinda de volta!</h2>
+                <p style="text-align: center; font-size: 15px; color: var(--pet-text-sub); margin-bottom: 30px;">Sua independência financeira começa aqui.</p>
+                
+                <div style="position: relative;">
+                    <label for="cpf-input" class="sr-only">CPF da Aluna</label>
+                    <input type="text" id="cpf-input" class="glass-input" placeholder="000.000.000-00" maxlength="14" inputmode="numeric">
+                </div>
+                
+                <button onclick="verificarCPF()" class="btn-glow">Entrar e Arrasar</button>
+                
+                <p style="text-align: center; font-size: 14px; margin-top: 20px;">
+                    Ainda não é aluna? <a href="https://comunidade.aprenderecuidar.com.br/sign_up" target="_blank" style="color: var(--pet-purple); font-weight: 800;">Cadastre-se agora →</a>
+                </p>
+            </div>
+
+            <div id="dash-content" style="display: none;">
+                <div style="background: #f5f3ff; padding: 15px; border-radius: 16px; margin-bottom: 24px; border-left: 4px solid var(--pet-purple);">
+                    <p id="motivational-quote" style="margin: 0; font-size: 14px; font-weight: 600; color: var(--pet-purple); font-style: italic;"></p>
+                </div>
+
+                <div style="display: flex; align-items: center; margin-bottom: 24px;">
+                    <img id="user-img" src="" alt="Sua foto de perfil" style="width: 64px; height: 64px; border-radius: 50%; border: 3px solid var(--pet-purple); object-fit: cover;">
+                    <div style="margin-left: 16px;">
+                        <h3 id="user-nome" style="margin: 0; font-size: 20px; color: var(--pet-indigo);"></h3>
+                        <p id="user-badge-display" style="margin: 0; font-size: 13px; color: var(--pet-purple); font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;"></p>
+                    </div>
+                </div>
+
+                <nav class="tabs" role="tablist">
+                    <button id="tab-btn-saldo" class="tab-btn active" onclick="switchTab('tab-saldo', this)" role="tab" aria-controls="tab-saldo" aria-selected="true">💰 Saldo</button>
+                    <button class="tab-btn" onclick="switchTab('tab-jornada', this)" role="tab" aria-controls="tab-jornada" aria-selected="false">🚀 Jornada 3A</button>
+                    <button class="tab-btn" onclick="switchTab('tab-missoes', this)" role="tab" aria-controls="tab-missoes" aria-selected="false">🎯 Desafios</button>
+                    <button class="tab-btn" onclick="switchTab('tab-ranking', this)" role="tab" aria-controls="tab-ranking" aria-selected="false">🏆 Ranking</button>
+                    <button class="tab-btn" onclick="switchTab('tab-manual', this)" role="tab" aria-controls="tab-manual" aria-selected="false">📖 Manual</button>
+                    <button class="tab-btn" onclick="switchTab('tab-extrato', this)" role="tab" aria-controls="tab-extrato" aria-selected="false">📜 Extrato</button>
+                </nav>
+
+                <div id="tab-saldo" class="tab-content" role="tabpanel" aria-labelledby="tab-btn-saldo">
+                    <div class="info-box" style="background: linear-gradient(to bottom, #ffffff, #f8fafc);">
+                        <div id="user-arrasas" style="font-size: 60px; font-weight: 800; color: var(--pet-indigo); line-height: 1;">0</div>
+                        <p style="font-size: 13px; font-weight: 800; color: var(--pet-text-sub); text-transform: uppercase; margin-top: 5px;">Saldo em Arrasas (A$)</p>
+                        
+                        <div style="margin: 25px 0 15px;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 8px;">
+                                <p style="font-size: 14px; font-weight: 800; margin: 0;">Meta Mensal</p>
+                                <span style="font-size: 16px; font-weight: 800; color: var(--pet-purple);"><span id="meta-txt">0</span>/100 A$</span>
+                            </div>
+                            <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                                <div id="bar-fill" class="progress-fill"></div>
+                            </div>
+                            <small style="font-size: 12px; color: var(--pet-text-sub); display: block; margin-top: 8px;">
+                                ✨ <b>A$100 = R$100,00</b> de auxílio financeiro direto!
+                            </small>
+                        </div>
+
+                        <button id="btn-resgate" onclick="solicitarResgate()" class="btn-glow" style="display: none; background: var(--pet-green); margin-top: 10px;">
+                            💸 Resgatar R$ 100,00 Agora
+                        </button>
+                    </div>
+
+                    <div class="info-box" style="background: #fff; border: 2px solid var(--pet-purple); border-style: dashed;">
+                        <h4 style="margin: 0 0 10px; color: var(--pet-purple);">📅 Próximo Evento</h4>
+                        <p id="proximo-evento-txt" style="font-size: 18px; font-weight: 800; margin: 0;">Carregando...</p>
+                        <p style="font-size: 13px; color: var(--pet-text-sub); margin-top: 5px;">Sua presença confirmada vale pontos!</p>
+                    </div>
+                </div>
+
+                <div id="tab-jornada" class="tab-content" style="display: none;">
+                    <div class="modelo-3a-box">
+                        <div class="stage-card" id="card-acreditar"><h5>ACREDITAR</h5><p>Identidade</p></div>
+                        <div class="stage-card" id="card-aprender"><h5>APRENDER</h5><p>Técnica</p></div>
+                        <div class="stage-card" id="card-agir"><h5>AGIR</h5><p>Renda</p></div>
+                    </div>
+
+                    <div class="horiz-container">
+                        <div class="horiz-map">
+                            <div class="horiz-line"></div>
+                            <div id="horiz-line-active" class="horiz-line-active"></div>
+                            <div id="jornada-lista" style="display: contents;"></div>
+                        </div>
+                    </div>
+                    <p style="text-align: center; font-size: 12px; color: var(--pet-text-sub); font-weight: 600;">Arraste para o lado para ver o seu futuro ➡</p>
+                </div>
+
+                <div id="tab-missoes" class="tab-content" style="display: none;">
+                    <h4 style="text-align: center; color: var(--pet-purple);">MISSÕES DISPONÍVEIS 🎯</h4>
+                    <div id="missoes-lista"></div>
+                    
+                    <div class="muro-container">
+                        <h4 style="margin: 0; font-size: 16px; color: #854d0e;">✨ Muro do Propósito</h4>
+                        <p style="font-size: 13px; color: #a16207; margin-top: 5px;">O que ganhar seu próprio dinheiro mudaria na sua vida hoje?</p>
+                        <div class="post-it-list">
+                            <div class="post-it">Dar o melhor aos meus filhos</div>
+                            <div class="post-it">Reformar meu cantinho</div>
+                            <div class="post-it">Ser dona do meu nariz</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-ranking" class="tab-content" style="display: none;">
+                    <h4 style="margin-bottom: 20px; color: var(--pet-indigo); text-align: center;">Vitrine de Talentos 🥇</h4>
+                    <ol id="ranking-list"></ol>
+                    <div style="background: #f8fafc; padding: 15px; border-radius: 12px; margin-top: 20px; border: 1px solid #e2e8f0;">
+                        <p style="font-size: 12px; color: var(--pet-text-sub); margin: 0; text-align: center;">
+                            💡 <b>Dica:</b> Clique nos primeiros lugares para a recompensa especial!
+                        </p>
+                    </div>
+                </div>
+
+                <div id="tab-manual" class="tab-content" style="display: none;">
+                    <div class="info-box">
+                        <h4 style="color: var(--pet-purple);">Aprenda a Arrasar 📖</h4>
+                        <p style="font-size: 14px;">Assista ao manual em vídeo sempre que tiver dúvidas.</p>
+                        <div style="aspect-ratio: 16/9; background:#000; border-radius:10px; overflow:hidden;">
+                            <iframe width="100%" height="100%" src="https://drive.google.com/file/d/1r3sF2U6-KzkQEHOJy6c5u3FaZ_t5IH2s/preview" frameborder="0"></iframe>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-extrato" class="tab-content" style="display: none;">
+                    <h4 style="margin-bottom: 15px; color: var(--pet-indigo);">Evolução do Saldo Real</h4>
+                    <div class="chart-container"><canvas id="arrasasChart"></canvas></div>
+                    
+                    <!-- NOVO: Configurações de Notificação -->
+                    <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 15px; margin-bottom: 20px;">
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                            <div>
+                                <h4 style="margin: 0; color: var(--pet-indigo); font-size: 15px;">🔔 Notificações WhatsApp</h4>
+                                <p style="margin: 2px 0 0; font-size: 12px; color: var(--pet-text-sub);">Receber avisos de saldo e eventos.</p>
+                            </div>
+                            <button id="btn-toggle-notif" onclick="toggleNotificacoes()" style="padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 800; transition: var(--transition); background: var(--pet-green); color: white;">
+                                ATIVADAS
+                            </button>
+                        </div>
+                    </div>
+
+                    <h4 style="margin: 20px 0 10px; color: var(--pet-indigo); font-size: 16px;">Histórico Recente</h4>
+                    <ul id="extrato-lista" style="max-height: 300px; overflow-y: auto; padding-right: 5px;"></ul>
+                </div>
+
+                <button onclick="location.reload()" class="sair-btn">Sair do Painel com Segurança</button>
+            </div>
+
+            <footer style="margin-top: 40px; text-align: center; border-top: 1px solid #f1f5f9; padding-top: 20px;">
+                <p style="font-size: 13px; color: var(--pet-text-sub); margin: 0;">
+                    <b>Profissão Pet Rocinha 2026</b><br>
+                    Cada Arrasa é um passo firme para sua independência.
+                </p>
+            </footer>
+        </article>
+    </section>
+</main>
+
+<script>
+    let currentData = null;
+    let chartInstance = null;
+    
+    // ATENÇÃO: COLOQUE AQUI O SEU LINK DO APPS SCRIPT
+    const urlApp = "https://script.google.com/macros/s/AKfycbyCtBQ_wVDEpyKybzHgo9eFswc6tczQuFs53VLzg3t9HuoFbLOVVY_zrVScPxIwG2b0/exec";
+
+    const configMapa = [
+        { id: "Aprendiz Curiosa", nome: "1. Aprendiz Curiosa", stage: "acreditar", icon: "🐾", desc: "Primeiros passos no curso." },
+        { id: "Mulher de Propósito", nome: "2. Mulher de Propósito", stage: "acreditar", icon: "✨", desc: "Conexão com seu 'porquê'." },
+        { id: "Fera da Técnica", nome: "3. Fera da Técnica", stage: "aprender", icon: "🎓", desc: "Domínio do manejo pet." },
+        { id: "Profissional que Arrasa", nome: "4. Profissional que Arrasa", stage: "agir", icon: "💼", desc: "Atendimento e renda." },
+        { id: "Embaixadora Pet Rocinha", nome: "5. Embaixadora Pet Rocinha", stage: "agir", icon: "👑", desc: "Referência na comunidade." }
+    ];
+// Adicione esta função no início do seu <script> no HTML
+function parseNestedCSV(str) {
+    if (!str) return [];
+    let result = [];
+    let current = '';
+    let inQuotes = false;
+    for (let i = 0; i < str.length; i++) {
+        let char = str[i];
+        if (char === '"') {
+            inQuotes = !inQuotes;
+        } else if (char === ',' && !inQuotes) {
+            result.push(current.trim());
+            current = '';
+        } else {
+            current += char;
+        }
+    }
+    result.push(current.trim());
+    return result;
+}
+    // Tratamento de CPF na digitação (Arranca tudo que não for número)
+    function tratarCPFFrontEnd(cpf) {
+        return cpf.replace(/\D/g, "");
+    }
+
+    // Máscara visual de CPF
+    function aplicarMascaraCPF(input) {
+        let value = input.value.replace(/\D/g, "");
+        if (value.length > 11) value = value.slice(0, 11);
+        
+        if (value.length > 9) value = value.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+        else if (value.length > 6) value = value.replace(/(\d{3})(\d{3})(\d{3})/, "$1.$2.$3");
+        else if (value.length > 3) value = value.replace(/(\d{3})(\d{3})/, "$1.$2");
+        
+        input.value = value;
+    }
+
+    document.getElementById('cpf-input').addEventListener('input', (e) => aplicarMascaraCPF(e.target));
+
+    function switchTab(tabId, el) {
+        document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+        document.querySelectorAll('.tab-btn').forEach(b => {
+            b.classList.remove('active');
+            b.setAttribute('aria-selected', 'false');
+        });
+        
+        const targetTab = document.getElementById(tabId);
+        targetTab.style.display = 'block';
+        el.classList.add('active');
+        el.setAttribute('aria-selected', 'true');
+        
+        if (tabId === 'tab-jornada') animarJornada();
+        if (tabId === 'tab-extrato') renderChart();
+    }
+
+    async function verificarCPF() {
+        const inputVal = document.getElementById('cpf-input').value;
+        const currentCPF = tratarCPFFrontEnd(inputVal);
+        
+        if (currentCPF.length !== 11) {
+            alert("Por favor, digite seu CPF completo (11 números).");
+            return;
+        }
+
+        const loader = document.getElementById('loader');
+        loader.style.display = 'flex';
+        
+        try {
+            const response = await fetch(`${urlApp}?cpf=${currentCPF}`);
+            if (!response.ok) throw new Error('Servidor indisponível.');
+            
+            const rawData = await response.json();
+            console.log("Dados brutos do Apps Script:", rawData);
+
+            // Função auxiliar para parsear CSV dentro de campos JSON
+            const parseNestedCSV = (csvStr) => {
+                if (!csvStr || typeof csvStr !== 'string') return [];
+                return csvStr.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(s => s.replace(/"/g, "").trim());
+            };
+
+            if (rawData.encontrado) {
+                // No seu script: aluna.nome = String(linha) -> linha inteira como CSV
+                // Colunas: A=ID, B=Nome, C=Email, D=Foto, ..., K=Arrasas, L=Badge, M=Notif
+                const linhaParts = parseNestedCSV(rawData.nome); 
+                
+                currentData = {
+                    encontrado: true,
+                    nome: linhaParts[1] || "Aluna", // Coluna B
+                    foto: linhaParts[3] || "", // Coluna D
+                    arrasas: parseInt(linhaParts[10]) || 0, // Coluna K (Índice 10)
+                    badge: linhaParts[11] || "Aprendiz Curiosa", // Coluna L (Índice 11)
+                    proximoEvento: rawData.proximoEvento || "Consulte a Circle",
+                    missoesDisponiveis: (rawData.missoesDisponiveis || []).map(m => {
+                        const mParts = parseNestedCSV(m);
+                        return {
+                            name: mParts[2] || mParts[0] || "Missão", // Coluna C da aba Config
+                            pts: parseInt(mParts[1]) || 0 // Coluna B da aba Config
+                        };
+                    }),
+                    ranking: (rawData.ranking || []).map(r => {
+                        // r.nome no seu script é String(dataRank[r]) -> linha inteira
+                        const rParts = parseNestedCSV(r.nome);
+                        return {
+                            nome: rParts[0] || "Aluna", // Nome do Ranking
+                            badge: rParts[1] || " ",
+                            xp: parseInt(rParts[2]) || 0,
+                            recompensa: rParts[3] || "Arrasou!"
+                        };
+                    }),
+                    historico: (rawData.historico || []).map(h => {
+                        // h.acao no seu script é String(linhaLog) -> linha inteira
+                        const hParts = parseNestedCSV(h.acao);
+                        return {
+                            data: h.data || "--/--", // Já vem formatado pelo script (dd/MM)
+                            acao: hParts[9] || hParts[3] || "Atividade", // Coluna J ou D do Log
+                            pontos: parseInt(hParts[8]) || 0 // Coluna I do Log
+                        };
+                    }),
+                    cpf: currentCPF
+                };
+
+                console.log("Dados finais processados:", currentData);
+                renderDashboard();
+            } else {
+                alert("Aluna não cadastrada no sistema.");
+            }
+        } catch (error) {
+            console.error("Erro no processamento:", error);
+            alert("Erro ao carregar seus dados. Verifique sua conexão.");
+        } finally {
+            loader.style.display = 'none';
+        }
+    }
+            
+    function renderDashboard() {
+        document.getElementById('auth-section').style.display = 'none';
+        document.getElementById('dash-content').style.display = 'block';
+        
+        const nomeCurto = currentData.nome.split(' ');
+        document.getElementById('user-nome').innerText = currentData.nome;
+        document.getElementById('user-img').src = currentData.foto || "https://via.placeholder.com/100?text=PET";
+        document.getElementById('user-arrasas').innerText = currentData.arrasas;
+        document.getElementById('user-badge-display').innerText = currentData.badge || "Aprendiz Curiosa";
+        document.getElementById('proximo-evento-txt').innerText = currentData.proximoEvento;
+        
+        const frases = [
+            `${nomeCurto}, a Rocinha brilha com você!`,
+            `O mercado pet espera seu talento, ${nomeCurto}!`,
+            `Sua independência financeira está mais perto, ${nomeCurto}!`
+        ];
+        document.getElementById('motivational-quote').innerText = frases[Math.floor(Math.random()*frases.length)];
+
+        // Progresso
+        const percent = Math.min(100, currentData.arrasas);
+        document.getElementById('meta-txt').innerText = percent;
+        document.querySelector('.progress-bar').setAttribute('aria-valuenow', percent);
+        setTimeout(() => document.getElementById('bar-fill').style.width = percent + '%', 100);
+        
+        if (currentData.arrasas >= 100) document.getElementById('btn-resgate').style.display = 'flex';
+
+        // Jornada 3A
+        window.currentLevelIndex = configMapa.findIndex(l => l.id === currentData.badge);
+        if (window.currentLevelIndex < 0) window.currentLevelIndex = 0;
+        
+        const currentStage = configMapa[window.currentLevelIndex].stage;
+        document.querySelectorAll('.stage-card').forEach(c => c.classList.remove('active'));
+        if (currentStage) document.getElementById('card-' + currentStage).classList.add('active');
+
+        document.getElementById('jornada-lista').innerHTML = configMapa.map((step, i) => `
+            <div class="step-item ${i <= window.currentLevelIndex ? 'unlocked' : ''}">
+                <div class="step-circle">${i <= window.currentLevelIndex ? step.icon : '🔒'}</div>
+                <div class="step-label"><b>${step.nome}</b><br><span style="font-size:9px">${step.desc}</span></div>
+            </div>
+        `).join('');
+
+        // Missões Dinâmicas
+        if (currentData.missoesDisponiveis && currentData.missoesDisponiveis.length > 0) {
+            document.getElementById('missoes-lista').innerHTML = currentData.missoesDisponiveis.map(m => `
+                <div class="list-item" style="justify-content:space-between;">
+                    <div><span style="font-size:20px; margin-right:10px;">🎯</span> <b>${m.name}</b><br></div>
+                    
+                </div>
+            `).join('');
+        } else {
+            document.getElementById('missoes-lista').innerHTML = '<p style="text-align:center; color:gray;">Nenhuma missão ativa.</p>';
+        }
+
+        // Ranking com Modal
+        if (currentData.ranking && currentData.ranking.length > 0) {
+            document.getElementById('ranking-list').innerHTML = currentData.ranking.map((r, i) => `
+                <li class="list-item" onclick="openModal('${r.nome}', '${r.recompensa}')">
+                    <div style="width:30px; font-weight:800; color:var(--pet-purple); font-size:16px;">${i+1}º</div>
+                    <div style="flex:1; margin-left:10px;"><b>${r.nome}</b><br><small>${r.badge || 'Aluna'}</small></div>
+                    <div style="font-weight:800; color:var(--pet-indigo);">${r.xp} XP</div>
+                </li>
+            `).join('');
+        }
+
+        // Extrato
+        if (currentData.historico && currentData.historico.length > 0) {
+            document.getElementById('extrato-lista').innerHTML = currentData.historico.map(h => `
+                <li class="list-item" style="justify-content:space-between; padding:12px; cursor: default;">
+                    <div><small style="color:var(--pet-purple); font-weight:700;">${h.data}</small><br><b style="font-size:13px;">${h.acao}</b></div>
+                    <div style="font-weight:800; color:${h.pontos >= 0 ? 'var(--pet-green)' : '#ef4444'};">${h.pontos >= 0 ? '+' : ''}${h.pontos}</div>
+                </li>
+            `).join('');
+        }
+
+        if (!localStorage.getItem("watchedProPet_2026")) showVideoGate();
+    }
+
+    function openModal(nome, recompensa) {
+        document.getElementById('modal-title').innerText = "Premiação de " + nome;
+        document.getElementById('modal-text').innerText = recompensa;
+        document.getElementById('reward-modal').style.display = 'flex';
+    }
+
+    function closeModal() { 
+        document.getElementById('reward-modal').style.display = 'none'; 
+    }
+
+    function animarJornada() {
+        const line = document.getElementById('horiz-line-active');
+        const total = configMapa.length - 1;
+        const progress = (window.currentLevelIndex / total) * 100;
+        line.style.width = `calc(${progress}% - 50px)`;
+    }
+
+    function renderChart() {
+        const ctx = document.getElementById('arrasasChart').getContext('2d');
+        if (chartInstance) chartInstance.destroy();
+        
+        let sum = 0;
+        // O histórico já vem na ordem cronológica (antigo para novo) do Apps Script
+        const points = currentData.historico.map(h => { 
+            sum += h.pontos; 
+            return Math.max(0, sum); 
+        });
+        const labels = currentData.historico.map(h => h.data);
+
+        chartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: points,
+                    borderColor: '#6366f1',
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true,
+                    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: '#6366f1',
+                    pointRadius: 4
+                }]
+            },
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                plugins: { legend: { display: false } },
+                scales: { 
+                    y: { 
+                        beginAtZero: true, 
+                        grid: { color: '#f1f5f9' },
+                        title: { display: true, text: 'Saldo (A$)' }
+                    }, 
+                    x: { grid: { display: false } } 
+                }
+            }
+        });
+    }
+
+    function showVideoGate() {
+        document.getElementById('video-gate').style.display = 'flex';
+        document.getElementById('video-iframe').src = "https://drive.google.com/file/d/1r3sF2U6-KzkQEHOJy6c5u3FaZ_t5IH2s/preview?autoplay=1";
+    }
+
+    function closeVideoGate() {
+        localStorage.setItem("watchedProPet_2026", "true");
+        document.getElementById('video-gate').style.display = 'none';
+        document.getElementById('video-iframe').src = "";
+    }
+
+    function solicitarResgate() {
+        if (confirm("Deseja solicitar o resgate do seu auxílio de R$ 100,00? Você será redirecionada para o WhatsApp de suporte.")) {
+            window.open("https://wa.me/5521982013090?text=Quero%20resgatar%20meu%20auxilio%20Profissao%20Pet", "_blank");
+        }
+    }
+
+async function toggleNotificacoes() {
+    const btn = document.getElementById('btn-toggle-notif');
+    const loader = document.getElementById('loader'); // Pega o elemento do spinner
+    const isAtivo = btn.innerText === 'ATIVADAS';
+    
+    // Extrai o CPF da string CSV enviada pelo Apps Script
+    const userCpf = parseNestedCSV(currentData.nome); 
+
+    let novoStatus = isAtivo ? 'Não' : 'Sim';
+    
+    if (isAtivo) {
+        if (!confirm("Deseja realmente desativar as notificações por WhatsApp? Você pode perder avisos importantes sobre seu saldo e eventos.")) {
+            return;
+        }
+    }
+
+    // --- 1. LIGA O SPINNER ---
+    loader.style.display = 'flex';
+
+    try {
+        // Chamada ao Apps Script enviando a ação de atualização
+        const response = await fetch(`${urlApp}?action=updateNotif&cpf=${userCpf}&status=${novoStatus}`);
+        
+        // --- 2. ATUALIZA A INTERFACE ---
+        if (novoStatus === 'Não') {
+            btn.innerText = 'DESATIVADAS';
+            btn.style.background = '#94a3b8';
+            alert("Notificações desativadas.");
+        } else {
+            btn.innerText = 'ATIVADAS';
+            btn.style.background = 'var(--pet-green)';
+            alert("Notificações reativadas!");
+        }
+
+    } catch (error) {
+        console.error("Erro ao atualizar notificações:", error);
+        alert("Erro ao conectar ao servidor.");
+    } finally {
+        // --- 3. DESLIGA O SPINNER (Sempre executa, dando certo ou errado) ---
+        loader.style.display = 'none';
+    }
+}
+
+    document.getElementById('cpf-input').addEventListener('keypress', (e) => { 
+        if(e.key === 'Enter') verificarCPF(); 
+    });
+
+    // Auto-login se o CPF vier na URL (útil para embedding)
+    window.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const cpf = urlParams.get('cpf');
+        if (cpf && cpf.length >= 11) {
+            document.getElementById('cpf-input').value = cpf;
+            aplicarMascaraCPF(document.getElementById('cpf-input'));
+            verificarCPF();
+        }
+    });
+</script>
+</body>
+</html>
