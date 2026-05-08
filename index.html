@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel da Aluna | Profissão Pet Rocinha 2026</title>
-    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Syne:wght@800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Syne:wght@800&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
 
     <style>
@@ -180,7 +180,7 @@
         .hero-content h1 {
             font-family: 'Syne', sans-serif;
             font-weight: 800;
-            font-size: clamp(2.2rem, 8vw, 3.5rem);
+            font-size: clamp(2.2rem, 8vw, 2.8rem);
             text-transform: uppercase;
             color: white;
             text-shadow: 0 4px 24px rgba(0,0,0,0.4);
@@ -577,6 +577,197 @@
             .stage-card { display: flex; align-items: center; justify-content: space-between; padding: 15px 20px; }
             .stage-card h5 { margin: 0; }
         }
+
+                /* ── CÉDULA 3D ── */
+        .cedula-container {
+            perspective: 1200px;
+            cursor: pointer;
+            margin: 0 auto 16px;
+        }
+
+        .cedula {
+            width: 250px;
+            height: 120px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+            animation: flutuar 5s ease-in-out infinite;
+            margin: 0 auto;
+        }
+
+        .cedula.virada {
+            transform: rotateY(180deg);
+        }
+
+        /* Hover removido para usar clique */
+        /* .cedula-container:hover .cedula {
+            transform: rotateY(180deg) scale(1.1);
+        } */
+
+        /* ── FRENTE E VERSO ── */
+        .face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            background-color: #e2e8f0;
+        }
+
+        /* Padrão de Micro-impressão */
+        .face::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: 
+                repeating-linear-gradient(45deg, rgba(0,0,0,0.02) 0px, rgba(0,0,0,0.02) 2px, transparent 2px, transparent 4px),
+                repeating-linear-gradient(-45deg, rgba(0,0,0,0.02) 0px, rgba(0,0,0,0.02) 2px, transparent 2px, transparent 4px);
+            pointer-events: none;
+            opacity: 0.5;
+        }
+
+        /* ── FRENTE DA NOTA ── */
+        .frente {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 15px;
+            box-sizing: border-box;
+            border: 4px double #065f46;
+        }
+
+        /* Faixa Holográfica */
+        .holograma {
+            position: absolute;
+            left: 20%;
+            top: 0;
+            bottom: 0;
+            width: 25px;
+            background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 100%);
+            background-size: 200% 100%;
+            animation: brilhoHolograma 3s infinite linear;
+            z-index: 1;
+            border-left: 1px solid rgba(0,0,0,0.05);
+            border-right: 1px solid rgba(0,0,0,0.05);
+        }
+
+        @keyframes brilhoHolograma {
+            0% { background-position: -100% 0; }
+            100% { background-position: 100% 0; }
+        }
+
+        .valor-nota {
+            position: absolute;
+            top: 10px;
+            left: 15px;
+            z-index: 2;
+        }
+
+        .texto-esmalte {
+            font-family: 'Dancing Script', cursive !important;
+            font-size: 28px !important;
+            color: #ff2a7a;
+            text-shadow: 2px 3px 4px rgba(0,0,0,0.2);
+            transform: rotate(-8deg);
+            font-weight: 700;
+        }
+
+        .conteudo-central {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            width: 100%;
+            gap: 2px;
+            z-index: 1;
+        }
+
+        .selo-circular {
+            width: 60px; 
+            height: 60px; 
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+        }
+
+        .numero-serie {
+            font-family: 'Space Mono', monospace;
+            font-size: 8px;
+            color: #065f46;
+            opacity: 0.7;
+            letter-spacing: 1px;
+        }
+
+        .logo-nota {
+            position: absolute;
+            bottom: 10px;
+            right: 15px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            z-index: 2;
+        }
+
+        /* ── VERSO DA NOTA ── */
+        .verso {
+            background: linear-gradient(135deg, #065f46 0%, #064e3b 100%);
+            transform: rotateY(180deg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #ecfdf5;
+            text-align: center;
+            padding: 15px;
+            box-sizing: border-box;
+            border: 4px double rgba(255,255,255,0.2);
+        }
+
+        .verso h3 {
+            margin: 0;
+            font-size: 14px;
+            font-family: 'Syne', sans-serif;
+            text-transform: uppercase;
+            color: #f9d976;
+        }
+
+        .linha-assinatura {
+            width: 80%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #f9d976, transparent);
+            margin: 10px 0 5px;
+        }
+
+        .verso p {
+            margin: 1px 0;
+            font-size: 8px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            opacity: 0.9;
+        }
+
+        .frase-impacto {
+            margin-top: 8px !important;
+            font-size: 8px !important;
+            font-weight: 800;
+            color: #10b981;
+            background: rgba(0,0,0,0.2);
+            padding: 3px 8px;
+            border-radius: 20px;
+        }
+
+        @keyframes flutuar {
+            0%, 100% { transform: translateY(0) rotateZ(0deg); }
+            33% { transform: translateY(-8px) rotateZ(1deg); }
+            66% { transform: translateY(-4px) rotateZ(-1deg); }
+        }
     </style>
 </head>
 <body>
@@ -652,8 +843,38 @@
                     <button class="tab-btn" onclick="switchTab('tab-extrato', this)" role="tab" aria-controls="tab-extrato" aria-selected="false">📜 Extrato</button>
                 </nav>
 
+                
                 <div id="tab-saldo" class="tab-content" role="tabpanel" aria-labelledby="tab-btn-saldo">
                     <div class="info-box" style="background: linear-gradient(to bottom, #ffffff, #f8fafc);">
+                <div class="cedula-container" onclick="this.querySelector('.cedula').classList.toggle('virada')" title="Clique para virar">
+                    <div class="cedula">
+                        
+                        <div class="face frente">
+                            <div class="holograma"></div>
+                            
+                            <div class="valor-nota">
+                                <span class="texto-esmalte">Arrasa</span>
+                            </div>
+                            
+                            <div class="conteudo-central">
+                                <div class="selo-circular">💅🏽</div>
+                                <div class="numero-serie">PP-2026-ROCINHA</div>
+                            </div>
+                            
+                            <img class="logo-nota" src="https://github.com/juanjsales/map_rocinha/blob/main/pet%20(1).png?raw=true" alt="Logo">
+                        </div>
+
+                        <div class="face verso">
+                            <h3>Profissão Pet Rocinha</h3>
+                            <div class="linha-assinatura"></div>
+                            <p>Cédula Institucional de Reconhecimento</p>
+                            <p>Válido para troca por benefícios e auxílio</p>
+                            <p class="frase-impacto">CUIDADO • RESPEITO • INDEPENDÊNCIA</p>
+                        </div>
+
+                    </div>
+                </div>
+
                         <div id="user-arrasas" style="font-size: 60px; font-weight: 800; color: var(--pet-indigo); line-height: 1;">0</div>
                         <p style="font-size: 13px; font-weight: 800; color: var(--pet-text-sub); text-transform: uppercase; margin-top: 5px;">Saldo em Arrasas (A$)</p>
                         
@@ -776,11 +997,11 @@
     const urlApp = "https://script.google.com/macros/s/AKfycbyCtBQ_wVDEpyKybzHgo9eFswc6tczQuFs53VLzg3t9HuoFbLOVVY_zrVScPxIwG2b0/exec";
 
     const configMapa = [
-        { id: "Aprendiz Curiosa", nome: "1. Aprendiz Curiosa", stage: "acreditar", icon: "🐾", desc: "Primeiros passos no curso." },
-        { id: "Mulher de Propósito", nome: "2. Mulher de Propósito", stage: "acreditar", icon: "✨", desc: "Conexão com seu 'porquê'." },
-        { id: "Fera da Técnica", nome: "3. Fera da Técnica", stage: "aprender", icon: "🎓", desc: "Domínio do manejo pet." },
-        { id: "Profissional que Arrasa", nome: "4. Profissional que Arrasa", stage: "agir", icon: "💼", desc: "Atendimento e renda." },
-        { id: "Embaixadora Pet Rocinha", nome: "5. Embaixadora Pet Rocinha", stage: "agir", icon: "👑", desc: "Referência na comunidade." }
+        { id: "Aprendiz Curiosa 🐾", nome: "1. Aprendiz Curiosa", stage: "acreditar", icon: "🐾", desc: "Primeiros passos no curso." },
+        { id: "Mulher de Propósito ✨", nome: "2. Mulher de Propósito", stage: "acreditar", icon: "✨", desc: "Conexão com seu 'porquê'." },
+        { id: "Fera da Técnica 🎓", nome: "3. Fera da Técnica", stage: "aprender", icon: "🎓", desc: "Domínio do manejo pet." },
+        { id: "Profissional que Arrasa 💼", nome: "4. Profissional que Arrasa", stage: "agir", icon: "💼", desc: "Atendimento e renda." },
+        { id: "Embaixadora Pet Rocinha 👑", nome: "5. Embaixadora Pet Rocinha", stage: "agir", icon: "👑", desc: "Referência na comunidade." }
     ];
 // Adicione esta função no início do seu <script> no HTML
 function parseNestedCSV(str) {
@@ -863,8 +1084,7 @@ function parseNestedCSV(str) {
             };
 
             if (rawData.encontrado) {
-                // No seu script: aluna.nome = String(linha) -> linha inteira como CSV
-                // Colunas: A=ID, B=Nome, C=Email, D=Foto, ..., K=Arrasas, L=Badge, M=Notif
+         
                 const linhaParts = parseNestedCSV(rawData.nome); 
                 
                 currentData = {
@@ -920,7 +1140,7 @@ function parseNestedCSV(str) {
         document.getElementById('auth-section').style.display = 'none';
         document.getElementById('dash-content').style.display = 'block';
         
-        const nomeCurto = currentData.nome.split(' ');
+        const nomeCurto = currentData.nome.split(' ')[0];
         document.getElementById('user-nome').innerText = currentData.nome;
         document.getElementById('user-img').src = currentData.foto || "https://via.placeholder.com/100?text=PET";
         document.getElementById('user-arrasas').innerText = currentData.arrasas;
@@ -994,7 +1214,7 @@ function parseNestedCSV(str) {
     }
 
     function openModal(nome, recompensa) {
-        document.getElementById('modal-title').innerText = "Premiação de " + nome;
+        document.getElementById('modal-title').innerText = "Premiação de Ranking";
         document.getElementById('modal-text').innerText = recompensa;
         document.getElementById('reward-modal').style.display = 'flex';
     }
@@ -1118,16 +1338,6 @@ async function toggleNotificacoes() {
         if(e.key === 'Enter') verificarCPF(); 
     });
 
-    // Auto-login se o CPF vier na URL (útil para embedding)
-    window.addEventListener('DOMContentLoaded', () => {
-        const urlParams = new URLSearchParams(window.location.search);
-        const cpf = urlParams.get('cpf');
-        if (cpf && cpf.length >= 11) {
-            document.getElementById('cpf-input').value = cpf;
-            aplicarMascaraCPF(document.getElementById('cpf-input'));
-            verificarCPF();
-        }
-    });
 </script>
 </body>
 </html>
