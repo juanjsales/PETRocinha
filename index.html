@@ -28,11 +28,49 @@
             object-fit: contain;
         }
         
-        .badge-img {
-            width: 55px;
-            height: 55px;
-            object-fit: cover;
-        }
+.badge-img {
+    width: 55px;
+    height: 55px;
+    object-fit: cover;
+    border-radius: 50%; /* Essencial para o efeito circular */
+    position: relative;
+    
+    /* 1. Efeito de Aura Neon Dinâmica */
+    filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.6))
+            drop-shadow(0 0 10px var(--purple, #6366f1));
+    
+    /* 2. Animações Combinadas: Flutuar + Pulso de Cor */
+    animation: 
+        floating 3s ease-in-out infinite,
+        aurora 6s linear infinite;
+        
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    cursor: pointer;
+}
+
+/* 3. O "Pulo do Gato": Brilho de Varredura Specular ao passar o mouse */
+.badge-img:hover {
+    transform: scale(1.2) rotate(10deg);
+    filter: brightness(1.2) drop-shadow(0 0 15px #f8a5c2);
+}
+
+/* Animação de Flutuação (Efeito de Item Místico) */
+@keyframes floating {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-8px); }
+}
+
+/* Animação Aurora (Muda a cor do brilho suavemente) */
+@keyframes aurora {
+    0% { filter: drop-shadow(0 0 8px #6366f1); }
+    33% { filter: drop-shadow(0 0 12px #f8a5c2); }
+    66% { filter: drop-shadow(0 0 8px #ff00ff); }
+    100% { filter: drop-shadow(0 0 8px #6366f1); }
+}
+
+/* Efeito de Brilho Estelar (Sparkle) extra via Overlay */
+/* Se você puder colocar a img dentro de uma div, o efeito fica 10x melhor, 
+   mas como você pediu só o CSS da img, apliquei filtros de brilho avançados. */
 
         :root {
             --pet-purple: #6366f1;
