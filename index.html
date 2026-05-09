@@ -8,6 +8,32 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
 
     <style>
+        .badge-container {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+            color: var(--pet-purple);
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 2px 8px;
+            background: #ede9fe;
+            border-radius: 12px;
+        }
+
+        .badge-icon {
+            width: 24px;
+            height: 24px;
+            object-fit: contain;
+        }
+        
+        .badge-img {
+            width: 55px;
+            height: 55px;
+            object-fit: cover;
+        }
+
         :root {
             --pet-purple: #6366f1;
             --pet-indigo: #1a1b4b;
@@ -117,38 +143,6 @@
             width: 100%; 
             height: calc(100% + 110px);
             border: none;
-        }
-
-        /* ── MODAL RECOMPENSA ── */
-        .modal-overlay {
-            display: none; 
-            position: fixed; 
-            top: 0; 
-            left: 0; 
-            width: 100%; 
-            height: 100%;
-            background: rgba(0,0,0,0.7); 
-            z-index: 10000;
-            align-items: center; 
-            justify-content: center; 
-            padding: 20px;
-        }
-        
-        .modal-card {
-            background: white; 
-            padding: 30px; 
-            border-radius: var(--radius-lg);
-            max-width: 400px; 
-            width: 100%; 
-            text-align: center; 
-            position: relative;
-            box-shadow: var(--shadow-lg); 
-            animation: modalIn 0.4s ease;
-        }
-        
-        @keyframes modalIn { 
-            from { transform: scale(0.8); opacity: 0; } 
-            to { transform: scale(1); opacity: 1; } 
         }
 
         /* ── HEADER ── */
@@ -458,6 +452,16 @@
             margin: 0; 
         }
         
+        .reward-details {
+            padding: 10px;
+            background: #f1f5f9;
+            border-radius: 12px;
+            margin-top: 5px;
+            font-size: 13px;
+            color: var(--pet-text-sub);
+            width: 100%;
+        }
+        
         .list-item {
             display: flex; 
             align-items: center; 
@@ -467,6 +471,7 @@
             margin-bottom: 10px; 
             border: 1px solid #f1f5f9;
             transition: var(--transition);
+            flex-wrap: wrap;
         }
         
         .list-item:hover { 
@@ -475,7 +480,151 @@
             cursor: pointer;
         }
 
-        /* ── LOADER ── */
+        /* ── MODAL ── */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 12, 55, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+            border-radius: var(--radius-lg);
+            padding: 40px 30px;
+            max-width: 550px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: scaleUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        @keyframes scaleUp {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 20px; right: 20px;
+            width: 40px;
+            height: 40px;
+            background: #f3f4f6;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--pet-text-sub);
+            transition: var(--transition);
+            z-index: 10;
+        }
+
+        .close-modal:hover {
+            background: #fee2e2;
+            color: #ef4444;
+            transform: rotate(90deg);
+        }
+
+        /* Estilos específicos para os containers de recompensa */
+        .reward-container {
+            border-radius: 24px;
+            padding: 24px;
+            margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+            transition: var(--transition);
+            border: 2px solid transparent;
+        }
+
+        .reward-container:hover {
+            transform: translateY(-5px);
+        }
+
+        .reward-container.gold {
+            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+            border-color: #fbbf24;
+            box-shadow: 0 10px 20px rgba(251, 191, 36, 0.15);
+        }
+
+        .reward-container.silver {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-color: #cbd5e1;
+            box-shadow: 0 10px 20px rgba(148, 163, 184, 0.15);
+        }
+
+        .reward-container.bronze {
+            background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+            border-color: #fb923c;
+            box-shadow: 0 10px 20px rgba(251, 146, 60, 0.15);
+        }
+
+        .reward-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 20px;
+            font-weight: 800;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .gold .reward-title { color: #92400e; }
+        .silver .reward-title { color: #334155; }
+        .bronze .reward-title { color: #9a3412; }
+
+        .reward-list {
+            padding: 0;
+            margin: 0;
+            list-style: none;
+        }
+
+        .reward-list li {
+            font-size: 14px;
+            margin-bottom: 10px;
+            padding-left: 24px;
+            position: relative;
+            line-height: 1.4;
+            color: var(--pet-text-sub);
+        }
+
+        .reward-list li::before {
+            content: '✨';
+            position: absolute;
+            left: 0;
+            top: 2px;
+            font-size: 14px;
+        }
+
+        /* Efeito de brilho/confete */
+        .confetti-piece {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: var(--pet-pink);
+            top: -10px;
+            opacity: 0;
+        }
+
+        @keyframes confettiFall {
+            0% { transform: translateY(0) rotate(0); opacity: 1; }
+            100% { transform: translateY(400px) rotate(720deg); opacity: 0; }
+        }
         #loader {
             display: none; 
             position: absolute; 
@@ -511,44 +660,6 @@
             padding: 10px; 
         }
 
-        /* ── POST-ITS ── */
-        .muro-container { 
-            background: #fffbeb; 
-            border: 2px dashed #fcd34d; 
-            border-radius: var(--radius-md); 
-            padding: 20px; 
-            margin-top: 24px; 
-        }
-        
-        .post-it-list { 
-            display: flex; 
-            flex-wrap: wrap; 
-            gap: 10px; 
-            justify-content: center; 
-            margin-top: 15px; 
-        }
-        
-        .post-it {
-            background: #fef08a; 
-            padding: 10px; 
-            border-radius: 4px; 
-            font-size: 12px; 
-            font-weight: 700;
-            width: 90px; 
-            box-shadow: 3px 3px 8px rgba(0,0,0,0.08); 
-            transform: rotate(-2deg); 
-            transition: var(--transition);
-        }
-        
-        .post-it:nth-child(even) { 
-            transform: rotate(2deg); 
-            background: #fde68a; 
-        }
-        
-        .post-it:hover { 
-            transform: scale(1.1) rotate(0); 
-            z-index: 2; 
-        }
 
         .sair-btn {
             margin-top: 30px; 
@@ -599,17 +710,13 @@
             transform: rotateY(180deg);
         }
 
-        /* Hover removido para usar clique */
-        /* .cedula-container:hover .cedula {
-            transform: rotateY(180deg) scale(1.1);
-        } */
-
         /* ── FRENTE E VERSO ── */
         .face {
             position: absolute;
             width: 100%;
             height: 100%;
             backface-visibility: hidden;
+            -webkit-backface-visibility: hidden; /* Adicionado para Safari/iOS */
             border-radius: 8px;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
             border: 1px solid rgba(0, 0, 0, 0.1);
@@ -768,20 +875,27 @@
             33% { transform: translateY(-8px) rotateZ(1deg); }
             66% { transform: translateY(-4px) rotateZ(-1deg); }
         }
+
+
     </style>
 </head>
 <body>
 
-<div id="reward-modal" class="modal-overlay">
-    <div class="modal-card">
-        <div style="font-size: 50px;">🎁</div>
-        <h3 id="modal-title" style="color: var(--pet-indigo);">Recompensa do ranking</h3>
-        <p id="modal-text" style="color: var(--pet-text-sub); font-size: 18px; font-weight: 600;"></p>
-        <button onclick="closeModal()" class="btn-glow" style="background: var(--pet-indigo); margin-top: 20px;">Fechar</button>
+    <div id="modal-recompensas" class="modal-overlay" onclick="fecharModalRecompensas()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <span class="close-modal" onclick="fecharModalRecompensas()" role="button" aria-label="Fechar modal de premiações">&times;</span>
+            <div style="text-align: center; margin-bottom: 30px;">
+                <span style="font-size: 50px;">🎁</span>
+                <h2 style="font-family: 'Syne', sans-serif; color: var(--pet-indigo); margin-top: 10px; font-size: 28px;">Premiações de Elite</h2>
+                <p style="color: var(--pet-text-sub); font-size: 15px;">O reconhecimento que você merece por arrasar!</p>
+            </div>
+            <div id="modal-recompensas-conteudo">
+                <!-- Conteúdo injetado via JS -->
+            </div>
+            <button onclick="fecharModalRecompensas()" class="btn-glow" style="margin-top: 10px; background: var(--pet-indigo);">Entendido, Vou Arrasar! 🚀</button>
+        </div>
     </div>
-</div>
-
-<main id="painel-pet-exclusivo">
+    <main id="painel-pet-exclusivo">
     <div id="video-gate">
         <h2>É HORA DE ARRASAR! 🚀</h2>
         <p>A Arrasa celebra a mulher que gera sua própria renda no morro.</p>
@@ -792,7 +906,7 @@
     </div>
 
     <header class="lp-header">
-        <img class="hero-logo" src="https://github.com/juanjsales/map_rocinha/blob/main/pet%20(1).png?raw=true" alt="Logo Profissão Pet">
+        <img class="hero-logo" src="https://github.com/juanjsales/map_rocinha/blob/main/pet%20(1).png?raw=true" alt="Logo Profissão Pet" loading="lazy">
         <div class="hero-content">
             <h1>Painel da Aluna <span>Profissão Pet</span></h1>
         </div>
@@ -814,10 +928,10 @@
                     <input type="text" id="cpf-input" class="glass-input" placeholder="000.000.000-00" maxlength="14" inputmode="numeric">
                 </div>
                 
-                <button onclick="verificarCPF()" class="btn-glow">Entrar e Arrasar</button>
+                <button id="btn-entrar" onclick="verificarCPF()" class="btn-glow">Entrar e Arrasar</button>
                 
                 <p style="text-align: center; font-size: 14px; margin-top: 20px;">
-                    Ainda não é aluna? <a href="https://comunidade.aprenderecuidar.com.br/sign_up" target="_blank" style="color: var(--pet-purple); font-weight: 800;">Cadastre-se agora →</a>
+                    Ainda não é aluna? <a href="https://comunidade.aprenderecuidar.com.br/sign_up" target="_blank" style="color: var(--pet-purple); font-weight: 800;" aria-label="Cadastrar-se no site">Cadastre-se agora →</a>
                 </p>
             </div>
 
@@ -826,54 +940,53 @@
                     <p id="motivational-quote" style="margin: 0; font-size: 14px; font-weight: 600; color: var(--pet-purple); font-style: italic;"></p>
                 </div>
 
-                <div style="display: flex; align-items: center; margin-bottom: 24px;">
-                    <img id="user-img" src="" alt="Sua foto de perfil" style="width: 64px; height: 64px; border-radius: 50%; border: 3px solid var(--pet-purple); object-fit: cover;">
-                    <div style="margin-left: 16px;">
-                        <h3 id="user-nome" style="margin: 0; font-size: 20px; color: var(--pet-indigo);"></h3>
-                        <p id="user-badge-display" style="margin: 0; font-size: 13px; color: var(--pet-purple); font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;"></p>
-                    </div>
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
+                    <div style="display: flex; align-items: center;">
+                        <img id="user-img" src="" alt="Sua foto de perfil" loading="lazy" style="width: 64px; height: 64px; border-radius: 50%; border: 3px solid var(--pet-purple); object-fit: cover;">
+                        <div style="margin-left: 16px;">
+                            <h3 id="user-nome" style="margin: 0; font-size: 20px; color: var(--pet-indigo);"></h3>
+                                <div id="user-badge-display" class="badge-container" style="margin-top: 4px; display: inline-flex;">
+                                    <span class="badge-text"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <img src="" class="badge-img" alt="Badge imagem" loading="lazy">
                 </div>
 
                 <nav class="tabs" role="tablist">
-                    <button id="tab-btn-saldo" class="tab-btn active" onclick="switchTab('tab-saldo', this)" role="tab" aria-controls="tab-saldo" aria-selected="true">💰 Saldo</button>
-                    <button class="tab-btn" onclick="switchTab('tab-jornada', this)" role="tab" aria-controls="tab-jornada" aria-selected="false">🚀 Jornada 3A</button>
-                    <button class="tab-btn" onclick="switchTab('tab-missoes', this)" role="tab" aria-controls="tab-missoes" aria-selected="false">🎯 Desafios</button>
-                    <button class="tab-btn" onclick="switchTab('tab-ranking', this)" role="tab" aria-controls="tab-ranking" aria-selected="false">🏆 Ranking</button>
-                    <button class="tab-btn" onclick="switchTab('tab-manual', this)" role="tab" aria-controls="tab-manual" aria-selected="false">📖 Manual</button>
-                    <button class="tab-btn" onclick="switchTab('tab-extrato', this)" role="tab" aria-controls="tab-extrato" aria-selected="false">📜 Extrato</button>
+                    <button id="tab-btn-saldo" class="tab-btn active" onclick="switchTab('tab-saldo', this)" role="tab" aria-controls="tab-saldo" aria-selected="true" aria-label="Aba de Saldo">💰 Saldo</button>
+                    <button class="tab-btn" onclick="switchTab('tab-jornada', this)" role="tab" aria-controls="tab-jornada" aria-selected="false" aria-label="Aba de Jornada 3A">🚀 Jornada 3A</button>
+
+                    <button class="tab-btn" onclick="switchTab('tab-ranking', this)" role="tab" aria-controls="tab-ranking" aria-selected="false" aria-label="Aba de Ranking">🏆 Ranking</button>
+                    <button class="tab-btn" onclick="switchTab('tab-manual', this)" role="tab" aria-controls="tab-manual" aria-selected="false" aria-label="Aba de Manual">📖 Manual</button>
+                    <button class="tab-btn" onclick="switchTab('tab-extrato', this)" role="tab" aria-controls="tab-extrato" aria-selected="false" aria-label="Aba de Extrato">📜 Extrato</button>
                 </nav>
 
                 
-                <div id="tab-saldo" class="tab-content" role="tabpanel" aria-labelledby="tab-btn-saldo">
+        <div id="tab-saldo" class="tab-content" role="tabpanel" aria-labelledby="tab-btn-saldo">
                     <div class="info-box" style="background: linear-gradient(to bottom, #ffffff, #f8fafc);">
-                <div class="cedula-container" onclick="this.querySelector('.cedula').classList.toggle('virada')" title="Clique para virar">
-                    <div class="cedula">
-                        
-                        <div class="face frente">
-                            <div class="holograma"></div>
-                            
-                            <div class="valor-nota">
-                                <span class="texto-esmalte">Arrasa</span>
+                        <div class="cedula-container" onclick="this.querySelector('.cedula').classList.toggle('virada')" title="Clique para virar" role="button" aria-label="Cédula Institucional, clique para virar">
+                            <div class="cedula">
+                                <div class="face frente">
+                                    <div class="holograma"></div>
+                                    <div class="valor-nota">
+                                        <span class="texto-esmalte">Arrasa</span>
+                                    </div>
+                                    <div class="conteudo-central">
+                                        <div class="selo-circular">💅🏽</div>
+                                        <div class="numero-serie">PP-2026-ROCINHA</div>
+                                    </div>
+                                    <img class="logo-nota" src="https://github.com/juanjsales/map_rocinha/blob/main/pet%20(1).png?raw=true" alt="Logo" loading="lazy">
+                                </div>
+                                <div class="face verso">
+                                    <h3>Profissão Pet Rocinha</h3>
+                                    <div class="linha-assinatura"></div>
+                                    <p>Cédula Institucional de Reconhecimento</p>
+                                    <p>Válido para troca por benefícios e auxílio</p>
+                                    <p class="frase-impacto">CUIDADO • RESPEITO • INDEPENDÊNCIA</p>
+                                </div>
                             </div>
-                            
-                            <div class="conteudo-central">
-                                <div class="selo-circular">💅🏽</div>
-                                <div class="numero-serie">PP-2026-ROCINHA</div>
-                            </div>
-                            
-                            <img class="logo-nota" src="https://github.com/juanjsales/map_rocinha/blob/main/pet%20(1).png?raw=true" alt="Logo">
                         </div>
-
-                        <div class="face verso">
-                            <h3>Profissão Pet Rocinha</h3>
-                            <div class="linha-assinatura"></div>
-                            <p>Cédula Institucional de Reconhecimento</p>
-                            <p>Válido para troca por benefícios e auxílio</p>
-                            <p class="frase-impacto">CUIDADO • RESPEITO • INDEPENDÊNCIA</p>
-                        </div>
-
-                    </div>
-                </div>
 
                         <div id="user-arrasas" style="font-size: 60px; font-weight: 800; color: var(--pet-indigo); line-height: 1;">0</div>
                         <p style="font-size: 13px; font-weight: 800; color: var(--pet-text-sub); text-transform: uppercase; margin-top: 5px;">Saldo em Arrasas (A$)</p>
@@ -901,6 +1014,12 @@
                         <p id="proximo-evento-txt" style="font-size: 18px; font-weight: 800; margin: 0;">Carregando...</p>
                         <p style="font-size: 13px; color: var(--pet-text-sub); margin-top: 5px;">Sua presença confirmada vale pontos!</p>
                     </div>
+                    
+                    <div class="info-box" style="background: #f1f5f9; border: 1px solid #e2e8f0;">
+                        <h4 style="margin: 0 0 10px; color: var(--pet-indigo);">🌐 Comunidade Profissão Pet</h4>
+                        <p style="font-size: 14px; color: var(--pet-text-sub); margin-bottom: 15px;">Participe da nossa comunidade para trocar experiências e aprender muito mais!</p>
+                        <a href="https://comunidade.aprenderecuidar.com.br" target="_blank" class="btn-glow" style="background: var(--pet-indigo);">Acessar Comunidade 🚀</a>
+                    </div>
                 </div>
 
                 <div id="tab-jornada" class="tab-content" style="display: none;">
@@ -920,28 +1039,16 @@
                     <p style="text-align: center; font-size: 12px; color: var(--pet-text-sub); font-weight: 600;">Arraste para o lado para ver o seu futuro ➡</p>
                 </div>
 
-                <div id="tab-missoes" class="tab-content" style="display: none;">
-                    <h4 style="text-align: center; color: var(--pet-purple);">MISSÕES DISPONÍVEIS 🎯</h4>
-                    <div id="missoes-lista"></div>
-                    
-                    <div class="muro-container">
-                        <h4 style="margin: 0; font-size: 16px; color: #854d0e;">✨ Muro do Propósito</h4>
-                        <p style="font-size: 13px; color: #a16207; margin-top: 5px;">O que ganhar seu próprio dinheiro mudaria na sua vida hoje?</p>
-                        <div class="post-it-list">
-                            <div class="post-it">Dar o melhor aos meus filhos</div>
-                            <div class="post-it">Reformar meu cantinho</div>
-                            <div class="post-it">Ser dona do meu nariz</div>
-                        </div>
-                    </div>
-                </div>
+
+
 
                 <div id="tab-ranking" class="tab-content" style="display: none;">
                     <h4 style="margin-bottom: 20px; color: var(--pet-indigo); text-align: center;">Vitrine de Talentos 🥇</h4>
+                   
                     <ol id="ranking-list"></ol>
-                    <div style="background: #f8fafc; padding: 15px; border-radius: 12px; margin-top: 20px; border: 1px solid #e2e8f0;">
-                        <p style="font-size: 12px; color: var(--pet-text-sub); margin: 0; text-align: center;">
-                            💡 <b>Dica:</b> Clique nos primeiros lugares para a recompensa especial!
-                        </p>
+                     <div class="info-box" style="background: #f5f3ff; border: 1px solid var(--pet-purple); text-align: center; margin-bottom: 20px; display: flex;
+    justify-content: center;">
+                        <button onclick="abrirModalRecompensas()" class="btn-glow" style="width: auto;">Ver as Premiações 🎁</button>
                     </div>
                 </div>
 
@@ -990,6 +1097,41 @@
 </main>
 
 <script>
+const recompensa1 = `
+    <div class="reward-container gold">
+        <h3 class="reward-title">🥇 A Grande Embaixadora</h3>
+        <ul class="reward-list">
+            <li><strong>💰 Investimento Semente:</strong> R$ [Valor] para equipamentos ou MEI com mentoria estratégica.</li>
+            <li><strong>🏆 Ranking de Elite:</strong> Posição #1 vitalícia na Vitrine de Talentos e recomendação prioritária.</li>
+            <li><strong>🚀 Aceleração:</strong> 50% de Desconto na Mentoria "Tata Educação Pro".</li>
+            <li><strong>✨ Selo de Autoridade:</strong> Badge "Vencedora Ouro" + Placa Física "Mulher que Arrasa".</li>
+            <li><strong>🎁 Kit Master:</strong> Tesouras profissionais, avental personalizado e produtos premium.</li>
+        </ul>
+    </div>`;
+
+const recompensa2 = `
+    <div class="reward-container silver">
+        <h3 class="reward-title">🥈 Profissional de Destaque</h3>
+        <ul class="reward-list">
+            <li><strong>💰 Investimento Semente:</strong> R$ [Valor] para ferramentas com acompanhamento.</li>
+            <li><strong>📍 Destaque no Banco:</strong> Selo de "Recomendação Prioritária" para parcerias.</li>
+            <li><strong>🚀 Aceleração:</strong> 30% de Desconto na Mentoria "Tata Educação Pro".</li>
+            <li><strong>✨ Selo de Autoridade:</strong> Badge "Vencedora Prata" + Selo Digital para Redes Sociais.</li>
+            <li><strong>🎁 Kit Intermediário:</strong> Soprador profissional e guia de contenção.</li>
+        </ul>
+    </div>`;
+
+const recompensa3 = `
+    <div class="reward-container bronze">
+        <h3 class="reward-title">🥉 Talento Revelação</h3>
+        <ul class="reward-list">
+            <li><strong>💰 Investimento Semente:</strong> R$ [Valor] para infraestrutura de atendimento domiciliar.</li>
+            <li><strong>📱 Visibilidade:</strong> Perfil em destaque na seção de Talentos Locais.</li>
+            <li><strong>🚀 Aceleração:</strong> 20% de Desconto na Mentoria "Tata Educação Pro".</li>
+            <li><strong>✨ Selo de Autoridade:</strong> Badge "Vencedora Bronze" + Certificado Impresso.</li>
+            <li><strong>🎁 Brindes:</strong> Kit de acessórios e maleta para Home Care.</li>
+        </ul>
+    </div>`;
     let currentData = null;
     let chartInstance = null;
     
@@ -997,11 +1139,11 @@
     const urlApp = "https://script.google.com/macros/s/AKfycbyCtBQ_wVDEpyKybzHgo9eFswc6tczQuFs53VLzg3t9HuoFbLOVVY_zrVScPxIwG2b0/exec";
 
     const configMapa = [
-        { id: "Aprendiz Curiosa 🐾", nome: "1. Aprendiz Curiosa", stage: "acreditar", icon: "🐾", desc: "Primeiros passos no curso." },
-        { id: "Mulher de Propósito ✨", nome: "2. Mulher de Propósito", stage: "acreditar", icon: "✨", desc: "Conexão com seu 'porquê'." },
-        { id: "Fera da Técnica 🎓", nome: "3. Fera da Técnica", stage: "aprender", icon: "🎓", desc: "Domínio do manejo pet." },
-        { id: "Profissional que Arrasa 💼", nome: "4. Profissional que Arrasa", stage: "agir", icon: "💼", desc: "Atendimento e renda." },
-        { id: "Embaixadora Pet Rocinha 👑", nome: "5. Embaixadora Pet Rocinha", stage: "agir", icon: "👑", desc: "Referência na comunidade." }
+        { id: "Aprendiz Curiosa 🐾", nome: "1. Aprendiz Curiosa 🐾", stage: "acreditar", icon: "🐾", img: "https://github.com/juanjsales/PETRocinha/blob/main/Aprendiz.webp?raw=true", desc: "Primeiros passos no curso." },
+        { id: "Mulher de Propósito ✨", nome: "2. Mulher de Propósito ✨", stage: "acreditar", icon: "✨", img: "https://github.com/juanjsales/PETRocinha/blob/main/Mulher.webp?raw=true", desc: "Conexão com seu 'porquê'." },
+        { id: "Fera da Técnica 🎓", nome: "3. Fera da Técnica 🎓", stage: "aprender", icon: "🎓", img: "https://github.com/juanjsales/PETRocinha/blob/main/Fera.webp?raw=true", desc: "Domínio do manejo pet." },
+        { id: "Profissional que Arrasa 💼", nome: "4. Profissional que Arrasa 💼", stage: "agir", icon: "💼", img: "https://github.com/juanjsales/PETRocinha/blob/main/Prof.webp?raw=true", desc: "Atendimento e renda." },
+        { id: "Embaixadora Pet Rocinha 👑", nome: "5. Embaixadora Pet Rocinha 👑", stage: "agir", icon: "👑", img: "https://github.com/juanjsales/PETRocinha/blob/main/Embaixadora.webp?raw=true", desc: "Referência na comunidade." }
     ];
 // Adicione esta função no início do seu <script> no HTML
 function parseNestedCSV(str) {
@@ -1040,25 +1182,20 @@ function parseNestedCSV(str) {
         input.value = value;
     }
 
-    document.getElementById('cpf-input').addEventListener('input', (e) => aplicarMascaraCPF(e.target));
+    document.getElementById('cpf-input').addEventListener('input', (e) => {
+        aplicarMascaraCPF(e.target);
+        localStorage.setItem('ultimoCPF', e.target.value);
+    });
 
-    function switchTab(tabId, el) {
-        document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
-        document.querySelectorAll('.tab-btn').forEach(b => {
-            b.classList.remove('active');
-            b.setAttribute('aria-selected', 'false');
-        });
-        
-        const targetTab = document.getElementById(tabId);
-        targetTab.style.display = 'block';
-        el.classList.add('active');
-        el.setAttribute('aria-selected', 'true');
-        
-        if (tabId === 'tab-jornada') animarJornada();
-        if (tabId === 'tab-extrato') renderChart();
-    }
+    window.addEventListener('load', () => {
+        const savedCPF = localStorage.getItem('ultimoCPF');
+        if (savedCPF) {
+            document.getElementById('cpf-input').value = savedCPF;
+        }
+    });
 
     async function verificarCPF() {
+        const btnEntrar = document.getElementById('btn-entrar');
         const inputVal = document.getElementById('cpf-input').value;
         const currentCPF = tratarCPFFrontEnd(inputVal);
         
@@ -1067,6 +1204,9 @@ function parseNestedCSV(str) {
             return;
         }
 
+        btnEntrar.disabled = true;
+        btnEntrar.innerText = "Processando...";
+        
         const loader = document.getElementById('loader');
         loader.style.display = 'flex';
         
@@ -1080,7 +1220,7 @@ function parseNestedCSV(str) {
             // Função auxiliar para parsear CSV dentro de campos JSON
             const parseNestedCSV = (csvStr) => {
                 if (!csvStr || typeof csvStr !== 'string') return [];
-                return csvStr.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(s => s.replace(/"/g, "").trim());
+                return csvStr.split(/,(?=(?:(?:[^\"]*\"){2})*[^\"]*$)/).map(s => s.replace(/\"/g, "").trim());
             };
 
             if (rawData.encontrado) {
@@ -1094,21 +1234,15 @@ function parseNestedCSV(str) {
                     arrasas: parseInt(linhaParts[10]) || 0, // Coluna K (Índice 10)
                     badge: linhaParts[11] || "Aprendiz Curiosa", // Coluna L (Índice 11)
                     proximoEvento: rawData.proximoEvento || "Consulte a Circle",
-                    missoesDisponiveis: (rawData.missoesDisponiveis || []).map(m => {
-                        const mParts = parseNestedCSV(m);
-                        return {
-                            name: mParts[2] || mParts[0] || "Missão", // Coluna C da aba Config
-                            pts: parseInt(mParts[1]) || 0 // Coluna B da aba Config
-                        };
-                    }),
+
                     ranking: (rawData.ranking || []).map(r => {
                         // r.nome no seu script é String(dataRank[r]) -> linha inteira
-                        const rParts = parseNestedCSV(r.nome);
+                        const rParts = parseNestedCSV(r.linhaRaw);
                         return {
                             nome: rParts[0] || "Aluna", // Nome do Ranking
                             badge: rParts[1] || " ",
                             xp: parseInt(rParts[2]) || 0,
-                            recompensa: rParts[3] || "Arrasou!"
+                            recompensa: rParts[3] || ""
                         };
                     }),
                     historico: (rawData.historico || []).map(h => {
@@ -1133,6 +1267,8 @@ function parseNestedCSV(str) {
             alert("Erro ao carregar seus dados. Verifique sua conexão.");
         } finally {
             loader.style.display = 'none';
+            btnEntrar.disabled = false;
+            btnEntrar.innerText = "Entrar e Arrasar";
         }
     }
             
@@ -1144,8 +1280,15 @@ function parseNestedCSV(str) {
         document.getElementById('user-nome').innerText = currentData.nome;
         document.getElementById('user-img').src = currentData.foto || "https://via.placeholder.com/100?text=PET";
         document.getElementById('user-arrasas').innerText = currentData.arrasas;
-        document.getElementById('user-badge-display').innerText = currentData.badge || "Aprendiz Curiosa";
-        document.getElementById('proximo-evento-txt').innerText = currentData.proximoEvento;
+        
+        const badgeDisplay = document.getElementById('user-badge-display');
+        const badgeImg = document.querySelector('.badge-img');
+        const badgeData = configMapa.find(c => c.id === currentData.badge) || configMapa[0];
+                    badgeDisplay.querySelector('.badge-text').innerText = badgeData.id;
+                    badgeImg.src = badgeData.img;
+                    badgeImg.alt = badgeData.id;
+                    
+                    document.getElementById('proximo-evento-txt').innerText = currentData.proximoEvento;
         
         const frases = [
             `${nomeCurto}, a Rocinha brilha com você!`,
@@ -1177,28 +1320,23 @@ function parseNestedCSV(str) {
             </div>
         `).join('');
 
-        // Missões Dinâmicas
-        if (currentData.missoesDisponiveis && currentData.missoesDisponiveis.length > 0) {
-            document.getElementById('missoes-lista').innerHTML = currentData.missoesDisponiveis.map(m => `
-                <div class="list-item" style="justify-content:space-between;">
-                    <div><span style="font-size:20px; margin-right:10px;">🎯</span> <b>${m.name}</b><br></div>
-                    
-                </div>
-            `).join('');
-        } else {
-            document.getElementById('missoes-lista').innerHTML = '<p style="text-align:center; color:gray;">Nenhuma missão ativa.</p>';
-        }
-
-        // Ranking com Modal
+        // Ranking
         if (currentData.ranking && currentData.ranking.length > 0) {
+            // Atualiza lista de ranking simples
             document.getElementById('ranking-list').innerHTML = currentData.ranking.map((r, i) => `
-                <li class="list-item" onclick="openModal('${r.nome}', '${r.recompensa}')">
-                    <div style="width:30px; font-weight:800; color:var(--pet-purple); font-size:16px;">${i+1}º</div>
-                    <div style="flex:1; margin-left:10px;"><b>${r.nome}</b><br><small>${r.badge || 'Aluna'}</small></div>
-                    <div style="font-weight:800; color:var(--pet-indigo);">${r.xp} XP</div>
+                <li class="list-item" style="justify-content:space-between; padding: 16px;">
+                    <div style="display:flex; width: 100%; align-items:center;">
+                        <div style="width:30px; font-weight:800; color:var(--pet-purple); font-size:16px;">${i+1}º</div>
+                        <div style="flex:1; margin-left:10px;"><b>${r.nome}</b><br><small>${r.badge || 'Aluna'}</small></div>
+                        <div style="font-weight:800; color:var(--pet-indigo); margin-right: 15px;">${r.xp} XP</div>
+                    </div>
                 </li>
             `).join('');
         }
+    
+    function toggleReward(btn) {
+        // Função mantida caso seja usada em outro lugar, embora não mais usada no ranking
+    }
 
         // Extrato
         if (currentData.historico && currentData.historico.length > 0) {
@@ -1211,16 +1349,6 @@ function parseNestedCSV(str) {
         }
 
         if (!localStorage.getItem("watchedProPet_2026")) showVideoGate();
-    }
-
-    function openModal(nome, recompensa) {
-        document.getElementById('modal-title').innerText = "Premiação de Ranking";
-        document.getElementById('modal-text').innerText = recompensa;
-        document.getElementById('reward-modal').style.display = 'flex';
-    }
-
-    function closeModal() { 
-        document.getElementById('reward-modal').style.display = 'none'; 
     }
 
     function animarJornada() {
@@ -1291,6 +1419,43 @@ function parseNestedCSV(str) {
         }
     }
 
+    function abrirModalRecompensas() {
+        const modalBody = document.getElementById('modal-recompensas-conteudo');
+        modalBody.innerHTML = `
+            ${recompensa1}
+            ${recompensa2}
+            ${recompensa3}
+        `;
+        document.getElementById('modal-recompensas').style.display = 'flex';
+        criarConfetes();
+    }
+
+    function criarConfetes() {
+        const modal = document.querySelector('.modal-content');
+        const cores = ['#6366f1', '#f8a5c2', '#FFD700', '#059669', '#ffffff'];
+        
+        for (let i = 0; i < 30; i++) {
+            const confetti = document.createElement('div');
+            confetti.className = 'confetti-piece';
+            confetti.style.left = Math.random() * 100 + '%';
+            confetti.style.backgroundColor = cores[Math.floor(Math.random() * cores.length)];
+            confetti.style.width = Math.random() * 10 + 5 + 'px';
+            confetti.style.height = confetti.style.width;
+            confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+            confetti.style.animation = `confettiFall ${Math.random() * 2 + 1}s ease-out forwards`;
+            confetti.style.animationDelay = Math.random() * 0.5 + 's';
+            
+            modal.appendChild(confetti);
+            
+            // Remove o confete após a animação
+            setTimeout(() => confetti.remove(), 3000);
+        }
+    }
+
+    function fecharModalRecompensas() {
+        document.getElementById('modal-recompensas').style.display = 'none';
+    }
+
 async function toggleNotificacoes() {
     const btn = document.getElementById('btn-toggle-notif');
     const loader = document.getElementById('loader'); // Pega o elemento do spinner
@@ -1334,8 +1499,52 @@ async function toggleNotificacoes() {
     }
 }
 
+    // Função para alternar entre as abas
+    function switchTab(tabId, el) {
+        // Esconde todos os conteúdos das abas
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.style.display = 'none';
+            content.setAttribute('aria-hidden', 'true');
+        });
+
+        // Desativa todos os botões das abas
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+            btn.setAttribute('aria-selected', 'false');
+            btn.removeAttribute('tabindex'); // Remover tabindex para botões inativos
+        });
+
+        // Mostra o conteúdo da aba selecionada
+        const selectedTabContent = document.getElementById(tabId);
+        if (selectedTabContent) {
+            selectedTabContent.style.display = 'block';
+            selectedTabContent.setAttribute('aria-hidden', 'false');
+        }
+
+        // Ativa o botão da aba clicada
+        if (el) {
+            el.classList.add('active');
+            el.setAttribute('aria-selected', 'true');
+            el.setAttribute('tabindex', '0'); // Adicionar tabindex para o botão ativo
+        }
+
+        // Executa funções específicas da aba, se existirem
+        if (tabId === 'tab-jornada') {
+            animarJornada();
+        } else if (tabId === 'tab-extrato') {
+            if (currentData && currentData.historico) {
+                renderChart();
+            }
+        }
+    }
+
+
     document.getElementById('cpf-input').addEventListener('keypress', (e) => { 
         if(e.key === 'Enter') verificarCPF(); 
+    });
+
+    // Define a aba inicial ao carregar o dashboard
+    document.addEventListener('DOMContentLoaded', () => {
     });
 
 </script>
