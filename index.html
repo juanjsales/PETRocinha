@@ -1669,14 +1669,19 @@ async function toggleNotificacoes() {
 
     document.addEventListener('DOMContentLoaded', () => {
         const params = new URLSearchParams(window.location.search);
+        // Tenta pegar o email da URL
         const email = params.get('email');
         const cpf = params.get('cpf');
 
         if (email) {
+            console.log("Email encontrado na URL:", email);
             verificarPorEmail(email);
         } else if (cpf) {
+            console.log("CPF encontrado na URL:", cpf);
             document.getElementById('cpf-input').value = cpf;
             verificarCPF();
+        } else {
+            console.log("Nenhum parâmetro de identificação encontrado na URL.");
         }
     });
 
