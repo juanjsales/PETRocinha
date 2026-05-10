@@ -353,11 +353,13 @@ function abrirModalRecompensas() {
     `;
     document.getElementById('modal-recompensas').style.display = 'flex';
     // Biblioteca confetti carregada via CDN
-    confetti({
-        particleCount: 150,
-        spread: 70,
-        origin: { y: 0.6 }
-    });
+    if (typeof confetti === 'function') {
+        confetti({
+            particleCount: 150,
+            spread: 70,
+            origin: { y: 0.6 }
+        });
+    }
 }
 
 function fecharModalRecompensas() {
@@ -607,7 +609,7 @@ async function sendQuizLogToBackend(isCorrect) {
         return;
     }
 
-    const nome = currentData.nome.split(' ')[0];
+    const nome = currentData.nome ? currentData.nome.split(' ')[0] : "Aluna";
     const cpf = currentData.cpf;
     const acao = isCorrect ? "acerto" : "erro";
     const pontos = isCorrect ? 1 : 0;
