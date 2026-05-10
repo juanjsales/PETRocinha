@@ -32,7 +32,7 @@
     width: 55px;
     height: 55px;
     object-fit: cover;
-    border-radius: 50%; /* Essencial para o efeito circular */
+   
     position: relative;
     
     /* 1. Efeito de Aura Neon Dinâmica */
@@ -48,29 +48,43 @@
     cursor: pointer;
 }
 
-/* 3. O "Pulo do Gato": Brilho de Varredura Specular ao passar o mouse */
+.badge-img {
+    width: 55px;
+    height: 55px;
+    object-fit: cover;
+    transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    cursor: pointer;
+    position: relative;
+    filter: grayscale(0.2); /* Fica levemente opaca quando parada */
+}
+
 .badge-img:hover {
-    transform: scale(1.2) rotate(10deg);
-    filter: brightness(1.2) drop-shadow(0 0 15px #f8a5c2);
+    /* 1. Efeito de Escala e Rotação (Parece um selo sendo aplicado) */
+    transform: scale(1.3) rotate(-12deg);
+    
+    /* 2. Cores Batom/Esmalte: Ativa a saturação e brilho */
+    filter: grayscale(0) brightness(1.2) contrast(1.1);
+    
+    /* 3. Borda Glossy: Simula o brilho de uma unha recém-pintada */
+    
+
+              
+    /* 4. O Flash de Luz: Cria um reflexo rápido que atravessa a medalha */
+    animation: glint 0.6s ease-in-out;
 }
 
-/* Animação de Flutuação (Efeito de Item Místico) */
-@keyframes floating {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-8px); }
+/* Animação que simula o brilho batendo no esmalte */
+@keyframes glint {
+    0% {
+        filter: brightness(1.2) contrast(1.1);
+    }
+    50% {
+        filter: brightness(1.8) contrast(1.3); /* O "estalo" de brilho */
+    }
+    100% {
+        filter: brightness(1.2) contrast(1.1);
+    }
 }
-
-/* Animação Aurora (Muda a cor do brilho suavemente) */
-@keyframes aurora {
-    0% { filter: drop-shadow(0 0 8px #6366f1); }
-    33% { filter: drop-shadow(0 0 12px #f8a5c2); }
-    66% { filter: drop-shadow(0 0 8px #ff00ff); }
-    100% { filter: drop-shadow(0 0 8px #6366f1); }
-}
-
-/* Efeito de Brilho Estelar (Sparkle) extra via Overlay */
-/* Se você puder colocar a img dentro de uma div, o efeito fica 10x melhor, 
-   mas como você pediu só o CSS da img, apliquei filtros de brilho avançados. */
 
         :root {
             --pet-purple: #6366f1;
@@ -123,7 +137,7 @@
             line-height: 1.2; 
         }
         
-        p { 
+p { 
             line-height: 1.5; 
         }
         
@@ -133,12 +147,12 @@
             outline: none; 
         }
         
-        a { 
+a { 
             text-decoration: none; 
             transition: var(--transition); 
         }
         
-        a:hover { 
+a:hover { 
             opacity: 0.8; 
         }
 
@@ -369,7 +383,7 @@
             border-radius: 10px;
         }
 
-        /* ── JORNADA ── */
+/* ── JORNADA ── */
         .horiz-container { 
             overflow-x: auto; 
             padding: 10px 0; 
@@ -974,9 +988,6 @@
             </div>
 
             <div id="dash-content" style="display: none;">
-                <div style="background: #f5f3ff; padding: 15px; border-radius: 16px; margin-bottom: 24px; border-left: 4px solid var(--pet-purple);">
-                    <p id="motivational-quote" style="margin: 0; font-size: 14px; font-weight: 600; color: var(--pet-purple); font-style: italic;"></p>
-                </div>
 
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
                     <div style="display: flex; align-items: center;">
@@ -991,11 +1002,19 @@
                         <img src="" class="badge-img" alt="Badge imagem" loading="lazy">
                 </div>
 
+
+                <!-- Dica da IA -->
+                <div id="dica-ia-container" style="margin-top: 15px; position: relative; background: #fff7ed; border: 1px solid #fb923c; border-radius: 12px; padding: 15px; display: none;">
+                    <div style="position: absolute; top: -10px; left: 20px; font-size: 20px;">💡</div>
+                    <p id="dica-ia-texto" style="margin: 0; font-size: 13px; color: #9a3412; font-weight: 600; line-height: 1.4;"></p>
+                </div>
+
                 <nav class="tabs" role="tablist">
                     <button id="tab-btn-saldo" class="tab-btn active" onclick="switchTab('tab-saldo', this)" role="tab" aria-controls="tab-saldo" aria-selected="true" aria-label="Aba de Saldo">💰 Saldo</button>
                     <button class="tab-btn" onclick="switchTab('tab-jornada', this)" role="tab" aria-controls="tab-jornada" aria-selected="false" aria-label="Aba de Jornada 3A">🚀 Jornada 3A</button>
 
                     <button class="tab-btn" onclick="switchTab('tab-ranking', this)" role="tab" aria-controls="tab-ranking" aria-selected="false" aria-label="Aba de Ranking">🏆 Ranking</button>
+                    <button class="tab-btn" onclick="switchTab('tab-quiz', this)" role="tab" aria-controls="tab-quiz" aria-selected="false" aria-label="Aba de Quiz">🧠 Quiz</button>
                     <button class="tab-btn" onclick="switchTab('tab-manual', this)" role="tab" aria-controls="tab-manual" aria-selected="false" aria-label="Aba de Manual">📖 Manual</button>
                     <button class="tab-btn" onclick="switchTab('tab-extrato', this)" role="tab" aria-controls="tab-extrato" aria-selected="false" aria-label="Aba de Extrato">📜 Extrato</button>
                 </nav>
@@ -1077,6 +1096,17 @@
                     <p style="text-align: center; font-size: 12px; color: var(--pet-text-sub); font-weight: 600;">Arraste para o lado para ver o seu futuro ➡</p>
                 </div>
 
+                <div id="tab-quiz" class="tab-content" style="display: none;">
+                    <div class="info-box" id="quiz-container" style="position: relative;">
+                        <div id="loader-quiz" style="display: none; position: absolute; inset: 0; background: rgba(255,255,255,0.9); z-index: 100; border-radius: var(--radius-md); display: none; align-items: center; justify-content: center; backdrop-filter: blur(2px);">
+                            <div class="spinner" style="width: 30px; height: 30px; border-width: 4px;"></div>
+                        </div>
+                        <div id="quiz-content">
+                            <!-- Conteúdo do quiz será injetado aqui pelo JS -->
+                        </div>
+                    </div>
+                </div>
+
 
 
 
@@ -1135,41 +1165,20 @@
 </main>
 
 <script>
-const recompensa1 = `
-    <div class="reward-container gold">
-        <h3 class="reward-title">🥇 A Grande Embaixadora</h3>
-        <ul class="reward-list">
-            <li><strong>💰 Investimento Semente:</strong> R$ [Valor] para equipamentos ou MEI com mentoria estratégica.</li>
-            <li><strong>🏆 Ranking de Elite:</strong> Posição #1 vitalícia na Vitrine de Talentos e recomendação prioritária.</li>
-            <li><strong>🚀 Aceleração:</strong> 50% de Desconto na Mentoria "Tata Educação Pro".</li>
-            <li><strong>✨ Selo de Autoridade:</strong> Badge "Vencedora Ouro" + Placa Física "Mulher que Arrasa".</li>
-            <li><strong>🎁 Kit Master:</strong> Tesouras profissionais, avental personalizado e produtos premium.</li>
-        </ul>
-    </div>`;
+    const DADOS_QUIZ_LOCAL = [
+        { pergunta: "Qual é o principal objetivo da jornada de uma Embaixadora?", opcoes: ["Ficar famosa", "Gerar renda própria", "Apenas passear com pets"], respostaCorreta: "Gerar renda própria" },
+        { pergunta: "Qual é a importância da Comunidade Profissão Pet?", opcoes: ["Para fofocar", "Para aprender e trocar experiências", "Para ver fotos de pets"], respostaCorreta: "Para aprender e trocar experiências" }
+    ];
+    
+    const DICAS_IA_LOCAL = {
+      "Aprendiz Curiosa": "Dica: Revise os conceitos básicos de comportamento animal para otimizar os atendimentos.",
+      "Mulher de Propósito": "Dica: Mapeie seus diferenciais competitivos e estruture sua oferta de serviços.",
+      "Fera da Técnica": "Dica: Aumente a eficiência dos procedimentos técnicos para reduzir o tempo de execução.",
+      "Profissional que Arrasa": "Dica: Organize sua agenda e mantenha controle rigoroso de entradas e saídas financeiras.",
+      "Embaixadora Pet Rocinha": "Dica: Utilize métricas de desempenho para gerenciar o crescimento da sua rede de atendimentos."
+    };
 
-const recompensa2 = `
-    <div class="reward-container silver">
-        <h3 class="reward-title">🥈 Profissional de Destaque</h3>
-        <ul class="reward-list">
-            <li><strong>💰 Investimento Semente:</strong> R$ [Valor] para ferramentas com acompanhamento.</li>
-            <li><strong>📍 Destaque no Banco:</strong> Selo de "Recomendação Prioritária" para parcerias.</li>
-            <li><strong>🚀 Aceleração:</strong> 30% de Desconto na Mentoria "Tata Educação Pro".</li>
-            <li><strong>✨ Selo de Autoridade:</strong> Badge "Vencedora Prata" + Selo Digital para Redes Sociais.</li>
-            <li><strong>🎁 Kit Intermediário:</strong> Soprador profissional e guia de contenção.</li>
-        </ul>
-    </div>`;
-
-const recompensa3 = `
-    <div class="reward-container bronze">
-        <h3 class="reward-title">🥉 Talento Revelação</h3>
-        <ul class="reward-list">
-            <li><strong>💰 Investimento Semente:</strong> R$ [Valor] para infraestrutura de atendimento domiciliar.</li>
-            <li><strong>📱 Visibilidade:</strong> Perfil em destaque na seção de Talentos Locais.</li>
-            <li><strong>🚀 Aceleração:</strong> 20% de Desconto na Mentoria "Tata Educação Pro".</li>
-            <li><strong>✨ Selo de Autoridade:</strong> Badge "Vencedora Bronze" + Certificado Impresso.</li>
-            <li><strong>🎁 Brindes:</strong> Kit de acessórios e maleta para Home Care.</li>
-        </ul>
-    </div>`;
+    let quizData = null;
     let currentData = null;
     let chartInstance = null;
     
@@ -1183,32 +1192,31 @@ const recompensa3 = `
         { id: "Profissional que Arrasa 💼", nome: "4. Profissional que Arrasa 💼", stage: "agir", icon: "💼", img: "https://github.com/juanjsales/PETRocinha/blob/main/Prof.webp?raw=true", desc: "Atendimento e renda." },
         { id: "Embaixadora Pet Rocinha 👑", nome: "5. Embaixadora Pet Rocinha 👑", stage: "agir", icon: "👑", img: "https://github.com/juanjsales/PETRocinha/blob/main/Embaixadora.webp?raw=true", desc: "Referência na comunidade." }
     ];
-// Adicione esta função no início do seu <script> no HTML
-function parseNestedCSV(str) {
-    if (!str) return [];
-    let result = [];
-    let current = '';
-    let inQuotes = false;
-    for (let i = 0; i < str.length; i++) {
-        let char = str[i];
-        if (char === '"') {
-            inQuotes = !inQuotes;
-        } else if (char === ',' && !inQuotes) {
-            result.push(current.trim());
-            current = '';
-        } else {
-            current += char;
+
+    function parseNestedCSV(str) {
+        if (!str) return [];
+        let result = [];
+        let current = '';
+        let inQuotes = false;
+        for (let i = 0; i < str.length; i++) {
+            let char = str[i];
+            if (char === '"') {
+                inQuotes = !inQuotes;
+            } else if (char === ',' && !inQuotes) {
+                result.push(current.trim());
+                current = '';
+            } else {
+                current += char;
+            }
         }
+        result.push(current.trim());
+        return result;
     }
-    result.push(current.trim());
-    return result;
-}
-    // Tratamento de CPF na digitação (Arranca tudo que não for número)
+    
     function tratarCPFFrontEnd(cpf) {
         return cpf.replace(/\D/g, "");
     }
 
-    // Máscara visual de CPF
     function aplicarMascaraCPF(input) {
         let value = input.value.replace(/\D/g, "");
         if (value.length > 11) value = value.slice(0, 11);
@@ -1255,41 +1263,39 @@ function parseNestedCSV(str) {
             const rawData = await response.json();
             console.log("Dados brutos do Apps Script:", rawData);
 
-            // Função auxiliar para parsear CSV dentro de campos JSON
             const parseNestedCSV = (csvStr) => {
                 if (!csvStr || typeof csvStr !== 'string') return [];
-                return csvStr.split(/,(?=(?:(?:[^\"]*\"){2})*[^\"]*$)/).map(s => s.replace(/\"/g, "").trim());
+                return csvStr.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(s => s.replace(/"/g, "").trim());
             };
 
             if (rawData.encontrado) {
-         
+          
                 const linhaParts = parseNestedCSV(rawData.nome); 
                 
                 currentData = {
                     encontrado: true,
-                    nome: linhaParts[1] || "Aluna", // Coluna B
-                    foto: linhaParts[3] || "", // Coluna D
-                    arrasas: parseInt(linhaParts[10]) || 0, // Coluna K (Índice 10)
-                    badge: linhaParts[11] || "Aprendiz Curiosa", // Coluna L (Índice 11)
+                    nome: linhaParts[1] || "Aluna",
+                    foto: linhaParts[3] || "",
+                    arrasas: parseInt(linhaParts[10]) || 0,
+                    xp_total: parseInt(linhaParts[13]) || 0,
+                    badge: linhaParts[11] || "Aprendiz Curiosa",
                     proximoEvento: rawData.proximoEvento || "Consulte a Circle",
 
                     ranking: (rawData.ranking || []).map(r => {
-                        // r.nome no seu script é String(dataRank[r]) -> linha inteira
                         const rParts = parseNestedCSV(r.linhaRaw);
                         return {
-                            nome: rParts[0] || "Aluna", // Nome do Ranking
+                            nome: rParts[0] || "Aluna", 
                             badge: rParts[1] || " ",
                             xp: parseInt(rParts[2]) || 0,
                             recompensa: rParts[3] || ""
                         };
                     }),
                     historico: (rawData.historico || []).map(h => {
-                        // h.acao no seu script é String(linhaLog) -> linha inteira
                         const hParts = parseNestedCSV(h.acao);
                         return {
-                            data: h.data || "--/--", // Já vem formatado pelo script (dd/MM)
-                            acao: hParts[9] || hParts[3] || "Atividade", // Coluna J ou D do Log
-                            pontos: parseInt(hParts[8]) || 0 // Coluna I do Log
+                            data: h.data || "--/--", 
+                            acao: hParts[9] || hParts[3] || "Atividade", 
+                            pontos: parseInt(hParts[8]) || 0 
                         };
                     }),
                     cpf: currentCPF
@@ -1315,33 +1321,53 @@ function parseNestedCSV(str) {
         document.getElementById('dash-content').style.display = 'block';
         
         const nomeCurto = currentData.nome.split(' ')[0];
-        document.getElementById('user-nome').innerText = currentData.nome;
-        document.getElementById('user-img').src = currentData.foto || "https://via.placeholder.com/100?text=PET";
-        document.getElementById('user-arrasas').innerText = currentData.arrasas;
+        const userNomeElem = document.getElementById('user-nome');
+        if (userNomeElem) userNomeElem.innerText = currentData.nome;
+        const userImgElem = document.getElementById('user-img');
+        if (userImgElem) userImgElem.src = currentData.foto || "https://via.placeholder.com/100?text=PET";
+        const userArrasasElem = document.getElementById('user-arrasas');
+        if (userArrasasElem) userArrasasElem.innerText = currentData.arrasas;
         
         const badgeDisplay = document.getElementById('user-badge-display');
         const badgeImg = document.querySelector('.badge-img');
         const badgeData = configMapa.find(c => c.id === currentData.badge) || configMapa[0];
-                    badgeDisplay.querySelector('.badge-text').innerText = badgeData.id;
-                    badgeImg.src = badgeData.img;
-                    badgeImg.alt = badgeData.id;
-                    
-                    document.getElementById('proximo-evento-txt').innerText = currentData.proximoEvento;
+// quizData = currentData.quiz; // Removido, pois quizData será preenchido por renderQuiz
+
+        // Render Dica IA - AGORA USA DICAS_IA_LOCAL
+        const dicaTexto = document.getElementById('dica-ia-texto');
+        const dicaContainer = document.getElementById('dica-ia-container');
+        const dicaIA = DICAS_IA_LOCAL[currentData.badge] || "Dica: Mantenha a constância e o foco técnico.";
         
-        const frases = [
-            `${nomeCurto}, a Rocinha brilha com você!`,
-            `O mercado pet espera seu talento, ${nomeCurto}!`,
-            `Sua independência financeira está mais perto, ${nomeCurto}!`
-        ];
-        document.getElementById('motivational-quote').innerText = frases[Math.floor(Math.random()*frases.length)];
+        if (dicaTexto) dicaTexto.innerText = dicaIA;
+        if (dicaContainer) dicaContainer.style.display = 'block';
+
+        if (badgeDisplay) {
+            const bText = badgeDisplay.querySelector('.badge-text');
+            if (bText) bText.innerText = badgeData.id;
+        }
+        if (badgeImg) {
+            badgeImg.src = badgeData.img;
+            badgeImg.alt = badgeData.id;
+        }
+        
+        const pEvento = document.getElementById('proximo-evento-txt');
+        if (pEvento) pEvento.innerText = currentData.proximoEvento;
+        
 
         // Progresso
         const percent = Math.min(100, currentData.arrasas);
-        document.getElementById('meta-txt').innerText = percent;
-        document.querySelector('.progress-bar').setAttribute('aria-valuenow', percent);
-        setTimeout(() => document.getElementById('bar-fill').style.width = percent + '%', 100);
+        const metaTxt = document.getElementById('meta-txt');
+        if (metaTxt) metaTxt.innerText = percent;
         
-        if (currentData.arrasas >= 100) document.getElementById('btn-resgate').style.display = 'flex';
+        const progBar = document.querySelector('.progress-bar');
+        if (progBar) progBar.setAttribute('aria-valuenow', percent);
+        
+        const barFill = document.getElementById('bar-fill');
+        if (barFill) setTimeout(() => barFill.style.width = percent + '%', 100);
+        
+
+        const btnResgate = document.getElementById('btn-resgate');
+        if (currentData.arrasas >= 100 && btnResgate) btnResgate.style.display = 'flex';
 
         // Jornada 3A
         window.currentLevelIndex = configMapa.findIndex(l => l.id === currentData.badge);
@@ -1349,19 +1375,23 @@ function parseNestedCSV(str) {
         
         const currentStage = configMapa[window.currentLevelIndex].stage;
         document.querySelectorAll('.stage-card').forEach(c => c.classList.remove('active'));
-        if (currentStage) document.getElementById('card-' + currentStage).classList.add('active');
+        const stageCardElem = document.getElementById('card-' + currentStage);
+        if (stageCardElem) stageCardElem.classList.add('active');
 
-        document.getElementById('jornada-lista').innerHTML = configMapa.map((step, i) => `
-            <div class="step-item ${i <= window.currentLevelIndex ? 'unlocked' : ''}">
-                <div class="step-circle">${i <= window.currentLevelIndex ? step.icon : '🔒'}</div>
-                <div class="step-label"><b>${step.nome}</b><br><span style="font-size:9px">${step.desc}</span></div>
-            </div>
-        `).join('');
+        const jornadaLista = document.getElementById('jornada-lista');
+        if (jornadaLista) {
+            jornadaLista.innerHTML = configMapa.map((step, i) => `
+                <div class="step-item ${i <= window.currentLevelIndex ? 'unlocked' : ''}">
+                    <div class="step-circle">${i <= window.currentLevelIndex ? step.icon : '🔒'}</div>
+                    <div class="step-label"><b>${step.nome}</b><br><span style="font-size:9px">${step.desc}</span></div>
+                </div>
+            `).join('');
+        }
 
         // Ranking
-        if (currentData.ranking && currentData.ranking.length > 0) {
-            // Atualiza lista de ranking simples
-            document.getElementById('ranking-list').innerHTML = currentData.ranking.map((r, i) => `
+        const rankingList = document.getElementById('ranking-list');
+        if (currentData.ranking && currentData.ranking.length > 0 && rankingList) {
+            rankingList.innerHTML = currentData.ranking.map((r, i) => `
                 <li class="list-item" style="justify-content:space-between; padding: 16px;">
                     <div style="display:flex; width: 100%; align-items:center;">
                         <div style="width:30px; font-weight:800; color:var(--pet-purple); font-size:16px;">${i+1}º</div>
@@ -1377,8 +1407,9 @@ function parseNestedCSV(str) {
     }
 
         // Extrato
-        if (currentData.historico && currentData.historico.length > 0) {
-            document.getElementById('extrato-lista').innerHTML = currentData.historico.map(h => `
+        const eLista = document.getElementById('extrato-lista');
+        if (currentData.historico && currentData.historico.length > 0 && eLista) {
+            eLista.innerHTML = currentData.historico.map(h => `
                 <li class="list-item" style="justify-content:space-between; padding:12px; cursor: default;">
                     <div><small style="color:var(--pet-purple); font-weight:700;">${h.data}</small><br><b style="font-size:13px;">${h.acao}</b></div>
                     <div style="font-weight:800; color:${h.pontos >= 0 ? 'var(--pet-green)' : '#ef4444'};">${h.pontos >= 0 ? '+' : ''}${h.pontos}</div>
@@ -1401,7 +1432,6 @@ function parseNestedCSV(str) {
         if (chartInstance) chartInstance.destroy();
         
         let sum = 0;
-        // O histórico já vem na ordem cronológica (antigo para novo) do Apps Script
         const points = currentData.historico.map(h => { 
             sum += h.pontos; 
             return Math.max(0, sum); 
@@ -1485,7 +1515,6 @@ function parseNestedCSV(str) {
             
             modal.appendChild(confetti);
             
-            // Remove o confete após a animação
             setTimeout(() => confetti.remove(), 3000);
         }
     }
@@ -1496,11 +1525,11 @@ function parseNestedCSV(str) {
 
 async function toggleNotificacoes() {
     const btn = document.getElementById('btn-toggle-notif');
-    const loader = document.getElementById('loader'); // Pega o elemento do spinner
+    const loader = document.getElementById('loader'); 
     const isAtivo = btn.innerText === 'ATIVADAS';
     
-    // Extrai o CPF da string CSV enviada pelo Apps Script
-    const userCpf = parseNestedCSV(currentData.nome); 
+    // Removido o parseamento incorreto de CPF via nome, agora utiliza currentData.cpf já carregado
+    const userCpf = currentData.cpf; 
 
     let novoStatus = isAtivo ? 'Não' : 'Sim';
     
@@ -1510,14 +1539,11 @@ async function toggleNotificacoes() {
         }
     }
 
-    // --- 1. LIGA O SPINNER ---
     loader.style.display = 'flex';
 
     try {
-        // Chamada ao Apps Script enviando a ação de atualização
         const response = await fetch(`${urlApp}?action=updateNotif&cpf=${userCpf}&status=${novoStatus}`);
         
-        // --- 2. ATUALIZA A INTERFACE ---
         if (novoStatus === 'Não') {
             btn.innerText = 'DESATIVADAS';
             btn.style.background = '#94a3b8';
@@ -1532,47 +1558,42 @@ async function toggleNotificacoes() {
         console.error("Erro ao atualizar notificações:", error);
         alert("Erro ao conectar ao servidor.");
     } finally {
-        // --- 3. DESLIGA O SPINNER (Sempre executa, dando certo ou errado) ---
         loader.style.display = 'none';
     }
 }
 
-    // Função para alternar entre as abas
     function switchTab(tabId, el) {
-        // Esconde todos os conteúdos das abas
         document.querySelectorAll('.tab-content').forEach(content => {
             content.style.display = 'none';
             content.setAttribute('aria-hidden', 'true');
         });
 
-        // Desativa todos os botões das abas
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.classList.remove('active');
             btn.setAttribute('aria-selected', 'false');
-            btn.removeAttribute('tabindex'); // Remover tabindex para botões inativos
+            btn.removeAttribute('tabindex'); 
         });
 
-        // Mostra o conteúdo da aba selecionada
         const selectedTabContent = document.getElementById(tabId);
         if (selectedTabContent) {
             selectedTabContent.style.display = 'block';
             selectedTabContent.setAttribute('aria-hidden', 'false');
         }
 
-        // Ativa o botão da aba clicada
         if (el) {
             el.classList.add('active');
             el.setAttribute('aria-selected', 'true');
-            el.setAttribute('tabindex', '0'); // Adicionar tabindex para o botão ativo
+            el.setAttribute('tabindex', '0'); 
         }
 
-        // Executa funções específicas da aba, se existirem
         if (tabId === 'tab-jornada') {
             animarJornada();
         } else if (tabId === 'tab-extrato') {
             if (currentData && currentData.historico) {
                 renderChart();
             }
+        } else if (tabId === 'tab-quiz') {
+            renderQuiz();
         }
     }
 
@@ -1581,10 +1602,246 @@ async function toggleNotificacoes() {
         if(e.key === 'Enter') verificarCPF(); 
     });
 
-    // Define a aba inicial ao carregar o dashboard
+    async function verificarPorEmail(email) {
+        const btnEntrar = document.getElementById('btn-entrar');
+        const loader = document.getElementById('loader');
+        
+        btnEntrar.disabled = true;
+        btnEntrar.innerText = "Processando...";
+        loader.style.display = 'flex';
+        
+        try {
+            const response = await fetch(`${urlApp}?email=${encodeURIComponent(email)}`);
+            if (!response.ok) throw new Error('Servidor indisponível.');
+            
+            const rawData = await response.json();
+            
+            const parseNestedCSV = (csvStr) => {
+                if (!csvStr || typeof csvStr !== 'string') return [];
+                return csvStr.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(s => s.replace(/"/g, "").trim());
+            };
+
+            if (rawData.encontrado) {
+                const linhaParts = parseNestedCSV(rawData.nome); 
+                
+                currentData = {
+                    encontrado: true,
+                    nome: linhaParts[1] || "Aluna",
+                    foto: linhaParts[3] || "",
+                    arrasas: parseInt(linhaParts[10]) || 0,
+                    xp_total: parseInt(linhaParts[13]) || 0,
+                    badge: linhaParts[11] || "Aprendiz Curiosa",
+                    proximoEvento: rawData.proximoEvento || "Consulte a Circle",
+                    ranking: (rawData.ranking || []).map(r => {
+                        const rParts = parseNestedCSV(r.linhaRaw);
+                        return {
+                            nome: rParts[0] || "Aluna", 
+                            badge: rParts[1] || " ",
+                            xp: parseInt(rParts[2]) || 0,
+                            recompensa: rParts[3] || ""
+                        };
+                    }),
+                    historico: (rawData.historico || []).map(h => {
+                        const hParts = parseNestedCSV(h.acao);
+                        return {
+                            data: h.data || "--/--", 
+                            acao: hParts[9] || hParts[3] || "Atividade", 
+                            pontos: parseInt(hParts[8]) || 0 
+                        };
+                    }),
+                    cpf: rawData.cpf // Assumindo que o backend retorne o CPF encontrado pelo e-mail
+                };
+
+                renderDashboard();
+            } else {
+                alert("Aluna não cadastrada no sistema via e-mail.");
+            }
+        } catch (error) {
+            console.error("Erro no processamento:", error);
+            alert("Erro ao carregar seus dados pelo e-mail.");
+        } finally {
+            loader.style.display = 'none';
+            btnEntrar.disabled = false;
+            btnEntrar.innerText = "Entrar e Arrasar";
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
+        const params = new URLSearchParams(window.location.search);
+        const email = params.get('email');
+        const cpf = params.get('cpf');
+
+        if (email) {
+            verificarPorEmail(email);
+        } else if (cpf) {
+            document.getElementById('cpf-input').value = cpf;
+            verificarCPF();
+        }
     });
 
+function renderQuiz() {
+    const quizContent = document.getElementById('quiz-content');
+
+    quizContent.innerHTML = `
+        <h4 style="color: var(--pet-purple);">🧠 Quiz Diário da Embaixadora</h4>
+        <div id="quiz-question-area">
+            <p id="pergunta-txt" style="font-size: 16px; font-weight: 700; margin-bottom: 15px;"></p>
+            <div id="opcoes-quiz" style="display: flex; flex-direction: column; gap: 10px;"></div>
+        </div>
+        <div id="quiz-result" style="margin-top: 20px; font-weight: 700; text-align: center; display: none;"></div>
+        <button id="quiz-next-btn" class="btn-glow" style="display: none; margin-top: 20px;">Próxima Pergunta</button>
+    `;
+
+    const currentPerguntaTxt = document.getElementById('pergunta-txt');
+    const currentOpcoesQuiz = document.getElementById('opcoes-quiz');
+    const quizResult = document.getElementById('quiz-result');
+    const quizNextBtn = document.getElementById('quiz-next-btn');
+
+    if (DADOS_QUIZ_LOCAL.length === 0) {
+        currentPerguntaTxt.innerText = "Nenhuma pergunta de quiz disponível no momento.";
+        return;
+    }
+
+    const randomIndex = Math.floor(Math.random() * DADOS_QUIZ_LOCAL.length);
+    quizData = DADOS_QUIZ_LOCAL[randomIndex];
+
+    currentPerguntaTxt.innerText = quizData.pergunta;
+    currentOpcoesQuiz.innerHTML = '';
+    quizData.opcoes.forEach(opcao => {
+        const button = document.createElement('button');
+        button.className = 'btn-glow quiz-option-btn';
+        button.style.background = '#f1f5f9';
+        button.style.color = 'var(--pet-text-main)';
+        button.style.boxShadow = 'none';
+        button.style.borderColor = '#e2e8f0';
+        button.style.border = '1px solid';
+        button.innerText = opcao;
+        button.onclick = () => checkQuizAnswer(opcao, currentOpcoesQuiz, quizResult, quizNextBtn);
+        currentOpcoesQuiz.appendChild(button);
+    });
+
+    quizNextBtn.onclick = () => renderQuiz();
+}
+
+async function checkQuizAnswer(selectedOption, opcoesQuizElement, quizResultElement, quizNextBtnElement) {
+    const loaderQuiz = document.getElementById('loader-quiz');
+    Array.from(opcoesQuizElement.children).forEach(btn => {
+        btn.disabled = true;
+        btn.style.opacity = '0.7';
+    });
+
+    loaderQuiz.style.display = 'flex';
+
+    if (selectedOption === quizData.respostaCorreta) {
+        await sendQuizLogToBackend(true);
+        quizResultElement.style.color = 'var(--pet-green)';
+        quizResultElement.innerText = "🎉 Resposta Correta! Você ganhou 1 Arrasa!";
+        quizResultElement.style.display = 'block';
+        
+        if (currentData) {
+            currentData.arrasas = (currentData.arrasas || 0) + 1;
+            document.getElementById('user-arrasas').innerText = currentData.arrasas;
+            
+            const percent = Math.min(100, currentData.arrasas);
+            document.getElementById('meta-txt').innerText = percent;
+            document.querySelector('.progress-bar').setAttribute('aria-valuenow', percent);
+            document.getElementById('bar-fill').style.width = percent + '%';
+            if (currentData.arrasas >= 100) document.getElementById('btn-resgate').style.display = 'flex';
+        }
+    } else {
+        await sendQuizLogToBackend(false);
+        quizResultElement.style.color = '#ef4444';
+        quizResultElement.innerText = `❌ Resposta Incorreta. A resposta certa era: "${quizData.respostaCorreta}"`;
+        quizResultElement.style.display = 'block';
+    }
+
+    loaderQuiz.style.display = 'none';
+
+    Array.from(opcoesQuizElement.children).forEach(btn => {
+        if (btn.innerText === quizData.respostaCorreta) {
+            btn.style.background = 'var(--pet-green)';
+            btn.style.color = 'white';
+        } else if (btn.innerText === selectedOption) {
+            btn.style.background = '#ef4444';
+            btn.style.color = 'white';
+        }
+    });
+    
+    quizNextBtnElement.style.display = 'block';
+}
+
+async function sendQuizLogToBackend(isCorrect) {
+    if (!currentData || !currentData.cpf) {
+        console.error("Dados do usuário não disponíveis para enviar o log do quiz.");
+        return;
+    }
+
+    const nome = currentData.nome.split(' ')[0];
+    const cpf = currentData.cpf;
+    const acao = isCorrect ? "acerto" : "erro";
+    const pontos = isCorrect ? 1 : 0;
+
+    try {
+        const response = await fetch(`${urlApp}?action=logAcertoQuiz&nome=${encodeURIComponent(nome)}&cpf=${cpf}&status=${acao}&pontos=${pontos}`);
+        const result = await response.json();
+        
+        if (result.erro) {
+            document.getElementById('quiz-result').innerText = result.erro;
+            document.getElementById('quiz-result').style.display = 'block';
+            document.getElementById('quiz-result').style.color = '#ef4444';
+            document.getElementById('opcoes-quiz').style.display = 'none';
+            document.getElementById('quiz-next-btn').style.display = 'none';
+            return;
+        }
+
+        if (!result.sucesso) {
+            console.error("Erro ao registrar log do quiz no backend:", result.erro);
+        } else {
+            console.log("Log do quiz registrado com sucesso:", result);
+            if (isCorrect) {
+                const updatedResponse = await fetch(`${urlApp}?cpf=${cpf}`);
+                const updatedRawData = await updatedResponse.json();
+                if (updatedRawData.encontrado) {
+                    const parseNestedCSV = (csvStr) => {
+                        if (!csvStr || typeof csvStr !== 'string') return [];
+                        return csvStr.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(s => s.replace(/"/g, "").trim());
+                    };
+                    const linhaParts = parseNestedCSV(updatedRawData.nome);
+                    currentData = {
+                        encontrado: true,
+                        nome: linhaParts[1] || "Aluna",
+                        foto: linhaParts[3] || "",
+                        arrasas: parseInt(linhaParts[10]) || 0,
+                        xp_total: parseInt(linhaParts[13]) || 0,
+                        badge: linhaParts[11] || "Aprendiz Curiosa",
+                        proximoEvento: updatedRawData.proximoEvento || "Consulte a Circle",
+                        ranking: (updatedRawData.ranking || []).map(r => {
+                            const rParts = parseNestedCSV(r.linhaRaw);
+                            return {
+                                nome: rParts[0] || "Aluna",
+                                badge: rParts[1] || " ",
+                                xp: parseInt(rParts[2]) || 0,
+                                recompensa: rParts[3] || ""
+                            };
+                        }),
+                        historico: (updatedRawData.historico || []).map(h => {
+                            const hParts = parseNestedCSV(h.acao);
+                            return {
+                                data: h.data || "--/--",
+                                acao: hParts[9] || hParts[3] || "Atividade",
+                                pontos: parseInt(hParts[8]) || 0
+                            };
+                        }),
+                        cpf: cpf
+                    };
+                    renderDashboard();
+                }
+            }
+        }
+    } catch (error) {
+        console.error("Erro na comunicação com o backend para registrar log do quiz:", error);
+    }
+}
 </script>
 </body>
 </html>
