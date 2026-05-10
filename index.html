@@ -1780,9 +1780,10 @@ async function sendQuizLogToBackend(isCorrect) {
     const cpf = currentData.cpf;
     const acao = isCorrect ? "acerto" : "erro";
     const pontos = isCorrect ? 1 : 0;
+    const email = new URLSearchParams(window.location.search).get('email') || "";
 
     try {
-        const response = await fetch(`${urlApp}?action=logAcertoQuiz&nome=${encodeURIComponent(nome)}&cpf=${cpf}&status=${acao}&pontos=${pontos}`);
+        const response = await fetch(`${urlApp}?action=logAcertoQuiz&nome=${encodeURIComponent(nome)}&cpf=${cpf}&email=${encodeURIComponent(email)}&status=${acao}&pontos=${pontos}`);
         const result = await response.json();
         
     if (result.erro) {
