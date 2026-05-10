@@ -1,3 +1,32 @@
+// Definições de recompensas (caso não venham da API)
+const recompensa1 = `
+    <div class="reward-container gold">
+        <div class="reward-title">🥇 Selo de Ouro - Arrasadora Elite</div>
+        <ul class="reward-list">
+            <li>Acesso a Masterclass de Negócios</li>
+            <li>Mentoria 1-1 com Especialista</li>
+        </ul>
+    </div>
+`;
+const recompensa2 = `
+    <div class="reward-container silver">
+        <div class="reward-title">🥈 Selo de Prata - Parceira Sênior</div>
+        <ul class="reward-list">
+            <li>Desconto em materiais de trabalho</li>
+            <li>Kit Exclusivo Profissão Pet</li>
+        </ul>
+    </div>
+`;
+const recompensa3 = `
+    <div class="reward-container bronze">
+        <div class="reward-title">🥉 Selo de Bronze - Iniciante Promissora</div>
+        <ul class="reward-list">
+            <li>Acesso ao grupo de suporte VIP</li>
+            <li>Certificado de Conclusão de Módulo</li>
+        </ul>
+    </div>
+`;
+
 const DADOS_QUIZ_LOCAL = [
     { pergunta: "Qual é o principal objetivo da jornada de uma Embaixadora?", opcoes: ["Ficar famosa", "Gerar renda própria", "Apenas passear com pets"], respostaCorreta: "Gerar renda própria" },
     { pergunta: "Qual é a importância da Comunidade Profissão Pet?", opcoes: ["Para fofocar", "Para aprender e trocar experiências", "Para ver fotos de pets"], respostaCorreta: "Para aprender e trocar experiências" }
@@ -94,7 +123,7 @@ async function verificarCPF() {
         if (!response.ok) throw new Error('Servidor indisponível.');
         
         const rawData = await response.json();
-        console.log("Dados brutos do Apps Script:", rawData);
+        // console.log("Dados brutos do Apps Script:", rawData);
 
         const parseNestedCSV = (csvStr) => {
             if (!csvStr || typeof csvStr !== 'string') return [];
@@ -135,7 +164,6 @@ async function verificarCPF() {
                 cpf: currentCPF
             };
 
-            console.log("Dados finais processados:", currentData);
             renderDashboard();
         } else {
             alert("Aluna não cadastrada no sistema.");
@@ -485,14 +513,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const cpf = params.get('cpf');
 
     if (email) {
-        console.log("Email encontrado na URL:", email);
+        // console.log("Email encontrado na URL:", email);
         verificarPorEmail(email);
     } else if (cpf) {
-        console.log("CPF encontrado na URL:", cpf);
+        // console.log("CPF encontrado na URL:", cpf);
         document.getElementById('cpf-input').value = cpf;
         verificarCPF();
     } else {
-        console.log("Nenhum parâmetro de identificação encontrado na URL.");
+        // console.log("Nenhum parâmetro de identificação encontrado na URL.");
     }
 });
 
