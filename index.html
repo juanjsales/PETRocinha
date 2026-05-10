@@ -1290,6 +1290,7 @@ a:hover {
                             recompensa: rParts[3] || ""
                         };
                     }),
+                    jaRespondeuQuiz: rawData.jaRespondeuQuiz || false,
                     historico: (rawData.historico || []).map(h => {
                         const hParts = parseNestedCSV(h.acao);
                         return {
@@ -1689,13 +1690,23 @@ function renderQuiz() {
             <div id="opcoes-quiz" style="display: flex; flex-direction: column; gap: 10px;"></div>
         </div>
         <div id="quiz-result" style="margin-top: 20px; font-weight: 700; text-align: center; display: none;"></div>
-        <button id="quiz-next-btn" class="btn-glow" style="display: none; margin-top: 20px;">Próxima Pergunta</button>
+        <!-- Botão de próxima pergunta removido -->
     `;
 
     const currentPerguntaTxt = document.getElementById('pergunta-txt');
     const currentOpcoesQuiz = document.getElementById('opcoes-quiz');
     const quizResult = document.getElementById('quiz-result');
     const quizNextBtn = document.getElementById('quiz-next-btn');
+
+    // Verifica se já respondeu hoje vindo do servidor
+    if (currentData.jaRespondeuQuiz) {
+        quizResult.style.color = 'var(--pet-text-sub)';
+        quizResult.innerHTML = `⏳ Você já respondeu o quiz hoje. Volte amanhã!`;
+        quizResult.style.display = 'block';
+        currentPerguntaTxt.style.display = 'none';
+        currentOpcoesQuiz.style.display = 'none';
+        return;
+    }
 
     if (DADOS_QUIZ_LOCAL.length === 0) {
         currentPerguntaTxt.innerText = "Nenhuma pergunta de quiz disponível no momento.";
@@ -1720,7 +1731,7 @@ function renderQuiz() {
         currentOpcoesQuiz.appendChild(button);
     });
 
-    quizNextBtn.onclick = () => renderQuiz();
+    // quizNextBtn.onclick = () => renderQuiz(); // removido para não permitir nova pergunta
 }
 
 async function checkQuizAnswer(selectedOption, opcoesQuizElement, quizResultElement, quizNextBtnElement) {
@@ -1734,25 +1745,9 @@ async function checkQuizAnswer(selectedOption, opcoesQuizElement, quizResultElem
 
     if (selectedOption === quizData.respostaCorreta) {
         await sendQuizLogToBackend(true);
-        quizResultElement.style.color = 'var(--pet-green)';
-        quizResultElement.innerText = "🎉 Resposta Correta! Você ganhou 1 Arrasa!";
-        quizResultElement.style.display = 'block';
-        
-        if (currentData) {
-            currentData.arrasas = (currentData.arrasas || 0) + 1;
-            document.getElementById('user-arrasas').innerText = currentData.arrasas;
-            
-            const percent = Math.min(100, currentData.arrasas);
-            document.getElementById('meta-txt').innerText = percent;
-            document.querySelector('.progress-bar').setAttribute('aria-valuenow', percent);
-            document.getElementById('bar-fill').style.width = percent + '%';
-            if (currentData.arrasas >= 100) document.getElementById('btn-resgate').style.display = 'flex';
-        }
+        // A lógica de "acertou" e o bloqueio é lidada dentro da sendQuizLogToBackend
     } else {
         await sendQuizLogToBackend(false);
-        quizResultElement.style.color = '#ef4444';
-        quizResultElement.innerText = `❌ Resposta Incorreta. A resposta certa era: "${quizData.respostaCorreta}"`;
-        quizResultElement.style.display = 'block';
     }
 
     loaderQuiz.style.display = 'none';
@@ -1785,57 +1780,80 @@ async function sendQuizLogToBackend(isCorrect) {
         const response = await fetch(`${urlApp}?action=logAcertoQuiz&nome=${encodeURIComponent(nome)}&cpf=${cpf}&status=${acao}&pontos=${pontos}`);
         const result = await response.json();
         
-        if (result.erro) {
-            document.getElementById('quiz-result').innerText = result.erro;
-            document.getElementById('quiz-result').style.display = 'block';
-            document.getElementById('quiz-result').style.color = '#ef4444';
-            document.getElementById('opcoes-quiz').style.display = 'none';
-            document.getElementById('quiz-next-btn').style.display = 'none';
-            return;
-        }
+    if (result.erro) {
+        document.getElementById('quiz-result').innerHTML = `⏳ ${result.erro}`;
+        document.getElementById('quiz-result').style.display = 'block';
+        document.getElementById('quiz-result').style.color = '#ef4444';
+        document.getElementById('quiz-result').style.fontSize = '18px';
+        document.getElementById('quiz-result').style.padding = '15px';
+        document.getElementById('quiz-result').style.background = '#fee2e2';
+        document.getElementById('quiz-result').style.borderRadius = '12px';
+        document.getElementById('opcoes-quiz').style.display = 'none';
+        document.getElementById('quiz-next-btn').style.display = 'none';
+        return;
+    }
 
-        if (!result.sucesso) {
-            console.error("Erro ao registrar log do quiz no backend:", result.erro);
-        } else {
-            console.log("Log do quiz registrado com sucesso:", result);
+        if (result.sucesso) {
             if (isCorrect) {
-                const updatedResponse = await fetch(`${urlApp}?cpf=${cpf}`);
-                const updatedRawData = await updatedResponse.json();
-                if (updatedRawData.encontrado) {
-                    const parseNestedCSV = (csvStr) => {
-                        if (!csvStr || typeof csvStr !== 'string') return [];
-                        return csvStr.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(s => s.replace(/"/g, "").trim());
-                    };
-                    const linhaParts = parseNestedCSV(updatedRawData.nome);
-                    currentData = {
-                        encontrado: true,
-                        nome: linhaParts[1] || "Aluna",
-                        foto: linhaParts[3] || "",
-                        arrasas: parseInt(linhaParts[10]) || 0,
-                        xp_total: parseInt(linhaParts[13]) || 0,
-                        badge: linhaParts[11] || "Aprendiz Curiosa",
-                        proximoEvento: updatedRawData.proximoEvento || "Consulte a Circle",
-                        ranking: (updatedRawData.ranking || []).map(r => {
-                            const rParts = parseNestedCSV(r.linhaRaw);
-                            return {
-                                nome: rParts[0] || "Aluna",
-                                badge: rParts[1] || " ",
-                                xp: parseInt(rParts[2]) || 0,
-                                recompensa: rParts[3] || ""
-                            };
-                        }),
-                        historico: (updatedRawData.historico || []).map(h => {
-                            const hParts = parseNestedCSV(h.acao);
-                            return {
-                                data: h.data || "--/--",
-                                acao: hParts[9] || hParts[3] || "Atividade",
-                                pontos: parseInt(hParts[8]) || 0
-                            };
-                        }),
-                        cpf: cpf
-                    };
-                    renderDashboard();
+                document.getElementById('quiz-result').style.color = 'var(--pet-green)';
+                document.getElementById('quiz-result').innerHTML = "🎉 Resposta Correta! Você ganhou 1 Arrasa!";
+                document.getElementById('quiz-result').style.display = 'block';
+                document.getElementById('quiz-next-btn').style.display = 'none'; // REMOVE BOTÃO
+                
+                if (currentData) {
+                    currentData.arrasas = (currentData.arrasas || 0) + 1;
+                    document.getElementById('user-arrasas').innerText = currentData.arrasas;
+                    
+                    const percent = Math.min(100, currentData.arrasas);
+                    document.getElementById('meta-txt').innerText = percent;
+                    document.querySelector('.progress-bar').setAttribute('aria-valuenow', percent);
+                    document.getElementById('bar-fill').style.width = percent + '%';
+                    if (currentData.arrasas >= 100) document.getElementById('btn-resgate').style.display = 'flex';
                 }
+            } else {
+                document.getElementById('quiz-result').style.color = '#ef4444';
+                document.getElementById('quiz-result').innerHTML = `❌ Resposta Incorreta. A resposta certa era: "${quizData.respostaCorreta}"`;
+                document.getElementById('quiz-result').style.display = 'block';
+                document.getElementById('quiz-next-btn').style.display = 'none'; // REMOVE BOTÃO
+            }
+
+            // Atualiza dados após sucesso
+            const updatedResponse = await fetch(`${urlApp}?cpf=${cpf}`);
+            const updatedRawData = await updatedResponse.json();
+            if (updatedRawData.encontrado) {
+                const parseNestedCSV = (csvStr) => {
+                    if (!csvStr || typeof csvStr !== 'string') return [];
+                    return csvStr.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(s => s.replace(/"/g, "").trim());
+                };
+                const linhaParts = parseNestedCSV(updatedRawData.nome);
+                currentData = {
+                    encontrado: true,
+                    nome: linhaParts[1] || "Aluna",
+                    foto: linhaParts[3] || "",
+                    arrasas: parseInt(linhaParts[10]) || 0,
+                    xp_total: parseInt(linhaParts[13]) || 0,
+                    badge: linhaParts[11] || "Aprendiz Curiosa",
+                    proximoEvento: updatedRawData.proximoEvento || "Consulte a Circle",
+                    ranking: (updatedRawData.ranking || []).map(r => {
+                        const rParts = parseNestedCSV(r.linhaRaw);
+                        return {
+                            nome: rParts[0] || "Aluna",
+                            badge: rParts[1] || " ",
+                            xp: parseInt(rParts[2]) || 0,
+                            recompensa: rParts[3] || ""
+                        };
+                    }),
+                    historico: (updatedRawData.historico || []).map(h => {
+                        const hParts = parseNestedCSV(h.acao);
+                        return {
+                            data: h.data || "--/--",
+                            acao: hParts[9] || hParts[3] || "Atividade",
+                            pontos: parseInt(hParts[8]) || 0
+                        };
+                    }),
+                    cpf: cpf
+                };
+                renderDashboard();
             }
         }
     } catch (error) {
