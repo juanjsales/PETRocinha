@@ -217,8 +217,19 @@ function doGet(e) {
       proximoEvento: "Carregando...",
       historico: [],
       ranking: [],
-      missoes: []
+      missoes: [],
+      recompensas: []
     };
+
+    // Carregar Recompensas
+    try {
+      const configData = db.getSheetData("Config");
+      const recompensaRows = configData.filter(r => r[0] === "RECOMPENSA");
+      dashboardData.recompensas = recompensaRows.map(r => ({
+        titulo: r[1],
+        desc: r[2]
+      }));
+    } catch (err) { console.error("Erro Recompensas:", err); }
 
     // Carregar Pergunta do Dia
     try {

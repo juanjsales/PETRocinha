@@ -142,6 +142,7 @@ async function verificarCPF() {
                 ranking: rawData.ranking || [],
                 jaRespondeuQuiz: rawData.jaRespondeuQuiz || false,
                 historico: rawData.historico || [],
+                recompensas: rawData.recompensas || [],
                 cpf: currentCPF,
                 email: ""
             };
@@ -187,6 +188,7 @@ async function verificarPorEmail(email) {
                 proximoEvento: rawData.proximoEvento || "Consulte a Circle",
                 ranking: rawData.ranking || [],
                 historico: rawData.historico || [],
+                recompensas: rawData.recompensas || [],
                 cpf: rawData.cpf,
                 email: email
             };
@@ -246,7 +248,7 @@ function renderDashboard() {
     if (eLista) {
         eLista.innerHTML = currentData.historico.map(h => `
             <li class="list-item" style="justify-content:space-between; padding:12px;">
-                <div><small style="color:var(--pet-purple); font-weight:700;">${h.data}</small><br><b>${h.acao}</b></div>
+                <div><small style="color:var(--pet-purple); font-weight:700;">${h.data}</small><br><b>${h.descricao}</b></div>
                 <div style="font-weight:800; color:${h.pontos >= 0 ? 'var(--pet-green)' : '#ef4444'};">${h.pontos >= 0 ? '+' : ''}${h.pontos}</div>
             </li>`).join('');
     }
@@ -302,7 +304,8 @@ async function sendQuizLogToBackend(isCorrect) {
     const jornadaLista = document.getElementById('jornada-lista');
     if (jornadaLista) {
         jornadaLista.innerHTML = configMapa.map((step, i) => {
-            const missoesDoPasso = (currentData.missoes && currentData.missoes[step.id]) ? currentData.missoes[step.id] : [];
+            const badgeNameFromStepId = step.id.replace(/^\d+\.\s*/, '').replace(/\s*[\uD800-\uDFFF].*$/, '').trim();
+            const missoesDoPasso = currentData.missoes ? currentData.missoes.filter(m => m.titulo.includes(badgeNameFromStepId)) : [];
             const listaMissoes = missoesDoPasso.length > 0 
                 ? `<ul style="font-size:10px; text-align:left; padding-left:15px; margin-top:5px;">${missoesDoPasso.map(m => `<li>${m}</li>`).join('')}</ul>`
                 : '';
@@ -393,17 +396,14 @@ function solicitarResgate() {
     }
 }
 
-const recompensa1 = `<div class="info-box"><h4>🎓 Mentoria Individual</h4><p>Destaque-se no ranking e ganhe 1h de consultoria.</p></div>`;
-const recompensa2 = `<div class="info-box"><h4>💅 Kit Profissional</h4><p>Produtos exclusivos para seu atendimento pet.</p></div>`;
-const recompensa3 = `<div class="info-box"><h4>👑 Troféu Embaixadora</h4><p>Reconhecimento oficial na rede.</p></div>`;
+// Remove as variáveis fixas de recompensa que não são mais usadas
+
 
 function abrirModalRecompensas() {
     const modalBody = document.getElementById('modal-recompensas-conteudo');
-    modalBody.innerHTML = `
-        ${recompensa1}
-        ${recompensa2}
-        ${recompensa3}
-    `;
+    modalBody.innerHTML = currentData.recompensas.map(r => `
+        <div class="info-box"><h4>${r.titulo}</h4><p>${r.desc}</p></div>
+    `).join('');
     document.getElementById('modal-recompensas').style.display = 'flex';
 }
 
