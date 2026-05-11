@@ -1,3 +1,17 @@
+function getEmailFromCircle() {
+    try {
+        if (window.circleUser && window.circleUser.email) {
+            return window.circleUser.email.toLowerCase().trim();
+        }
+        // Tentativa via template líquido (substitua conforme necessário)
+        let liquidEmail = "{{ user.email }}";
+        if (liquidEmail && !liquidEmail.includes('{{')) return liquidEmail.toLowerCase().trim();
+    } catch (e) {
+        console.warn("Erro ao tentar obter e-mail da Circle:", e);
+    }
+    return null;
+}
+
 // Definições de recompensas (caso não venham da API)
 const recompensa1 = `
     <div class="reward-container gold">
@@ -485,11 +499,8 @@ async function verificarPorEmail(email) {
 document.addEventListener('DOMContentLoaded', () => {
     // Recuperar e-mail da URL ou tentar capturar via mensagem do Circle
     const params = new URLSearchParams(window.location.search);
-    const emailParam = params.get('email');
+    const emailParam = params.get('email') || getEmailFromCircle();
     
-    // Variável para armazenar o email do usuário
-    let userEmail = emailParam;
-
     if (emailParam) {
         verificarPorEmail(emailParam);
     } else if (cpf) {
