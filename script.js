@@ -344,6 +344,18 @@ function solicitarResgate() {
     }
 }
 
+// Wrapper robusto para confetti
+function dispararConfetti(config) {
+    if (typeof confetti === 'function') {
+        confetti(config);
+    } else {
+        console.warn("Biblioteca 'confetti' ainda não carregada. Tentando novamente em 500ms...");
+        setTimeout(() => {
+            if (typeof confetti === 'function') confetti(config);
+        }, 500);
+    }
+}
+
 function abrirModalRecompensas() {
     const modalBody = document.getElementById('modal-recompensas-conteudo');
     modalBody.innerHTML = `
@@ -352,14 +364,13 @@ function abrirModalRecompensas() {
         ${recompensa3}
     `;
     document.getElementById('modal-recompensas').style.display = 'flex';
-    // Biblioteca confetti carregada via CDN
-    if (typeof confetti === 'function') {
-        confetti({
-            particleCount: 150,
-            spread: 70,
-            origin: { y: 0.6 }
-        });
-    }
+    
+    // Dispara animação de comemoração com segurança
+    dispararConfetti({
+        particleCount: 150,
+        spread: 70,
+        origin: { y: 0.6 }
+    });
 }
 
 function fecharModalRecompensas() {
@@ -606,6 +617,18 @@ async function checkQuizAnswer(selectedOption, opcoesQuizElement, quizResultElem
 async function sendQuizLogToBackend(isCorrect) {
     if (!currentData || !currentData.cpf) {
         console.error("Dados do usuário não disponíveis para enviar o log do quiz.");
+        alert("Sessão expirada ou dados não carregados. Por favor, recarregue a página e entre novamente.");
+        
+        // Tenta recuperar via CPF salvo ou volta para a tela de login
+        const savedCPF = localStorage.getItem('ultimoCPF');
+        if (savedCPF) {
+            console.log("Tentando recuperar dados via localStorage...");
+            document.getElementById('cpf-input').value = savedCPF;
+            verificarCPF();
+        } else {
+            document.getElementById('auth-section').style.display = 'flex';
+            document.getElementById('dash-content').style.display = 'none';
+        }
         return;
     }
 
