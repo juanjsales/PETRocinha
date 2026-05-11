@@ -1,5 +1,5 @@
 // Definições de recompensas (caso não venham da API)
-window.confetti = window.confetti || function() {};
+window.confetti = window.confetti || typeof confetti !== 'undefined' ? confetti : function() {};
 const recompensa1 = `
     <div class="reward-container gold">
         <div class="reward-title">🥇 Selo de Ouro - Arrasadora Elite</div>
