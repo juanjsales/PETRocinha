@@ -23,10 +23,8 @@ function doGet(e) {
       buscarLinhaPorCPF: function(sheet, cpfBuscado) {
         const data = sheet.getDataRange().getValues();
         for (let i = 1; i < data.length; i++) {
-          for (let j = 0; j < data[i].length; j++) {
-            if (this.limparCPF(data[i][j]) === cpfBuscado) {
-              return { linha: data[i], indice: i + 1 };
-            }
+          if (this.limparCPF(data[i][6]) === cpfBuscado) {
+            return { linha: data[i], indice: i + 1 };
           }
         }
         return null;
@@ -36,6 +34,7 @@ function doGet(e) {
     const action = e.parameter.action || e.parameter.acao; 
     const cpfParam = e.parameter.cpf || "";
     const emailParam = e.parameter.email || "";
+    Logger.log("Email recebido: " + emailParam);
     let cpfBuscado = Utils.limparCPF(cpfParam);
     
     // Se email foi passado e não CPF, tentamos encontrar o CPF pelo email na base
