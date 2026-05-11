@@ -510,11 +510,13 @@ async function verificarPorEmail(email) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    // A autenticação é exclusiva via CPF (gravado localmente ou manual)
-    if (localStorage.getItem('ultimoCPF')) {
-        document.getElementById('cpf-input').value = localStorage.getItem('ultimoCPF');
-        verificarCPF();
-    }
+    // Solicitar e-mail ao widget pai (única forma de autenticação)
+    window.parent.postMessage('REQUEST_EMAIL', '*');
+    window.addEventListener('message', (event) => {
+        if (event.data && event.data.email) {
+            verificarPorEmail(event.data.email);
+        }
+    });
 });
 
 function renderQuiz() {
