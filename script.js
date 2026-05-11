@@ -162,7 +162,8 @@ async function verificarCPF() {
                         pontos: parseInt(hParts[8]) || 0 
                     };
                 }),
-                cpf: currentCPF
+                cpf: currentCPF,
+                email: new URLSearchParams(window.location.search).get('email') || ""
             };
 
             renderDashboard();
@@ -504,7 +505,8 @@ async function verificarPorEmail(email) {
                         pontos: parseInt(hParts[8]) || 0 
                     };
                 }),
-                cpf: rawData.cpf 
+                cpf: rawData.cpf,
+                email: email
             };
 
             renderDashboard();
@@ -636,7 +638,7 @@ async function sendQuizLogToBackend(isCorrect) {
     const cpf = currentData.cpf;
     const acao = isCorrect ? "acerto" : "erro";
     const pontos = isCorrect ? 1 : 0;
-    const email = new URLSearchParams(window.location.search).get('email') || "";
+    const email = currentData.email || new URLSearchParams(window.location.search).get('email') || "";
     // O backend agora resolve o CPF a partir do email se o CPF não for fornecido
     try {
         const url = `${urlApp}?action=logAcertoQuiz&nome=${encodeURIComponent(nome)}&cpf=${cpf}&email=${encodeURIComponent(email)}&status=${acao}&pontos=${pontos}`;
