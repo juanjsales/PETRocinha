@@ -297,16 +297,123 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// Funções de UI Auxiliares (mantidas)
-function switchTab(tabId, el) {
-    document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById(tabId).style.display = 'block';
-    if (el) el.classList.add('active');
-    if (tabId === 'tab-quiz') renderQuiz();
-    if (tabId === 'tab-jornada') renderJornada();
-    if (tabId === 'tab-extrato' && currentData) renderChart();
+
+function renderChart() {
+    const ctx = document.getElementById('arrasasChart').getContext('2d');
+    if (chartInstance) chartInstance.destroy();
+    
+    let sum = 0;
+    const points = currentData.historico.map(h => { 
+        sum += h.pontos; 
+        return Math.max(0, sum); 
+    });
+    const labels = currentData.historico.map(h => h.data);
+
+    chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: points,
+                borderColor: '#6366f1',
+                borderWidth: 3,
+                tension: 0.4,
+                fill: true,
+                backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                pointBackgroundColor: '#fff',
+                pointBorderColor: '#6366f1',
+                pointRadius: 4
+            }]
+        },
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false, 
+            plugins: { legend: { display: false } },
+            scales: { 
+                y: { 
+                    beginAtZero: true, 
+                    grid: { color: '#f1f5f9' },
+                    title: { display: true, text: 'Saldo (A$)' }
+                }, 
+                x: { grid: { display: false } } 
+            }
+        }
+    });
 }
+
+function showVideoGate() {
+    document.getElementById('video-gate').style.display = 'flex';
+    document.getElementById('video-iframe').src = "https://drive.google.com/file/d/1r3sF2U6-KzkQEHOJy6c5u3FaZ_t5IH2s/preview?autoplay=1";
+}
+
+function closeVideoGate() {
+    localStorage.setItem("watchedProPet_2026", "true");
+    document.getElementById('video-gate').style.display = 'none';
+    document.getElementById('video-iframe').src = "";
+}
+
+function solicitarResgate() {
+    if (confirm("Deseja solicitar o resgate do seu auxílio de R$ 100,00? Você será redirecionada para o WhatsApp de suporte.")) {
+        window.open("https://wa.me/5521982013090?text=Quero%20resgatar%20meu%20auxilio%20Profissao%20Pet", "_blank");
+    }
+}
+
+const recompensa1 = `<div class="info-box"><h4>🎓 Mentoria Individual</h4><p>Destaque-se no ranking e ganhe 1h de consultoria.</p></div>`;
+const recompensa2 = `<div class="info-box"><h4>💅 Kit Profissional</h4><p>Produtos exclusivos para seu atendimento pet.</p></div>`;
+const recompensa3 = `<div class="info-box"><h4>👑 Troféu Embaixadora</h4><p>Reconhecimento oficial na rede.</p></div>`;
+
+function abrirModalRecompensas() {
+    const modalBody = document.getElementById('modal-recompensas-conteudo');
+    modalBody.innerHTML = `
+        ${recompensa1}
+        ${recompensa2}
+        ${recompensa3}
+    `;
+    document.getElementById('modal-recompensas').style.display = 'flex';
+}
+
+function fecharModalRecompensas() {
+    document.getElementById('modal-recompensas').style.display = 'none';
+}
+
+async function toggleNotificacoes() {
+    const btn = document.getElementById('btn-toggle-notif');
+    const loader = document.getElementById('loader'); 
+    const isAtivo = btn.innerText === 'ATIVADAS';
+    
+    const userCpf = currentData.cpf; 
+
+    let novoStatus = isAtivo ? 'Não' : 'Sim';
+    
+    if (isAtivo) {
+        if (!confirm("Deseja realmente desativar as notificações por WhatsApp? Você pode perder avisos importantes sobre seu saldo e eventos.")) {
+            return;
+        }
+    }
+
+    loader.style.display = 'flex';
+
+    try {
+        const response = await fetch(`${urlApp}?action=updateNotif&cpf=${userCpf}&status=${novoStatus}`);
+        
+        if (novoStatus === 'Não') {
+            btn.innerText = 'DESATIVADAS';
+            btn.style.background = '#94a3b8';
+            showNotification("Notificações desativadas.");
+        } else {
+            btn.innerText = 'ATIVADAS';
+            btn.style.background = 'var(--pet-green)';
+            showNotification("Notificações reativadas!");
+        }
+
+    } catch (error) {
+        console.error("Erro ao atualizar notificações:", error);
+        showNotification("Erro ao conectar ao servidor.", "error");
+    } finally {
+        loader.style.display = 'none';
+    }
+}
+
 
 function renderQuiz() {
     const quizContent = document.getElementById('quiz-content');

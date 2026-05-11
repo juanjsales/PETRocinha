@@ -199,25 +199,25 @@ function doGet(e) {
     // Carregar Próximo Evento
     try {
       const configData = db.getSheetData("Config");
-      const eventoRow = configData.find(r => r[0] === "PROXIMO_EVENTO"); // Adicionado [0] para acessar a primeira coluna
-      if (eventoRow) dashboardData.proximoEvento = eventoRow[1]; // Adicionado [1] para pegar o valor
+      const eventoRow = configData.find(r => r[0] === "PROXIMO_EVENTO");
+      if (eventoRow) dashboardData.proximoEvento = eventoRow[1];
       
       // Carregar Missões Disponíveis
       dashboardData.missoes = configData.slice(1)
-        .filter(r => r[0] !== "PROXIMO_EVENTO" && r[0] !== "") // Adicionado [0]
-        .map(r => ({ titulo: r[0], desc: r[1], valor: r[2] })); // Ajustado para r[0], r[1], r[2]
+        .filter(r => r[0] !== "PROXIMO_EVENTO" && r[0] !== "")
+        .map(r => ({ titulo: r[0], desc: r[1], valor: r[2] }));
     } catch (err) { console.error("Erro Config:", err); }
 
     // Carregar Histórico (Log)
     try {
       const logData = db.getSheetData("Log");
       dashboardData.historico = logData
-        .filter(row => Utils.limparCPF(row[CONFIG.COLUNAS_LOG.CPF]) === perfil.cpf)
+        .filter(row => row[CONFIG.COLUNAS_LOG.CPF] && Utils.limparCPF(row[CONFIG.COLUNAS_LOG.CPF]) === perfil.cpf)
         .reverse()
         .slice(0, 15)
         .map(row => ({
-          data: Utils.formatarData(row[CONFIG.COLUNAS_LOG.DATA]).split(' '),
-          acao: row[CONFIG.COLUNAS_LOG.TIPO] || row[CONFIG.COLUNAS_LOG.DESCRICAO],
+          data: Utils.formatarData(row[CONFIG.COLUNAS_LOG.DATA]),
+          acao: row[CONFIG.COLUNAS_LOG.DESCRICAO] || "Ação",
           pontos: Number(row[CONFIG.COLUNAS_LOG.PONTOS]) || 0
         }));
     } catch (err) { console.error("Erro Histórico:", err); }
@@ -225,12 +225,13 @@ function doGet(e) {
     // Carregar Ranking
     try {
       const rankData = db.getSheetData("Ranking");
-      rankData.shift(); // Remove cabeçalho
-      dashboardData.ranking = rankData
-        .filter(r => r[0] !== "")
-        .sort((a, b) => Number(b[2]) - Number(a[2]))
-        .slice(0, 10)
-        .map(r => ({ nome: r[0], badge: r[1], xp: Number(r[2]) }));
+      if (rankData.length > 1) {
+        dashboardData.ranking = rankData.slice(1)
+          .filter(r => r[0] !== "")
+          .sort((a, b) => Number(b[2]) - Number(a[2]))
+          .slice(0, 10)
+          .map(r => ({ nome: r[0], badge: r[1], xp: Number(r[2]) }));
+      }
     } catch (err) { console.error("Erro Ranking:", err); }
 
     return Utils.responderJSON(dashboardData);
