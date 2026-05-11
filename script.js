@@ -86,11 +86,7 @@ async function verificarCPF() {
     loader.style.display = 'flex';
     
     try {
-<<<<<<< HEAD
-        const response = await fetch(`${urlApp}?cpf=${currentCPF}`);
-=======
         const response = await fetch(`${urlApp}?cpf=${encodeURIComponent(currentCPF)}`);
->>>>>>> f92700f (new)
         if (!response.ok) throw new Error('Servidor indisponível.');
         
         const rawData = await response.json();
