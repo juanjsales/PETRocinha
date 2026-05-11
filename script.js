@@ -646,27 +646,32 @@ async function sendQuizLogToBackend(isCorrect) {
         console.log("Enviando log para:", url);
         const response = await fetch(url);
         const result = await response.json();
-        console.log("Resposta do backend:", result);
+        console.log("RESPOSTA DO BACKEND DO QUIZ:", result);
+        
+        // Adicionando logs de diagnóstico para verificar o estado do DOM
+        const quizResEl = document.getElementById('quiz-result');
+        console.log("Elemento quiz-result encontrado:", quizResEl);
         
         if (result.erro) {
-            document.getElementById('quiz-result').innerHTML = `⏳ ${result.erro}`;
-            document.getElementById('quiz-result').style.display = 'block';
-            document.getElementById('quiz-result').style.color = '#ef4444';
-            document.getElementById('quiz-result').style.fontSize = '18px';
-            document.getElementById('quiz-result').style.padding = '15px';
-            document.getElementById('quiz-result').style.background = '#fee2e2';
-            document.getElementById('quiz-result').style.borderRadius = '12px';
+            quizResEl.innerHTML = `⏳ ${result.erro}`;
+            quizResEl.style.display = 'block';
+            quizResEl.style.color = '#ef4444';
+            quizResEl.style.fontSize = '18px';
+            quizResEl.style.padding = '15px';
+            quizResEl.style.background = '#fee2e2';
+            quizResEl.style.borderRadius = '12px';
             document.getElementById('opcoes-quiz').style.display = 'none';
             return;
         }
 
         if (result.sucesso || result.mensagem === "Já preenchido hoje") {
             if (isCorrect) {
-                document.getElementById('quiz-result').style.color = 'var(--pet-green)';
-                document.getElementById('quiz-result').innerHTML = result.mensagem === "Já preenchido hoje" 
+                quizResEl.style.color = 'var(--pet-green)';
+                quizResEl.innerHTML = result.mensagem === "Já preenchido hoje" 
                     ? "ℹ️ Você já respondeu ao quiz hoje." 
                     : "🎉 Resposta Correta! Você ganhou 1 Arrasa!";
-                document.getElementById('quiz-result').style.display = 'block';
+                quizResEl.style.display = 'block';
+                console.log("Mensagem de acerto exibida:", quizResEl.innerHTML);
                 
                 if (currentData) {
                     if (result.mensagem !== "Já preenchido hoje") {
@@ -681,34 +686,54 @@ async function sendQuizLogToBackend(isCorrect) {
                     if (currentData.arrasas >= 100) document.getElementById('btn-resgate').style.display = 'flex';
                 }
             } else {
-                document.getElementById('quiz-result').style.color = '#ef4444';
-                document.getElementById('quiz-result').innerHTML = result.mensagem === "Já preenchido hoje"
+                quizResEl.style.color = '#ef4444';
+                quizResEl.innerHTML = result.mensagem === "Já preenchido hoje"
                     ? "ℹ️ Você já respondeu ao quiz hoje."
                     : `❌ Resposta Incorreta. A resposta certa era: "${quizData.respostaCorreta}"`;
-                document.getElementById('quiz-result').style.display = 'block';
+                quizResEl.style.display = 'block';
+                console.log("Mensagem de erro exibida:", quizResEl.innerHTML);
             }
 
             const updatedResponse = await fetch(`${urlApp}?cpf=${cpf}`);
             const updatedRawData = await updatedResponse.json();
+            
+            // Log para debug
+            console.log("DADOS ATUALIZADOS APÓS QUIZ:", updatedRawData);
+
             if (updatedRawData.encontrado) {
+                // Manter parsing antigo se necessário, ou usar direto se a API mudou
+                const parseNestedCSV = (csvStr) => {
+                    if (!csvStr || typeof csvStr !== 'string') return [];
+                    return csvStr.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(s => s.replace(/"/g, "").trim());
+                };
+                
+                const linhaParts = parseNestedCSV(updatedRawData.nome);
+                
                 currentData = {
                     encontrado: true,
-                    nome: updatedRawData.nome || "Aluna",
-                    foto: updatedRawData.foto || "",
-                    arrasas: updatedRawData.arrasas || 0,
-                    xp_total: updatedRawData.xp_total || 0,
-                    badge: updatedRawData.badge || "Aprendiz Curiosa",
+                    nome: linhaParts[1] || updatedRawData.nome || "Aluna",
+                    foto: linhaParts[3] || updatedRawData.foto || "",
+                    arrasas: parseInt(linhaParts[10]) || updatedRawData.arrasas || 0,
+                    xp_total: parseInt(linhaParts[13]) || updatedRawData.xp_total || 0,
+                    badge: linhaParts[11] || updatedRawData.badge || "Aprendiz Curiosa",
                     proximoEvento: updatedRawData.proximoEvento || "Consulte a Circle",
-                    ranking: (updatedRawData.ranking || []).map(r => ({
-                        nome: r.nome || "Aluna",
-                        badge: r.badge || " ",
-                        xp: r.xp || 0
-                    })),
-                    historico: (updatedRawData.historico || []).map(h => ({
-                        data: h.data || "--/--",
-                        acao: h.acao || "Atividade",
-                        pontos: h.pontos || 0
-                    })),
+                    ranking: (updatedRawData.ranking || []).map(r => {
+                        const rParts = parseNestedCSV(r.linhaRaw);
+                        return {
+                            nome: rParts[0] || "Aluna",
+                            badge: rParts[1] || " ",
+                            xp: parseInt(rParts[2]) || 0,
+                            recompensa: rParts[3] || ""
+                        };
+                    }),
+                    historico: (updatedRawData.historico || []).map(h => {
+                        const hParts = parseNestedCSV(h.acao);
+                        return {
+                            data: h.data || "--/--",
+                            acao: hParts[9] || hParts[3] || "Atividade",
+                            pontos: parseInt(hParts[8]) || 0
+                        };
+                    }),
                     cpf: cpf
                 };
                 renderDashboard();
