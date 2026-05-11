@@ -12,11 +12,19 @@ const CONFIG = {
     NOME: 1,      // B
     EMAIL: 2,     // C
     FOTO: 3,      // D
+    CPF: 7,       // H
     ARRASAS: 10,  // K
     BADGE: 11,    // L
-    XP: 13,       // N
     NOTIF: 12,    // M
-    CPF: 7        // H (Sua coluna atualizada)
+    XP: 13        // N
+  },
+  COLUNAS_CONFIG: {
+    TIPO: 0,
+    VALOR1: 1,
+    VALOR2: 2,
+    VALOR3: 3,
+    VALOR4: 4,
+    VALOR5: 5
   },
   COLUNAS_LOG: {
     DATA: 0,
@@ -25,6 +33,11 @@ const CONFIG = {
     EMAIL: 7,
     PONTOS: 8,
     DESCRICAO: 9
+  },
+  COLUNAS_RANKING: {
+    NOME: 0,
+    BADGE: 1,
+    XP: 2
   }
 };
 
@@ -224,22 +237,24 @@ function doGet(e) {
     // Carregar Recompensas
     try {
       const configData = db.getSheetData("Config");
-      const recompensaRows = configData.filter(r => r[0] === "RECOMPENSA");
+      const cols = CONFIG.COLUNAS_CONFIG;
+      const recompensaRows = configData.filter(r => r[cols.TIPO] === "RECOMPENSA");
       dashboardData.recompensas = recompensaRows.map(r => ({
-        titulo: r[1],
-        desc: r[2]
+        titulo: r[cols.VALOR1],
+        desc: r[cols.VALOR2]
       }));
     } catch (err) { console.error("Erro Recompensas:", err); }
 
     // Carregar Pergunta do Dia
     try {
       const configData = db.getSheetData("Config");
-      const perguntaRow = configData.find(r => r[0] === "PERGUNTA_DO_DIA");
+      const cols = CONFIG.COLUNAS_CONFIG;
+      const perguntaRow = configData.find(r => r[cols.TIPO] === "PERGUNTA_DO_DIA");
       if (perguntaRow) {
         dashboardData.perguntaDoDia = {
-          pergunta: perguntaRow[1],
-          opcoes: [perguntaRow[2], perguntaRow[3], perguntaRow[4]],
-          respostaCorreta: perguntaRow[5]
+          pergunta: perguntaRow[cols.VALOR1],
+          opcoes: [perguntaRow[cols.VALOR2], perguntaRow[cols.VALOR3], perguntaRow[cols.VALOR4]],
+          respostaCorreta: perguntaRow[cols.VALOR5]
         };
       }
     } catch (err) { console.error("Erro Pergunta Dia:", err); }
@@ -247,40 +262,43 @@ function doGet(e) {
     // Carregar Próximo Evento
     try {
       const configData = db.getSheetData("Config");
-      const eventoRow = configData.find(r => r[0] === "PROXIMO_EVENTO");
-      if (eventoRow) dashboardData.proximoEvento = eventoRow[1];
+      const cols = CONFIG.COLUNAS_CONFIG;
+      const eventoRow = configData.find(r => r[cols.TIPO] === "PROXIMO_EVENTO");
+      if (eventoRow) dashboardData.proximoEvento = eventoRow[cols.VALOR1];
       
       // Carregar Missões Disponíveis
       dashboardData.missoes = configData.slice(1)
-        .filter(r => r[0] !== "PROXIMO_EVENTO" && r[0] !== "")
-        .map(r => ({ titulo: r[0], desc: r[1], valor: r[2] }));
+        .filter(r => r[cols.TIPO] !== "PROXIMO_EVENTO" && r[cols.TIPO] !== "")
+        .map(r => ({ titulo: r[cols.TIPO], desc: r[cols.VALOR1], valor: r[cols.VALOR2] }));
     } catch (err) { console.error("Erro Config:", err); }
 
     // Carregar Histórico (Log)
     try {
       const logData = db.getSheetData("Log");
+      const cols = CONFIG.COLUNAS_LOG;
       dashboardData.historico = logData
-        .filter(row => row[CONFIG.COLUNAS_LOG.CPF] && Utils.limparCPF(row[CONFIG.COLUNAS_LOG.CPF]) === perfil.cpf)
+        .filter(row => row[cols.CPF] && Utils.limparCPF(row[cols.CPF]) === perfil.cpf)
         .reverse()
         .slice(0, 15)
         .map(row => ({
-          data: Utils.formatarData(row[CONFIG.COLUNAS_LOG.DATA]),
-          tipo: row[CONFIG.COLUNAS_LOG.TIPO],
-          email: row[CONFIG.COLUNAS_LOG.EMAIL],
-          pontos: Number(row[CONFIG.COLUNAS_LOG.PONTOS]) || 0,
-          descricao: row[CONFIG.COLUNAS_LOG.DESCRICAO] || "Ação"
+          data: Utils.formatarData(row[cols.DATA]),
+          tipo: row[cols.TIPO],
+          email: row[cols.EMAIL],
+          pontos: Number(row[cols.PONTOS]) || 0,
+          descricao: row[cols.DESCRICAO] || "Ação"
         }));
     } catch (err) { console.error("Erro Histórico:", err); }
 
     // Carregar Ranking
     try {
       const rankData = db.getSheetData("Ranking");
+      const cols = CONFIG.COLUNAS_RANKING;
       if (rankData.length > 1) {
         dashboardData.ranking = rankData.slice(1)
-          .filter(r => r[0] !== "")
-          .sort((a, b) => Number(b[2]) - Number(a[2]))
+          .filter(r => r[cols.NOME] !== "")
+          .sort((a, b) => Number(b[cols.XP]) - Number(a[cols.XP]))
           .slice(0, 10)
-          .map(r => ({ nome: r[0], badge: r[1], xp: Number(r[2]) }));
+          .map(r => ({ nome: r[cols.NOME], badge: r[cols.BADGE], xp: Number(r[cols.XP]) }));
       }
     } catch (err) { console.error("Erro Ranking:", err); }
 

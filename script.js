@@ -296,14 +296,15 @@ async function sendQuizLogToBackend(isCorrect) {
     const jornadaLista = document.getElementById('jornada-lista');
     const fluxoHeader = document.querySelectorAll('.fluxo-step');
     
-    if (jornadaLista) {
+    if (jornadaLista && currentData && currentData.badge) {
         const currentIndex = configMapa.findIndex(l => l.id === currentData.badge);
         const activeIndex = currentIndex >= 0 ? currentIndex : 0;
         
         // Header 3A
         fluxoHeader.forEach(el => el.classList.remove('active'));
         const currentStage = configMapa[activeIndex].stage;
-        document.getElementById(`step-${currentStage}`).classList.add('active');
+        const targetHeader = document.getElementById(`step-${currentStage}`);
+        if(targetHeader) targetHeader.classList.add('active');
 
         // Linha do tempo
         jornadaLista.innerHTML = configMapa.map((passo, index) => {
@@ -314,6 +315,8 @@ async function sendQuizLogToBackend(isCorrect) {
                 <div class="step-label">${passo.nome.replace(/^\d+\.\s*/, '')}</div>
             </div>`;
         }).join('');
+    } else if (jornadaLista) {
+        jornadaLista.innerHTML = `<p>Dados da jornada não disponíveis.</p>`;
     }
 
 // Inicialização
