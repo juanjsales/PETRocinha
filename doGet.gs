@@ -115,8 +115,8 @@ function doGet(e) {
         aluna = {
           encontrado: true,
           cpf: cpfBuscado,
-          nome: String(linha), 
-          foto: String(linha[3] || ""),
+          nome: linha[1] || "Aluna", 
+          foto: linha[3] || "",
           arrasas: Number(linha[10]) || 0,
           badge: String(linha[11] || "Aprendiz Curiosa"),
           xp_total: Number(linha[13]) || 0,
@@ -149,7 +149,11 @@ function doGet(e) {
         }
         
         if (linhaCfg[2] && linhaCfg[1] && chave !== "PROXIMO_EVENTO") {
-          aluna.missoesDisponiveis.push(String(linhaCfg));
+          aluna.missoesDisponiveis.push({
+            titulo: linhaCfg[0],
+            descricao: linhaCfg[1],
+            recompensa: linhaCfg[2]
+          });
         }
       }
     } catch(e) {}
@@ -180,7 +184,7 @@ function doGet(e) {
 
           aluna.historico.push({
             data: dataFmt,
-            acao: String(linhaLog), 
+            acao: linhaLog[9] || linhaLog[3] || "Atividade", 
             pontos: Number(linhaLog[8]) || 0
           });
         }
@@ -199,8 +203,8 @@ function doGet(e) {
       for (let r = 0; r < dataRank.length && aluna.ranking.length < 10; r++) {
         if (dataRank[r] && String(dataRank[r][0]).trim() !== "") {
           aluna.ranking.push({
-            linhaRaw: String(dataRank[r]), 
-            badge: String(dataRank[r][1] || "Talento"),
+            nome: dataRank[r][0] || "Aluna",
+            badge: dataRank[r][1] || "Talento",
             xp: Number(dataRank[r][2]) || 0
           });
         }

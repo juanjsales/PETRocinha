@@ -132,36 +132,26 @@ async function verificarCPF() {
         };
 
         if (rawData.encontrado) {
-      
-            const linhaParts = parseNestedCSV(rawData.nome); 
-            
             currentData = {
                 encontrado: true,
-                nome: linhaParts[1] || "Aluna",
-                foto: linhaParts[3] || "",
-                arrasas: parseInt(linhaParts[10]) || 0,
-                xp_total: parseInt(linhaParts[13]) || 0,
-                badge: linhaParts[11] || "Aprendiz Curiosa",
+                nome: rawData.nome || "Aluna",
+                foto: rawData.foto || "",
+                arrasas: rawData.arrasas || 0,
+                xp_total: rawData.xp_total || 0,
+                badge: rawData.badge || "Aprendiz Curiosa",
                 proximoEvento: rawData.proximoEvento || "Consulte a Circle",
 
-                ranking: (rawData.ranking || []).map(r => {
-                    const rParts = parseNestedCSV(r.linhaRaw);
-                    return {
-                        nome: rParts[0] || "Aluna", 
-                        badge: rParts[1] || " ",
-                        xp: parseInt(rParts[2]) || 0,
-                        recompensa: rParts[3] || ""
-                    };
-                }),
+                ranking: (rawData.ranking || []).map(r => ({
+                    nome: r.nome || "Aluna", 
+                    badge: r.badge || " ",
+                    xp: r.xp || 0
+                })),
                 jaRespondeuQuiz: rawData.jaRespondeuQuiz || false,
-                historico: (rawData.historico || []).map(h => {
-                    const hParts = parseNestedCSV(h.acao);
-                    return {
-                        data: h.data || "--/--", 
-                        acao: hParts[9] || hParts[3] || "Atividade", 
-                        pontos: parseInt(hParts[8]) || 0 
-                    };
-                }),
+                historico: (rawData.historico || []).map(h => ({
+                    data: h.data || "--/--", 
+                    acao: h.acao || "Atividade", 
+                    pontos: h.pontos || 0 
+                })),
                 cpf: currentCPF,
                 email: new URLSearchParams(window.location.search).get('email') || ""
             };
@@ -478,33 +468,25 @@ async function verificarPorEmail(email) {
         };
 
         if (rawData.encontrado) {
-            const linhaParts = parseNestedCSV(rawData.nome); 
-            
             currentData = {
                 encontrado: true,
-                nome: linhaParts[1] || "Aluna",
-                foto: linhaParts[3] || "",
-                arrasas: parseInt(linhaParts[10]) || 0,
-                xp_total: parseInt(linhaParts[13]) || 0,
-                badge: linhaParts[11] || "Aprendiz Curiosa",
+                nome: rawData.nome || "Aluna",
+                foto: rawData.foto || "",
+                arrasas: rawData.arrasas || 0,
+                xp_total: rawData.xp_total || 0,
+                badge: rawData.badge || "Aprendiz Curiosa",
                 proximoEvento: rawData.proximoEvento || "Consulte a Circle",
-                ranking: (rawData.ranking || []).map(r => {
-                    const rParts = parseNestedCSV(r.linhaRaw);
-                    return {
-                        nome: rParts[0] || "Aluna", 
-                        badge: rParts[1] || " ",
-                        xp: parseInt(rParts[2]) || 0,
-                        recompensa: rParts[3] || ""
-                    };
-                }),
-                historico: (rawData.historico || []).map(h => {
-                    const hParts = parseNestedCSV(h.acao);
-                    return {
-                        data: h.data || "--/--", 
-                        acao: hParts[9] || hParts[3] || "Atividade", 
-                        pontos: parseInt(hParts[8]) || 0 
-                    };
-                }),
+
+                ranking: (rawData.ranking || []).map(r => ({
+                    nome: r.nome || "Aluna", 
+                    badge: r.badge || " ",
+                    xp: r.xp || 0
+                })),
+                historico: (rawData.historico || []).map(h => ({
+                    data: h.data || "--/--", 
+                    acao: h.acao || "Atividade", 
+                    pontos: h.pontos || 0 
+                })),
                 cpf: rawData.cpf,
                 email: email
             };
@@ -687,7 +669,6 @@ async function sendQuizLogToBackend(isCorrect) {
                 document.getElementById('quiz-result').style.display = 'block';
                 
                 if (currentData) {
-                    // Se não for "já preenchido", incrementa
                     if (result.mensagem !== "Já preenchido hoje") {
                         currentData.arrasas = (currentData.arrasas || 0) + 1;
                     }
@@ -710,36 +691,24 @@ async function sendQuizLogToBackend(isCorrect) {
             const updatedResponse = await fetch(`${urlApp}?cpf=${cpf}`);
             const updatedRawData = await updatedResponse.json();
             if (updatedRawData.encontrado) {
-                const parseNestedCSV = (csvStr) => {
-                    if (!csvStr || typeof csvStr !== 'string') return [];
-                    return csvStr.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(s => s.replace(/"/g, "").trim());
-                };
-                const linhaParts = parseNestedCSV(updatedRawData.nome);
                 currentData = {
                     encontrado: true,
-                    nome: linhaParts[1] || "Aluna",
-                    foto: linhaParts[3] || "",
-                    arrasas: parseInt(linhaParts[10]) || 0,
-                    xp_total: parseInt(linhaParts[13]) || 0,
-                    badge: linhaParts[11] || "Aprendiz Curiosa",
+                    nome: updatedRawData.nome || "Aluna",
+                    foto: updatedRawData.foto || "",
+                    arrasas: updatedRawData.arrasas || 0,
+                    xp_total: updatedRawData.xp_total || 0,
+                    badge: updatedRawData.badge || "Aprendiz Curiosa",
                     proximoEvento: updatedRawData.proximoEvento || "Consulte a Circle",
-                    ranking: (updatedRawData.ranking || []).map(r => {
-                        const rParts = parseNestedCSV(r.linhaRaw);
-                        return {
-                            nome: rParts[0] || "Aluna",
-                            badge: rParts[1] || " ",
-                            xp: parseInt(rParts[2]) || 0,
-                            recompensa: rParts[3] || ""
-                        };
-                    }),
-                    historico: (updatedRawData.historico || []).map(h => {
-                        const hParts = parseNestedCSV(h.acao);
-                        return {
-                            data: h.data || "--/--",
-                            acao: hParts[9] || hParts[3] || "Atividade",
-                            pontos: parseInt(hParts[8]) || 0
-                        };
-                    }),
+                    ranking: (updatedRawData.ranking || []).map(r => ({
+                        nome: r.nome || "Aluna",
+                        badge: r.badge || " ",
+                        xp: r.xp || 0
+                    })),
+                    historico: (updatedRawData.historico || []).map(h => ({
+                        data: h.data || "--/--",
+                        acao: h.acao || "Atividade",
+                        pontos: h.pontos || 0
+                    })),
                     cpf: cpf
                 };
                 renderDashboard();
