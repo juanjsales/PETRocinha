@@ -499,7 +499,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Ouvir mensagens da Circle
     window.addEventListener('message', (event) => {
-        const DOMINIO_PERMITIDO = 'https://comunidade.profissaopet.com.br'; 
+        const DOMINIO_PERMITIDO = 'https://comunidade.aprenderecuidar.com.br'; 
         
         // Validação de origem robusta
         if (event.origin !== DOMINIO_PERMITIDO) {
