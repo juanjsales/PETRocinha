@@ -7,6 +7,7 @@
 // Configurações Globais
 const CONFIG = {
   SS_ID: "1e2MfXxnGHnkifeh-uJiRrSYuI8rxbp-GCdWvNpj-lgI",
+  SECURITY_TOKEN: "PET_ROCINHA_2026_SECRET",
   COLUNAS_MEMBROS: {
     NOME: 1,      // B
     EMAIL: 2,     // C
@@ -62,19 +63,35 @@ class Database {
   }
 
   getSheetData(nomeAba) {
+    const cache = CacheService.getScriptCache();
+    const cachedData = cache.get(nomeAba);
+    if (cachedData) return JSON.parse(cachedData);
+
     const sheet = this.ss.getSheetByName(nomeAba);
     if (!sheet) throw new Error(`Aba ${nomeAba} não encontrada.`);
-    return sheet.getDataRange().getValues();
+    const data = sheet.getDataRange().getValues();
+    
+    cache.put(nomeAba, JSON.stringify(data), 300); // Cache por 5 minutos
+    return data;
+  }
+
+  // Novo método para invalidar cache após escrita
+  invalidateCache(nomeAba) {
+    CacheService.getScriptCache().remove(nomeAba);
   }
 
   appendLog(dados) {
     const sheet = this.ss.getSheetByName("Log");
-    if (sheet) sheet.appendRow(dados);
+    if (sheet) {
+      sheet.appendRow(dados);
+      this.invalidateCache("Log");
+    }
   }
 
   updateMemberField(linhaIndice, colunaIndice, valor) {
     const sheet = this.ss.getSheetByName("community_members");
     sheet.getRange(linhaIndice, colunaIndice + 1).setValue(valor);
+    this.invalidateCache("community_members");
   }
 }
 
@@ -150,6 +167,12 @@ function doGet(e) {
   
   try {
     const params = e.parameter;
+    
+    // Verificação de Token
+    if (params.token !== CONFIG.SECURITY_TOKEN) {
+       return Utils.responderJSON({ encontrado: false, erro: "Acesso não autorizado." });
+    }
+
     const action = params.action || params.acao;
     let alunaRel = null;
 
@@ -157,7 +180,8 @@ function doGet(e) {
     if (params.email) {
       alunaRel = service.buscarPorEmail(params.email);
     } else if (params.cpf) {
-      alunaRel = service.buscarPorCPF(params.cpf);
+      let cpfBuscado = params.cpf;
+      alunaRel = service.buscarPorCPF(cpfBuscado);
     }
 
     if (!alunaRel) {
@@ -196,6 +220,19 @@ function doGet(e) {
       missoes: []
     };
 
+    // Carregar Pergunta do Dia
+    try {
+      const configData = db.getSheetData("Config");
+      const perguntaRow = configData.find(r => r[0] === "PERGUNTA_DO_DIA");
+      if (perguntaRow) {
+        dashboardData.perguntaDoDia = {
+          pergunta: perguntaRow[1],
+          opcoes: [perguntaRow[2], perguntaRow[3], perguntaRow[4]],
+          respostaCorreta: perguntaRow[5]
+        };
+      }
+    } catch (err) { console.error("Erro Pergunta Dia:", err); }
+
     // Carregar Próximo Evento
     try {
       const configData = db.getSheetData("Config");
@@ -217,8 +254,10 @@ function doGet(e) {
         .slice(0, 15)
         .map(row => ({
           data: Utils.formatarData(row[CONFIG.COLUNAS_LOG.DATA]),
-          acao: row[CONFIG.COLUNAS_LOG.DESCRICAO] || "Ação",
-          pontos: Number(row[CONFIG.COLUNAS_LOG.PONTOS]) || 0
+          tipo: row[CONFIG.COLUNAS_LOG.TIPO],
+          email: row[CONFIG.COLUNAS_LOG.EMAIL],
+          pontos: Number(row[CONFIG.COLUNAS_LOG.PONTOS]) || 0,
+          descricao: row[CONFIG.COLUNAS_LOG.DESCRICAO] || "Ação"
         }));
     } catch (err) { console.error("Erro Histórico:", err); }
 
