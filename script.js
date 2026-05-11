@@ -618,7 +618,7 @@ async function checkQuizAnswer(selectedOption, opcoesQuizElement, quizResultElem
 }
 
 async function sendQuizLogToBackend(isCorrect) {
-    if (!currentData || !currentData.cpf) {
+    if (!currentData || (!currentData.cpf && !localStorage.getItem('ultimoCPF'))) {
         console.warn("Dados do usuário não disponíveis. Tentando recuperar via localStorage...");
         const savedCPF = localStorage.getItem('ultimoCPF');
         if (savedCPF) {
