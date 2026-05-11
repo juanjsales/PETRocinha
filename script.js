@@ -638,8 +638,11 @@ async function sendQuizLogToBackend(isCorrect) {
     const email = new URLSearchParams(window.location.search).get('email') || "";
     // O backend agora resolve o CPF a partir do email se o CPF não for fornecido
     try {
-        const response = await fetch(`${urlApp}?action=logAcertoQuiz&nome=${encodeURIComponent(nome)}&cpf=${cpf}&email=${encodeURIComponent(email)}&status=${acao}&pontos=${pontos}`);
+        const url = `${urlApp}?action=logAcertoQuiz&nome=${encodeURIComponent(nome)}&cpf=${cpf}&email=${encodeURIComponent(email)}&status=${acao}&pontos=${pontos}`;
+        console.log("Enviando log para:", url);
+        const response = await fetch(url);
         const result = await response.json();
+        console.log("Resposta do backend:", result);
         
         if (result.erro) {
             document.getElementById('quiz-result').innerHTML = `⏳ ${result.erro}`;
