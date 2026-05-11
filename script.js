@@ -2,20 +2,19 @@ function getEmailFromCircle() {
     console.log("Debug: Tentando obter e-mail da Circle...");
     try {
         if (window.circleUser && window.circleUser.email) {
-            console.log("Debug: Encontrado via window.circleUser:", window.circleUser.email);
             return window.circleUser.email.toLowerCase().trim();
         }
         
-        let liquidEmail = "{{ user.email }}";
-        console.log("Debug: Tentativa via Liquid template:", liquidEmail);
+        // Verifica se o template foi processado pelo servidor
+        let liquidEmail = "${user.email}"; 
+        console.log("Debug: Tentativa via template:", liquidEmail);
         
-        if (liquidEmail && !liquidEmail.includes('{{')) {
+        if (liquidEmail && !liquidEmail.includes('${')) {
             return liquidEmail.toLowerCase().trim();
         }
     } catch (e) {
         console.error("Debug: Erro ao tentar obter e-mail da Circle:", e);
     }
-    console.log("Debug: Nenhum e-mail encontrado.");
     return null;
 }
 
