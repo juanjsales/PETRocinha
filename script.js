@@ -656,14 +656,19 @@ async function sendQuizLogToBackend(isCorrect) {
             return;
         }
 
-        if (result.sucesso) {
+        if (result.sucesso || result.mensagem === "Já preenchido hoje") {
             if (isCorrect) {
                 document.getElementById('quiz-result').style.color = 'var(--pet-green)';
-                document.getElementById('quiz-result').innerHTML = "🎉 Resposta Correta! Você ganhou 1 Arrasa!";
+                document.getElementById('quiz-result').innerHTML = result.mensagem === "Já preenchido hoje" 
+                    ? "ℹ️ Você já respondeu ao quiz hoje." 
+                    : "🎉 Resposta Correta! Você ganhou 1 Arrasa!";
                 document.getElementById('quiz-result').style.display = 'block';
                 
                 if (currentData) {
-                    currentData.arrasas = (currentData.arrasas || 0) + 1;
+                    // Se não for "já preenchido", incrementa
+                    if (result.mensagem !== "Já preenchido hoje") {
+                        currentData.arrasas = (currentData.arrasas || 0) + 1;
+                    }
                     document.getElementById('user-arrasas').innerText = currentData.arrasas;
                     
                     const percent = Math.min(100, currentData.arrasas);
@@ -674,7 +679,9 @@ async function sendQuizLogToBackend(isCorrect) {
                 }
             } else {
                 document.getElementById('quiz-result').style.color = '#ef4444';
-                document.getElementById('quiz-result').innerHTML = `❌ Resposta Incorreta. A resposta certa era: "${quizData.respostaCorreta}"`;
+                document.getElementById('quiz-result').innerHTML = result.mensagem === "Já preenchido hoje"
+                    ? "ℹ️ Você já respondeu ao quiz hoje."
+                    : `❌ Resposta Incorreta. A resposta certa era: "${quizData.respostaCorreta}"`;
                 document.getElementById('quiz-result').style.display = 'block';
             }
 
