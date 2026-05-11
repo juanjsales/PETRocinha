@@ -510,23 +510,33 @@ async function verificarPorEmail(email) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Escuta solicitações do iframe
+    // 1. Prioridade: E-mail vindo diretamente pela URL (ex: ?email=teste@teste.com)
+    const params = new URLSearchParams(window.location.search);
+    const emailDaUrl = params.get('email');
+    
+    if (emailDaUrl && emailDaUrl !== '${user.email}' && emailDaUrl !== '{{user.email}}') {
+        console.log("Debug: E-mail encontrado na URL:", emailDaUrl);
+        verificarPorEmail(emailDaUrl);
+        return; // Se tem e-mail na URL, não precisa pedir ao pai
+    }
+
+    // 2. Escuta solicitações do iframe (se estiver no pai) ou espera receber o e-mail
     window.addEventListener('message', (event) => {
         if (event.data === 'REQUEST_EMAIL') {
-            // Supondo que a Circle forneça window.circleUser.email
             if (window.circleUser && window.circleUser.email) {
                 event.source.postMessage({ email: window.circleUser.email }, event.origin);
             }
         }
-    });
-
-    // Solicitar e-mail ao widget pai (única forma de autenticação)
-    window.parent.postMessage('REQUEST_EMAIL', '*');
-    window.addEventListener('message', (event) => {
+        
         if (event.data && event.data.email) {
+            console.log("Debug: E-mail recebido via postMessage:", event.data.email);
             verificarPorEmail(event.data.email);
         }
     });
+
+    // 3. Solicitar e-mail ao widget pai como fallback
+    console.log("Debug: Solicitando e-mail ao pai...");
+    window.parent.postMessage('REQUEST_EMAIL', '*');
 });
 
 function renderQuiz() {
