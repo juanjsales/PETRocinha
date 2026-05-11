@@ -382,9 +382,23 @@ a:hover {
     position: absolute; 
     left: 50px; 
     height: 6px; 
-    background: var(--pet-purple); 
-    transition: width 1.2s; 
+    background: linear-gradient(90deg, var(--pet-purple), #93c5fd); 
+    transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1); 
     border-radius: 3px; 
+}
+
+.horiz-line-active::after {
+    content: '';
+    position: absolute;
+    right: -6px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 14px;
+    height: 14px;
+    background: white;
+    border: 3px solid var(--pet-purple);
+    border-radius: 50%;
+    box-shadow: 0 0 10px rgba(99, 102, 241, 0.6);
 }
 
 .step-item { 
@@ -463,13 +477,16 @@ a:hover {
     background: #f8fafc; 
     border: 1px solid #e2e8f0; 
     transition: var(--transition);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 .stage-card.active { 
     background: var(--pet-indigo); 
     color: white; 
     border-color: var(--pet-indigo); 
-    transform: scale(1.05); 
+    transform: scale(1.05);
+    box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.4);
+    transition: all 0.4s ease;
 }
 
 .stage-card h5 { 
