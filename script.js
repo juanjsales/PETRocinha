@@ -520,6 +520,19 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
         // console.log("Nenhum parâmetro de identificação encontrado na URL.");
     }
+
+    // Ouvir mensagens da Circle
+    window.addEventListener('message', (event) => {
+        // Verifica origem segura (ajuste o domínio conforme necessário)
+        const DOMINIO_PERMITIDO = 'https://comunidade.profissaopet.com.br'; 
+        if (event.origin !== DOMINIO_PERMITIDO && event.origin !== window.location.origin) {
+            return;
+        }
+
+        if (event.data && event.data.email) {
+            verificarPorEmail(event.data.email);
+        }
+    });
 });
 
 function renderQuiz() {
