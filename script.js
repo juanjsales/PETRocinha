@@ -510,6 +510,16 @@ async function verificarPorEmail(email) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Escuta solicitações do iframe
+    window.addEventListener('message', (event) => {
+        if (event.data === 'REQUEST_EMAIL') {
+            // Supondo que a Circle forneça window.circleUser.email
+            if (window.circleUser && window.circleUser.email) {
+                event.source.postMessage({ email: window.circleUser.email }, event.origin);
+            }
+        }
+    });
+
     // Solicitar e-mail ao widget pai (única forma de autenticação)
     window.parent.postMessage('REQUEST_EMAIL', '*');
     window.addEventListener('message', (event) => {
