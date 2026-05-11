@@ -290,6 +290,25 @@ async function sendQuizLogToBackend(isCorrect) {
     }
 }
 
+    // Jornada 3A
+    window.currentLevelIndex = configMapa.findIndex(l => l.id === currentData.badge);
+    if (window.currentLevelIndex < 0) window.currentLevelIndex = 0;
+    
+    const currentStage = configMapa[window.currentLevelIndex].stage;
+    document.querySelectorAll('.stage-card').forEach(c => c.classList.remove('active'));
+    const stageCardElem = document.getElementById('card-' + currentStage);
+    if (stageCardElem) stageCardElem.classList.add('active');
+
+    const jornadaLista = document.getElementById('jornada-lista');
+    if (jornadaLista) {
+        jornadaLista.innerHTML = configMapa.map((step, i) => `
+            <div class="step-item ${i <= window.currentLevelIndex ? 'unlocked' : ''}">
+                <div class="step-circle">${i <= window.currentLevelIndex ? step.icon : '🔒'}</div>
+                <div class="step-label"><b>${step.nome}</b><br><span style="font-size:9px">${step.desc}</span></div>
+            </div>
+        `).join('');
+    }
+
 // Inicialização
 document.addEventListener('DOMContentLoaded', () => {
     const params = new URLSearchParams(window.location.search);
