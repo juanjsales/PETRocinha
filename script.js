@@ -510,8 +510,7 @@ async function verificarPorEmail(email) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    // A autenticação agora é delegada totalmente ao widget na Circle
-    // O dashboard apenas espera a carga inicial se o CPF já estiver gravado localmente
+    // A autenticação é exclusiva via CPF (gravado localmente ou manual)
     if (localStorage.getItem('ultimoCPF')) {
         document.getElementById('cpf-input').value = localStorage.getItem('ultimoCPF');
         verificarCPF();
