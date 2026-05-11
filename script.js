@@ -483,31 +483,30 @@ async function verificarPorEmail(email) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Recuperar e-mail da URL ou tentar capturar via mensagem do Circle
     const params = new URLSearchParams(window.location.search);
-    const email = params.get('email');
-    const cpf = params.get('cpf');
+    const emailParam = params.get('email');
+    
+    // Variável para armazenar o email do usuário
+    let userEmail = emailParam;
 
-    if (email) {
-        // console.log("Email encontrado na URL:", email);
-        verificarPorEmail(email);
+    if (emailParam) {
+        verificarPorEmail(emailParam);
     } else if (cpf) {
-        // console.log("CPF encontrado na URL:", cpf);
         document.getElementById('cpf-input').value = cpf;
         verificarCPF();
-    } else {
-        // console.log("Nenhum parâmetro de identificação encontrado na URL.");
     }
 
     // Ouvir mensagens da Circle
     window.addEventListener('message', (event) => {
-        // Verifica origem segura (ajuste o domínio conforme necessário)
         const DOMINIO_PERMITIDO = 'https://comunidade.profissaopet.com.br'; 
         if (event.origin !== DOMINIO_PERMITIDO && event.origin !== window.location.origin) {
             return;
         }
 
         if (event.data && event.data.email) {
-            verificarPorEmail(event.data.email);
+            userEmail = event.data.email;
+            verificarPorEmail(userEmail);
         }
     });
 });
