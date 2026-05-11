@@ -34,6 +34,7 @@ function doGet(e) {
       const nome = e.parameter.nome || "";
       const status = e.parameter.status || "desconhecido"; 
       const pontos = parseInt(e.parameter.pontos) || 0; 
+      const email = e.parameter.email || ""; // Corrigido para pegar do parametro
 
       const sheetLog = ss.getSheetByName("Log");
       const dataLog = sheetLog.getDataRange().getValues();
@@ -50,7 +51,7 @@ function doGet(e) {
       }
 
       // Ordem exigida: Data | ID Usuario | Nome | codigo_evento | Curso/Evento | Aula | CPF | Email | Pontos | Descrição
-      sheetLog.appendRow([new Date(), "", nome, "quiz_diario", `Quiz Diário`, "", cpfBuscado, emailParam, pontos, `Acertou quiz diário`]);
+      sheetLog.appendRow([new Date(), "", nome, "quiz_diario", `Quiz Diário`, "", cpfBuscado, email, pontos, `Acertou quiz diário`]);
 
       return ContentService.createTextOutput(JSON.stringify({ sucesso: true, status: status, pontos: pontos }))
         .setMimeType(ContentService.MimeType.JSON);
