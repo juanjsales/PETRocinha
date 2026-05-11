@@ -153,7 +153,7 @@ async function verificarCPF() {
                     pontos: h.pontos || 0 
                 })),
                 cpf: currentCPF,
-                email: new URLSearchParams(window.location.search).get('email') || ""
+                email: (new URLSearchParams(window.location.search).get('email') || "") !== '${user.email}' ? (new URLSearchParams(window.location.search).get('email') || "") : ""
             };
 
             renderDashboard();
