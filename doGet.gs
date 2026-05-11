@@ -3,25 +3,48 @@ function doGet(e) {
     const SS_ID = "1e2MfXxnGHnkifeh-uJiRrSYuI8rxbp-GCdWvNpj-lgI";
     const ss = SpreadsheetApp.openById(SS_ID);
 
-    function limparCPF(valor) {
-      if (!valor) return "";
-      let numeros = String(valor).replace(/\D/g, "").trim();
-      while (numeros.length > 0 && numeros.length < 11) { numeros = "0" + numeros; }
-      return numeros;
-    }
+    // Funções utilitárias isoladas
+    const Utils = {
+      limparCPF: function(valor) {
+        if (!valor) return "";
+        let numeros = String(valor).replace(/\D/g, "").trim();
+        while (numeros.length > 0 && numeros.length < 11) { numeros = "0" + numeros; }
+        return numeros;
+      },
+      formatarData: function(dataBruta) {
+        if (dataBruta instanceof Date) {
+          return Utilities.formatDate(dataBruta, "GMT-3", "dd/MM");
+        } else if (dataBruta) {
+          let partes = String(dataBruta).substring(0,10).split("-");
+          if (partes.length === 3) return partes[2] + "/" + partes[1];
+        }
+        return "--/--";
+      },
+      buscarLinhaPorCPF: function(sheet, cpfBuscado) {
+        const data = sheet.getDataRange().getValues();
+        for (let i = 1; i < data.length; i++) {
+          for (let j = 0; j < data[i].length; j++) {
+            if (this.limparCPF(data[i][j]) === cpfBuscado) {
+              return { linha: data[i], indice: i + 1 };
+            }
+          }
+        }
+        return null;
+      }
+    };
 
     const action = e.parameter.action || e.parameter.acao; 
     const cpfParam = e.parameter.cpf || "";
     const emailParam = e.parameter.email || "";
-    const cpfBuscado = limparCPF(cpfParam);
-
+    let cpfBuscado = Utils.limparCPF(cpfParam);
+    
     // Se email foi passado e não CPF, tentamos encontrar o CPF pelo email na base
     if (emailParam && !cpfBuscado) {
       const sheetMembers = ss.getSheetByName("community_members");
       const dataMembers = sheetMembers.getDataRange().getValues();
       for (let i = 1; i < dataMembers.length; i++) {
         if (String(dataMembers[i][7]).toLowerCase() === emailParam.toLowerCase()) {
-          cpfBuscado = limparCPF(dataMembers[i][6]);
+          cpfBuscado = Utils.limparCPF(dataMembers[i][6]);
           break;
         }
       }
@@ -34,13 +57,13 @@ function doGet(e) {
       const nome = e.parameter.nome || "";
       const status = e.parameter.status || "desconhecido"; 
       const pontos = parseInt(e.parameter.pontos) || 0; 
-      const email = e.parameter.email || ""; // Corrigido para pegar do parametro
+      const email = e.parameter.email || "";
 
       const sheetLog = ss.getSheetByName("Log");
       const dataLog = sheetLog.getDataRange().getValues();
       const agora = new Date();
       const ultimaResposta = dataLog.find(row => 
-        limparCPF(String(row[6])) === cpfBuscado && 
+        Utils.limparCPF(String(row[6])) === cpfBuscado && 
         row[3] === 'quiz_diario' && 
         (agora - new Date(row[0])) < 24 * 60 * 60 * 1000
       );
@@ -50,7 +73,6 @@ function doGet(e) {
           .setMimeType(ContentService.MimeType.JSON);
       }
 
-      // Ordem exigida: Data | ID Usuario | Nome | codigo_evento | Curso/Evento | Aula | CPF | Email | Pontos | Descrição
       sheetLog.appendRow([new Date(), "", nome, "quiz_diario", `Quiz Diário`, "", cpfBuscado, email, pontos, `Acertou quiz diário`]);
 
       return ContentService.createTextOutput(JSON.stringify({ sucesso: true, status: status, pontos: pontos }))
@@ -63,19 +85,12 @@ function doGet(e) {
     if (action === "updateNotif" || action === "updateAlert") {
       const status = e.parameter.status || "Não";
       const sheetMembers = ss.getSheetByName("community_members");
-      const dataMembers = sheetMembers.getDataRange().getValues();
+      const res = Utils.buscarLinhaPorCPF(sheetMembers, cpfBuscado);
       
-      for (let i = 1; i < dataMembers.length; i++) {
-        let linha = dataMembers[i];
-        let achouNestaLinha = false;
-        for (let j = 0; j < linha.length; j++) {
-          if (limparCPF(linha[j]) === cpfBuscado) { achouNestaLinha = true; break; }
-        }
-        if (achouNestaLinha) {
-          sheetMembers.getRange(i + 1, 13).setValue(status);
-          return ContentService.createTextOutput(JSON.stringify({ sucesso: true, status: status }))
-            .setMimeType(ContentService.MimeType.JSON);
-        }
+      if (res) {
+        sheetMembers.getRange(res.indice, 13).setValue(status);
+        return ContentService.createTextOutput(JSON.stringify({ sucesso: true, status: status }))
+          .setMimeType(ContentService.MimeType.JSON);
       }
     }
 
@@ -85,9 +100,8 @@ function doGet(e) {
     const dataLog = sheetLog.getDataRange().getValues();
     const agora = new Date();
     
-    // Procura no Log, coluna 0 (Data), 3 (codigo_evento), 6 (CPF)
     const ultimaResposta = dataLog.find(row => 
-        limparCPF(String(row[6])) === cpfBuscado && 
+        Utils.limparCPF(String(row[6])) === cpfBuscado && 
         String(row[3]) === 'quiz_diario' && 
         (agora - new Date(row[0])) < 24 * 60 * 60 * 1000
     );
@@ -100,39 +114,27 @@ function doGet(e) {
     // 1. DADOS DA ALUNA (community_members)
     // ==========================================
     const sheetMembers = ss.getSheetByName("community_members");
-    const dataMembers = sheetMembers.getDataRange().getValues();
-    let aluna = { encontrado: false };
-
-    for (let i = 1; i < dataMembers.length; i++) {
-      let linha = dataMembers[i];
-      let achouNestaLinha = false;
-      
-      for (let j = 0; j < linha.length; j++) {
-        if (limparCPF(linha[j]) === cpfBuscado) { achouNestaLinha = true; break; }
-      }
-
-      if (achouNestaLinha) {
-        aluna = {
-          encontrado: true,
-          cpf: cpfBuscado,
-          nome: linha[1] || "Aluna", 
-          foto: linha[3] || "",
-          arrasas: Number(linha[10]) || 0,
-          badge: String(linha[11] || "Aprendiz Curiosa"),
-          xp_total: Number(linha[13]) || 0,
-          jaRespondeuQuiz: jaRespondeuHoje,
-          proximoEvento: "Consulte a Circle",
-          missoesDisponiveis: [],
-          historico: [],
-          ranking: []
-        };
-        break; 
-      }
-    }
-
-    if (!aluna.encontrado) {
+    const resAluna = Utils.buscarLinhaPorCPF(sheetMembers, cpfBuscado);
+    
+    if (!resAluna) {
        return ContentService.createTextOutput(JSON.stringify({ encontrado: false })).setMimeType(ContentService.MimeType.JSON);
     }
+    
+    let linha = resAluna.linha;
+    let aluna = {
+      encontrado: true,
+      cpf: cpfBuscado,
+      nome: linha[1] || "Aluna", 
+      foto: linha[3] || "",
+      arrasas: Number(linha[10]) || 0,
+      badge: String(linha[11] || "Aprendiz Curiosa"),
+      xp_total: Number(linha[13]) || 0,
+      jaRespondeuQuiz: jaRespondeuHoje,
+      proximoEvento: "Consulte a Circle",
+      missoesDisponiveis: [],
+      historico: [],
+      ranking: []
+    };
 
     // ==========================================
     // 2. CONFIGURAÇÕES E MISSÕES (Aba Config)
@@ -169,21 +171,12 @@ function doGet(e) {
         let achouNoLog = false;
         
         for (let c = 0; c < linhaLog.length; c++) {
-          if (limparCPF(linhaLog[c]) === cpfBuscado) { achouNoLog = true; break; }
+          if (Utils.limparCPF(linhaLog[c]) === cpfBuscado) { achouNoLog = true; break; }
         }
 
         if (achouNoLog) {
-          let dataBruta = linhaLog[0];
-          let dataFmt = "--/--";
-          if (dataBruta instanceof Date) {
-            dataFmt = Utilities.formatDate(dataBruta, "GMT-3", "dd/MM");
-          } else if (dataBruta) {
-            let partes = String(dataBruta).substring(0,10).split("-");
-            if (partes.length === 3) dataFmt = partes[2] + "/" + partes[1];
-          }
-
           aluna.historico.push({
-            data: dataFmt,
+            data: Utils.formatarData(linhaLog[0]),
             acao: linhaLog[9] || linhaLog[3] || "Atividade", 
             pontos: Number(linhaLog[8]) || 0
           });
@@ -214,11 +207,7 @@ function doGet(e) {
     // ==========================================
     // 5. QUIZ DIÁRIO
     // ==========================================
-    
-    // Garante que o quiz exista sempre, mesmo que sorteie um null ou garanta um padrão.
-    // Usaremos Math.floor para selecionar.
     aluna.quiz = null;
-    
     aluna.dicaIA = null;
 
     return ContentService.createTextOutput(JSON.stringify(aluna)).setMimeType(ContentService.MimeType.JSON);
