@@ -510,22 +510,24 @@ async function verificarPorEmail(email) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Solicitar e-mail ao widget pai
+    window.parent.postMessage('REQUEST_EMAIL', '*');
+    window.addEventListener('message', (event) => {
+        if (event.data && event.data.email) {
+            console.log("Debug: E-mail recebido do pai via postMessage:", event.data.email);
+            verificarPorEmail(event.data.email);
+        }
+    });
+    
+    // Fallback: tentar localmente se postMessage falhar
     const params = new URLSearchParams(window.location.search);
     const emailParam = params.get('email');
-    const emailCircle = getEmailFromCircle();
-    
-    console.log("Debug Init: emailParam =", emailParam, "emailCircle =", emailCircle);
-    
-    const emailToUse = emailParam || emailCircle;
-    
-    if (emailToUse) {
-        verificarPorEmail(emailToUse);
-    } else if (cpf) {
-        document.getElementById('cpf-input').value = cpf;
+    if (emailParam && emailParam !== '${user.email}') {
+        verificarPorEmail(emailParam);
+    } else if (localStorage.getItem('ultimoCPF')) {
+        document.getElementById('cpf-input').value = localStorage.getItem('ultimoCPF');
         verificarCPF();
     }
-
-  
 });
 
 function renderQuiz() {
