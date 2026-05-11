@@ -55,24 +55,20 @@ const configMapa = [
     { id: "Embaixadora Pet Rocinha 👑", nome: "5. Embaixadora Pet Rocinha 👑", stage: "agir", icon: "👑", img: "https://github.com/juanjsales/PETRocinha/blob/main/Embaixadora.webp?raw=true", desc: "Referência na comunidade." }
 ];
 
-function parseNestedCSV(str) {
-    if (!str) return [];
-    let result = [];
-    let current = '';
-    let inQuotes = false;
-    for (let i = 0; i < str.length; i++) {
-        let char = str[i];
-        if (char === '"') {
-            inQuotes = !inQuotes;
-        } else if (char === ',' && !inQuotes) {
-            result.push(current.trim());
-            current = '';
-        } else {
-            current += char;
-        }
-    }
-    result.push(current.trim());
-    return result;
+function showNotification(message, type = 'info') {
+    const notif = document.createElement('div');
+    notif.className = `notification ${type}`;
+    notif.innerText = message;
+    notif.style.position = 'fixed';
+    notif.style.bottom = '20px';
+    notif.style.right = '20px';
+    notif.style.padding = '15px';
+    notif.style.background = type === 'error' ? '#ef4444' : '#10b981';
+    notif.style.color = 'white';
+    notif.style.borderRadius = '8px';
+    notif.style.zIndex = '9999';
+    document.body.appendChild(notif);
+    setTimeout(() => notif.remove(), 3000);
 }
 
 function tratarCPFFrontEnd(cpf) {
@@ -108,7 +104,7 @@ async function verificarCPF() {
     const currentCPF = tratarCPFFrontEnd(inputVal);
     
     if (currentCPF.length !== 11) {
-        alert("Por favor, digite seu CPF completo (11 números).");
+        showNotification("Por favor, digite seu CPF completo (11 números).", "error");
         return;
     }
 
@@ -157,11 +153,11 @@ async function verificarCPF() {
 
             renderDashboard();
         } else {
-            alert("Aluna não cadastrada no sistema.");
+            showNotification("Aluna não cadastrada no sistema.", "error");
         }
     } catch (error) {
         console.error("Erro no processamento:", error);
-        alert("Erro ao carregar seus dados. Verifique sua conexão.");
+        showNotification("Erro ao carregar seus dados. Verifique sua conexão.", "error");
     } finally {
         loader.style.display = 'none';
         btnEntrar.disabled = false;
@@ -374,16 +370,16 @@ async function toggleNotificacoes() {
         if (novoStatus === 'Não') {
             btn.innerText = 'DESATIVADAS';
             btn.style.background = '#94a3b8';
-            alert("Notificações desativadas.");
+            showNotification("Notificações desativadas.");
         } else {
             btn.innerText = 'ATIVADAS';
             btn.style.background = 'var(--pet-green)';
-            alert("Notificações reativadas!");
+            showNotification("Notificações reativadas!");
         }
 
     } catch (error) {
         console.error("Erro ao atualizar notificações:", error);
-        alert("Erro ao conectar ao servidor.");
+        showNotification("Erro ao conectar ao servidor.", "error");
     } finally {
         loader.style.display = 'none';
     }
@@ -474,11 +470,11 @@ async function verificarPorEmail(email) {
 
             renderDashboard();
         } else {
-            alert("Aluna não cadastrada no sistema via e-mail.");
+            showNotification("Aluna não cadastrada no sistema via e-mail.", "error");
         }
     } catch (error) {
         console.error("Erro no processamento:", error);
-        alert("Erro ao carregar seus dados pelo e-mail.");
+        showNotification("Erro ao carregar seus dados pelo e-mail.", "error");
     } finally {
         loader.style.display = 'none';
         btnEntrar.disabled = false;
@@ -604,7 +600,7 @@ async function sendQuizLogToBackend(isCorrect) {
         }
         
         console.error("Dados do usuário não disponíveis e CPF não encontrado no localStorage.");
-        alert("Sessão expirada ou dados não carregados. Por favor, recarregue a página e entre novamente.");
+        showNotification("Sessão expirada ou dados não carregados. Por favor, recarregue a página e entre novamente.", "error");
         document.getElementById('auth-section').style.display = 'flex';
         document.getElementById('dash-content').style.display = 'none';
         return;
