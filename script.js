@@ -616,19 +616,18 @@ async function checkQuizAnswer(selectedOption, opcoesQuizElement, quizResultElem
 
 async function sendQuizLogToBackend(isCorrect) {
     if (!currentData || !currentData.cpf) {
-        console.error("Dados do usuário não disponíveis para enviar o log do quiz.");
-        alert("Sessão expirada ou dados não carregados. Por favor, recarregue a página e entre novamente.");
-        
-        // Tenta recuperar via CPF salvo ou volta para a tela de login
+        console.warn("Dados do usuário não disponíveis. Tentando recuperar via localStorage...");
         const savedCPF = localStorage.getItem('ultimoCPF');
         if (savedCPF) {
-            console.log("Tentando recuperar dados via localStorage...");
             document.getElementById('cpf-input').value = savedCPF;
             verificarCPF();
-        } else {
-            document.getElementById('auth-section').style.display = 'flex';
-            document.getElementById('dash-content').style.display = 'none';
+            return;
         }
+        
+        console.error("Dados do usuário não disponíveis e CPF não encontrado no localStorage.");
+        alert("Sessão expirada ou dados não carregados. Por favor, recarregue a página e entre novamente.");
+        document.getElementById('auth-section').style.display = 'flex';
+        document.getElementById('dash-content').style.display = 'none';
         return;
     }
 
