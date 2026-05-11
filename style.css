@@ -75,7 +75,7 @@ body {
     background-attachment: fixed;
     font-family: 'Baloo 2', cursive;
     color: var(--pet-text-main);
-    min-height: 100%;
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
     overflow-x: hidden;
@@ -125,7 +125,7 @@ a:hover {
 /* ── VIDEO GATE ── */
 #video-gate {
     display: none;
-    position: absolute;
+    position: fixed;
     top: 0; 
     left: 0;
     width: 100%; 
@@ -349,16 +349,15 @@ a:hover {
     border-radius: 10px;
 }
 
-/* ── NOVA LINHA DO TEMPO ── */
-.fluxo-3a-header {
-    display: flex;
-    justify-content: space-around;
-    margin-bottom: 20px;
-    font-size: 12px;
-    font-weight: 800;
-    color: var(--pet-text-sub);
+/* ── JORNADA ── */
+.horiz-container { 
+    overflow-x: auto; 
+    padding: 10px 0; 
+    scrollbar-width: none; 
+    width: 100%; 
 }
 
+<<<<<<< HEAD
 .fluxo-step {
     padding-bottom: 5px;
     border-bottom: 2px solid transparent;
@@ -375,18 +374,30 @@ a:hover {
     overflow-x: auto;
     width: 100%;
     scroll-snap-type: x mandatory;
+=======
+.horiz-container::-webkit-scrollbar { 
+    display: none; 
 }
 
-.timeline-line {
-    position: absolute;
-    top: 50%;
-    left: 0;
-    width: 100%;
-    height: 4px;
-    background: #e2e8f0;
-    z-index: 0;
+.horiz-map { 
+    display: flex; 
+    align-items: center; 
+    position: relative; 
+    min-width: 650px; 
+    padding: 30px 0; 
+>>>>>>> f92700f (new)
 }
 
+.horiz-line { 
+    position: absolute; 
+    left: 50px; 
+    right: 50px; 
+    height: 6px; 
+    background: #e2e8f0; 
+    border-radius: 3px; 
+}
+
+<<<<<<< HEAD
 .timeline-steps {
     display: flex;
     justify-content: space-around;
@@ -408,12 +419,36 @@ a:hover {
 .step-icon {
     width: 40px;
     height: 40px;
+=======
+.horiz-line-active { 
+    position: absolute; 
+    left: 50px; 
+    height: 6px; 
+    background: var(--pet-purple); 
+    transition: width 1.2s; 
+    border-radius: 3px; 
+}
+
+.step-item { 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    width: 130px; 
+    position: relative; 
+    z-index: 1; 
+}
+
+.step-circle {
+    width: 60px; 
+    height: 60px;
+    background: white;
+    border: 4px solid #e2e8f0;
+>>>>>>> f92700f (new)
     border-radius: 50%;
-    background: #fff;
-    border: 3px solid #cbd5e1;
-    display: flex;
-    align-items: center;
+    display: flex; 
+    align-items: center; 
     justify-content: center;
+<<<<<<< HEAD
     font-size: 20px;
     transition: all 0.3s ease;
 }
@@ -435,12 +470,34 @@ a:hover {
     font-weight: 700;
     color: var(--pet-text-sub);
     text-align: center;
+=======
+    font-size: 24px; 
+    transition: var(--transition);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
 }
 
-.unlocked .step-label {
-    color: var(--pet-purple);
+.unlocked .step-circle { 
+    border-color: var(--pet-purple); 
+    background: #f5f3ff; 
+    transform: scale(1.1); 
+    box-shadow: 0 8px 20px rgba(99,102,241,0.2); 
 }
 
+.step-label { 
+    font-size: 11px; 
+    font-weight: 700; 
+    text-align: center; 
+    margin-top: 12px; 
+    color: var(--pet-text-sub); 
+    width: 100px; 
+    line-height: 1.2; 
+>>>>>>> f92700f (new)
+}
+
+.unlocked .step-label { 
+    color: var(--pet-purple); 
+    font-weight: 800; 
+}
 
 /* ── STAGE CARDS ── */
 .modelo-3a-box { 
@@ -458,16 +515,13 @@ a:hover {
     background: #f8fafc; 
     border: 1px solid #e2e8f0; 
     transition: var(--transition);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 .stage-card.active { 
     background: var(--pet-indigo); 
     color: white; 
     border-color: var(--pet-indigo); 
-    transform: scale(1.05);
-    box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.4);
-    transition: all 0.4s ease;
+    transform: scale(1.05); 
 }
 
 .stage-card h5 { 
@@ -514,7 +568,7 @@ ul, ol {
 /* ── MODAL ── */
 .modal-overlay {
     display: none;
-    position: absolute;
+    position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(15, 12, 55, 0.85);
     backdrop-filter: blur(8px);
@@ -682,18 +736,13 @@ ul, ol {
     to { transform: rotate(360deg); } 
 }
 
-#quiz-question-area {
-    padding: 20px;
-    background: #ffffff;
-    border-radius: var(--radius-md);
-    border: 1px solid #e2e8f0;
-}
-
-#opcoes-quiz {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    margin-top: 20px;
+/* ── CHART ── */
+.chart-container { 
+    height: 220px; 
+    margin: 24px 0; 
+    background: #f8fafc; 
+    border-radius: var(--radius-md); 
+    padding: 10px; 
 }
 
 
@@ -712,35 +761,6 @@ ul, ol {
 .sair-btn:hover { 
     opacity: 1; 
     color: var(--pet-purple); 
-}
-
-/* ── TOAST NOTIFICATIONS ── */
-.toast-container {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    z-index: 20000;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.toast {
-    background: white;
-    color: var(--pet-text-main);
-    padding: 16px 24px;
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-lg);
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    border: 1px solid #e2e8f0;
-    animation: slideInRight 0.3s ease-out;
-}
-
-@keyframes slideInRight {
-    from { transform: translateX(100%); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
 }
 
 @media (max-width: 480px) {
