@@ -218,9 +218,12 @@ function renderDashboard() {
     document.getElementById('user-img').src = currentData.foto || "";
     document.getElementById('user-arrasas').innerText = currentData.arrasas;
     
-    const badgeData = configMapa.find(c => c.id === currentData.badge) || configMapa;
+    const badgeData = configMapa.find(c => c.id === currentData.badge) || configMapa[0];
     document.querySelector('.badge-text').innerText = badgeData.id;
     document.querySelector('.badge-img').src = badgeData.img;
+
+    // Atualiza a jornada
+    atualizarJornada(currentData.badge);
 
     const dicaIA = DICAS_IA_LOCAL[currentData.badge] || "Dica: Mantenha a constância e o foco técnico.";
     document.getElementById('dica-ia-texto').innerText = dicaIA;
@@ -292,32 +295,33 @@ async function sendQuizLogToBackend(isCorrect) {
     }
 }
 
-    // Atualiza a lógica de renderização da jornada
+function atualizarJornada(badgeAtual) {
     const jornadaLista = document.getElementById('jornada-lista');
     const fluxoHeader = document.querySelectorAll('.fluxo-step');
     
-    if (jornadaLista && currentData && currentData.badge) {
-        const currentIndex = configMapa.findIndex(l => l.id === currentData.badge);
-        const activeIndex = currentIndex >= 0 ? currentIndex : 0;
-        
-        // Header 3A
-        fluxoHeader.forEach(el => el.classList.remove('active'));
-        const currentStage = configMapa[activeIndex].stage;
-        const targetHeader = document.getElementById(`step-${currentStage}`);
-        if(targetHeader) targetHeader.classList.add('active');
+    if (!jornadaLista) return;
 
-        // Linha do tempo
-        jornadaLista.innerHTML = configMapa.map((passo, index) => {
-            const isUnlocked = index <= activeIndex;
-            return `
-            <div class="timeline-step ${isUnlocked ? 'unlocked' : 'locked'}">
-                <div class="step-icon">${isUnlocked ? passo.icon : '🔒'}</div>
-                <div class="step-label">${passo.nome.replace(/^\d+\.\s*/, '')}</div>
-            </div>`;
-        }).join('');
-    } else if (jornadaLista) {
-        jornadaLista.innerHTML = `<p>Dados da jornada não disponíveis.</p>`;
-    }
+    const currentIndex = configMapa.findIndex(l => l.id === badgeAtual);
+    const activeIndex = currentIndex >= 0 ? currentIndex : 0;
+    
+    // Header 3A
+    fluxoHeader.forEach(el => el.classList.remove('active'));
+    const currentStage = configMapa[activeIndex].stage;
+    const targetHeader = document.getElementById(`step-${currentStage}`);
+    if(targetHeader) targetHeader.classList.add('active');
+
+    // Linha do tempo
+    jornadaLista.innerHTML = configMapa.map((passo, index) => {
+        const isUnlocked = index <= activeIndex;
+        const isActive = index === activeIndex;
+        
+        return `
+        <div class="timeline-step ${isUnlocked ? 'unlocked' : 'locked'} ${isActive ? 'active' : ''}">
+            <div class="step-icon">${isUnlocked ? passo.icon : '🔒'}</div>
+            <div class="step-label">${passo.nome.replace(/^\d+\.\s*/, '')}</div>
+        </div>`;
+    }).join('');
+}
 
 // Inicialização
 document.addEventListener('DOMContentLoaded', () => {

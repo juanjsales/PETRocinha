@@ -359,6 +359,11 @@ a:hover {
     color: var(--pet-text-sub);
 }
 
+.fluxo-step {
+    padding-bottom: 5px;
+    border-bottom: 2px solid transparent;
+}
+
 .fluxo-step.active {
     color: var(--pet-purple);
     border-bottom: 2px solid var(--pet-purple);
@@ -366,9 +371,10 @@ a:hover {
 
 .timeline-wrapper {
     position: relative;
-    padding: 40px 0;
+    padding: 20px 0;
     overflow-x: auto;
     width: 100%;
+    scroll-snap-type: x mandatory;
 }
 
 .timeline-line {
@@ -387,7 +393,8 @@ a:hover {
     align-items: center;
     position: relative;
     z-index: 1;
-    min-width: 600px;
+    min-width: 300px;
+    padding: 0 20px;
 }
 
 .timeline-step {
@@ -395,29 +402,36 @@ a:hover {
     flex-direction: column;
     align-items: center;
     gap: 10px;
+    scroll-snap-align: center;
 }
 
 .step-icon {
-    width: 50px;
-    height: 50px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     background: #fff;
     border: 3px solid #cbd5e1;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 24px;
+    font-size: 20px;
     transition: all 0.3s ease;
 }
 
 .timeline-step.unlocked .step-icon {
     border-color: var(--pet-purple);
     background: #f5f3ff;
-    box-shadow: 0 0 15px rgba(99,102,241,0.4);
+    box-shadow: 0 0 10px rgba(99,102,241,0.3);
+}
+
+.timeline-step.active .step-icon {
+    border-color: var(--pet-green);
+    background: #d1fae5;
+    transform: scale(1.1);
 }
 
 .step-label {
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 700;
     color: var(--pet-text-sub);
     text-align: center;
