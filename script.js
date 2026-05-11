@@ -6,18 +6,20 @@ window.addEventListener('message', (event) => {
 });
 
 function getEmailFromCircle() {
+    console.log("Debug: Tentando obter e-mail da Circle...");
     try {
         if (window.circleUser && window.circleUser.email) {
             return window.circleUser.email.toLowerCase().trim();
         }
         
         let liquidEmail = "${user.email}"; 
+        console.log("Debug: Tentativa via template:", liquidEmail);
         
         if (liquidEmail && !liquidEmail.includes('${')) {
             return liquidEmail.toLowerCase().trim();
         }
     } catch (e) {
-        console.error("Erro ao tentar obter e-mail da Circle:", e);
+        console.error("Debug: Erro ao tentar obter e-mail da Circle:", e);
     }
     return null;
 }
@@ -72,52 +74,19 @@ const configMapa = [
 ];
 
 function showNotification(message, type = 'info') {
-    let container = document.querySelector('.toast-container');
-    if (!container) {
-        container = document.createElement('div');
-        container.className = 'toast-container';
-        document.body.appendChild(container);
-    }
-    const toast = document.createElement('div');
-    toast.className = 'toast';
-    toast.innerHTML = `${type === 'error' ? '❌' : '✅'} <span>${message}</span>`;
-    container.appendChild(toast);
-    setTimeout(() => toast.remove(), 3000);
-}
-
-function normalizarDados(rawData, email = "") {
-    return {
-        encontrado: true,
-        nome: rawData.nome || "Aluna",
-        foto: rawData.foto || "",
-        arrasas: rawData.arrasas || 0,
-        xp_total: rawData.xp_total || 0,
-        badge: rawData.badge || "Aprendiz Curiosa",
-        proximoEvento: rawData.proximoEvento || "Consulte a Circle",
-        ranking: rawData.ranking || [],
-        jaRespondeuQuiz: rawData.jaRespondeuQuiz || false,
-        historico: rawData.historico || [],
-        cpf: rawData.cpf || "",
-        email: email
-    };
-}
-
-
-function validarCPF(cpf) {
-    cpf = cpf.replace(/[^\d]+/g, '');
-    if (cpf == '' || cpf.length != 11 || /^(\d)\1{10}$/.test(cpf)) return false;
-    let soma = 0;
-    let resto;
-    for (let i = 1; i <= 9; i++) soma = soma + parseInt(cpf.substring(i - 1, i)) * (11 - i);
-    resto = (soma * 10) % 11;
-    if ((resto == 10) || (resto == 11)) resto = 0;
-    if (resto != parseInt(cpf.substring(9, 10))) return false;
-    soma = 0;
-    for (let i = 1; i <= 10; i++) soma = soma + parseInt(cpf.substring(i - 1, i)) * (12 - i);
-    resto = (soma * 10) % 11;
-    if ((resto == 10) || (resto == 11)) resto = 0;
-    if (resto != parseInt(cpf.substring(10, 11))) return false;
-    return true;
+    const notif = document.createElement('div');
+    notif.className = `notification ${type}`;
+    notif.innerText = message;
+    notif.style.position = 'fixed';
+    notif.style.bottom = '20px';
+    notif.style.right = '20px';
+    notif.style.padding = '15px';
+    notif.style.background = type === 'error' ? '#ef4444' : '#10b981';
+    notif.style.color = 'white';
+    notif.style.borderRadius = '8px';
+    notif.style.zIndex = '9999';
+    document.body.appendChild(notif);
+    setTimeout(() => notif.remove(), 3000);
 }
 
 function tratarCPFFrontEnd(cpf) {
@@ -148,8 +117,8 @@ async function verificarCPF() {
     const inputVal = document.getElementById('cpf-input').value;
     const currentCPF = tratarCPFFrontEnd(inputVal);
     
-    if (!validarCPF(currentCPF)) {
-        showNotification("CPF inválido.", "error");
+    if (currentCPF.length !== 11) {
+        showNotification("Por favor, digite seu CPF completo (11 números).", "error");
         return;
     }
 
@@ -162,8 +131,20 @@ async function verificarCPF() {
         const rawData = await response.json();
 
         if (rawData.encontrado) {
-            currentData = normalizarDados(rawData, "");
-            currentData.cpf = currentCPF;
+            currentData = {
+                encontrado: true,
+                nome: rawData.nome || "Aluna",
+                foto: rawData.foto || "",
+                arrasas: rawData.arrasas || 0,
+                xp_total: rawData.xp_total || 0,
+                badge: rawData.badge || "Aprendiz Curiosa",
+                proximoEvento: rawData.proximoEvento || "Consulte a Circle",
+                ranking: rawData.ranking || [],
+                jaRespondeuQuiz: rawData.jaRespondeuQuiz || false,
+                historico: rawData.historico || [],
+                cpf: currentCPF,
+                email: ""
+            };
             renderDashboard();
         } else {
             showNotification("Aluna não cadastrada no sistema.", "error");
@@ -178,6 +159,7 @@ async function verificarCPF() {
 }
 
 async function verificarPorEmail(email) {
+    console.log("🔍 Iniciando busca para o e-mail:", email);
     const btnEntrar = document.getElementById('btn-entrar');
     const loader = document.getElementById('loader');
     
@@ -187,19 +169,37 @@ async function verificarPorEmail(email) {
     
     try {
         const fetchUrl = `${urlApp}?email=${encodeURIComponent(email.trim())}`;
+        console.log("📡 Chamando URL:", fetchUrl);
 
         const response = await fetch(fetchUrl);
         const rawData = await response.json();
         
+        console.log("📥 Resposta recebida do Backend:", rawData);
+
         if (rawData.encontrado) {
-            currentData = normalizarDados(rawData, email);
+            currentData = {
+                encontrado: true,
+                nome: rawData.nome || "Aluna",
+                foto: rawData.foto || "",
+                arrasas: rawData.arrasas || 0,
+                xp_total: rawData.xp_total || 0,
+                badge: rawData.badge || "Aprendiz Curiosa",
+                proximoEvento: rawData.proximoEvento || "Consulte a Circle",
+                ranking: rawData.ranking || [],
+                historico: rawData.historico || [],
+                cpf: rawData.cpf,
+                email: email
+            };
             renderDashboard();
             showNotification(`Bem-vinda, ${currentData.nome}!`);
         } else {
+            console.warn("❌ Backend retornou: não encontrado.", rawData);
             showNotification(rawData.erro || "E-mail não cadastrado na Profissão Pet.", "error");
+            // Se não achou, deixa o CPF visível para login manual
             document.getElementById('auth-section').style.display = 'flex';
         }
     } catch (error) {
+        console.error("🚨 Erro crítico na requisição:", error);
         showNotification("Erro de conexão com a base de dados.", "error");
     } finally {
         loader.style.display = 'none';
@@ -223,15 +223,11 @@ function renderDashboard() {
     const dicaIA = DICAS_IA_LOCAL[currentData.badge] || "Dica: Mantenha a constância e o foco técnico.";
     document.getElementById('dica-ia-texto').innerText = dicaIA;
 
-const META_PROGRESSO = 100;
-
-// ...
-
-    const percent = Math.min(100, (currentData.arrasas / META_PROGRESSO) * 100);
+    const percent = Math.min(100, currentData.arrasas);
     document.getElementById('meta-txt').innerText = percent;
     document.getElementById('bar-fill').style.width = percent + '%';
     
-    if (currentData.arrasas >= META_PROGRESSO) document.getElementById('btn-resgate').style.display = 'flex';
+    if (currentData.arrasas >= 100) document.getElementById('btn-resgate').style.display = 'flex';
 
     // Ranking e Histórico
     const rankingList = document.getElementById('ranking-list');
@@ -256,7 +252,7 @@ const META_PROGRESSO = 100;
     }
 }
 
-async function sendQuizLogToBackend(isCorrect, correta = "") {
+async function sendQuizLogToBackend(isCorrect) {
     const loaderQuiz = document.getElementById('loader-quiz');
     const quizResEl = document.getElementById('quiz-result');
     const nome = currentData.nome ? currentData.nome.split(' ') : "Aluna";
@@ -275,25 +271,16 @@ async function sendQuizLogToBackend(isCorrect, correta = "") {
             document.getElementById('opcoes-quiz').style.display = 'none';
         } else {
             quizResEl.style.display = 'block';
-            quizResEl.innerHTML = isCorrect ? "🎉 Resposta Correta! Você ganhou 1 Arrasa!" : `❌ Incorreta. Resposta: "${correta}"`;
+            quizResEl.innerHTML = isCorrect ? "🎉 Resposta Correta! Você ganhou 1 Arrasa!" : `❌ Incorreta. Resposta: "${quizData.respostaCorreta}"`;
             
-            if (isCorrect) {
-                // Atualização local otimizada
-                currentData.arrasas = Number(currentData.arrasas) + 1;
-                currentData.jaRespondeuQuiz = true;
-                
-                // Re-render parcial (apenas os elementos afetados)
-                document.getElementById('user-arrasas').innerText = currentData.arrasas;
-                
-                // Opcional: Atualizar apenas o indicador visual se necessário
-                const percent = Math.min(100, (currentData.arrasas / META_PROGRESSO) * 100);
-                document.getElementById('meta-txt').innerText = percent;
-                document.getElementById('bar-fill').style.width = percent + '%';
-                
-                if (currentData.arrasas >= META_PROGRESSO) document.getElementById('btn-resgate').style.display = 'flex';
-                
-                // Esconder quiz após sucesso
-                document.getElementById('opcoes-quiz').style.display = 'none';
+            // Recarrega os dados para atualizar saldo e ranking
+            const updated = await fetch(`${urlApp}?cpf=${currentData.cpf}`);
+            const updatedData = await updated.json();
+            if (updatedData.encontrado) {
+                currentData.arrasas = updatedData.arrasas;
+                currentData.historico = updatedData.historico;
+                currentData.ranking = updatedData.ranking;
+                renderDashboard();
             }
         }
     } catch (e) {
@@ -465,11 +452,6 @@ async function toggleNotificacoes() {
 
 function renderQuiz() {
     const quizContent = document.getElementById('quiz-content');
-    if (!currentData.perguntaDoDia) {
-        quizContent.innerHTML = `<h4>🧠 Quiz Diário</h4><p>Nenhuma pergunta disponível hoje.</p>`;
-        return;
-    }
-
     quizContent.innerHTML = `<h4>🧠 Quiz Diário</h4><div id="quiz-question-area"><p id="pergunta-txt"></p><div id="opcoes-quiz"></div></div><div id="quiz-result" style="display:none"></div>`;
     
     if (currentData.jaRespondeuQuiz) {
@@ -478,16 +460,16 @@ function renderQuiz() {
         return;
     }
 
-    const qData = currentData.perguntaDoDia;
-    document.getElementById('pergunta-txt').innerText = qData.pergunta;
-    qData.opcoes.forEach(opt => {
+    quizData = DADOS_QUIZ_LOCAL[Math.floor(Math.random() * DADOS_QUIZ_LOCAL.length)];
+    document.getElementById('pergunta-txt').innerText = quizData.pergunta;
+    quizData.opcoes.forEach(opt => {
         const btn = document.createElement('button');
         btn.innerText = opt;
         btn.className = 'btn-glow tab-btn';
         btn.style.margin = '5px 0';
         btn.onclick = () => {
             Array.from(btn.parentElement.children).forEach(b => b.disabled = true);
-            sendQuizLogToBackend(opt === qData.respostaCorreta, qData.respostaCorreta);
+            sendQuizLogToBackend(opt === quizData.respostaCorreta);
         };
         document.getElementById('opcoes-quiz').appendChild(btn);
     });
