@@ -1,3 +1,10 @@
+window.parent.postMessage('REQUEST_EMAIL', '*');
+window.addEventListener('message', (event) => {
+    if (event.data.email) {
+        verificarPorEmail(event.data.email);
+    }
+});
+
 function getEmailFromCircle() {
     console.log("Debug: Tentando obter e-mail da Circle...");
     try {
