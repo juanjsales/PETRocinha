@@ -335,17 +335,6 @@ function solicitarResgate() {
     }
 }
 
-// Wrapper robusto para confetti
-function dispararConfetti(config) {
-    if (typeof confetti === 'function') {
-        confetti(config);
-    } else {
-        console.warn("Biblioteca 'confetti' ainda não carregada. Tentando novamente em 500ms...");
-        setTimeout(() => {
-            if (typeof confetti === 'function') confetti(config);
-        }, 500);
-    }
-}
 
 function abrirModalRecompensas() {
     const modalBody = document.getElementById('modal-recompensas-conteudo');
@@ -355,13 +344,6 @@ function abrirModalRecompensas() {
         ${recompensa3}
     `;
     document.getElementById('modal-recompensas').style.display = 'flex';
-    
-    // Dispara animação de comemoração com segurança
-    dispararConfetti({
-        particleCount: 150,
-        spread: 70,
-        origin: { y: 0.6 }
-    });
 }
 
 function fecharModalRecompensas() {
