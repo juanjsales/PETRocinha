@@ -142,16 +142,22 @@ async function verificarCPF() {
 }
 
 async function verificarPorEmail(email) {
+    console.log("🔍 Iniciando busca para o e-mail:", email);
     const btnEntrar = document.getElementById('btn-entrar');
     const loader = document.getElementById('loader');
     
     btnEntrar.disabled = true;
-    btnEntrar.innerText = "Processando...";
+    btnEntrar.innerText = "Buscando...";
     loader.style.display = 'flex';
     
     try {
-        const response = await fetch(`${urlApp}?email=${encodeURIComponent(email)}`);
+        const fetchUrl = `${urlApp}?email=${encodeURIComponent(email.trim())}`;
+        console.log("📡 Chamando URL:", fetchUrl);
+
+        const response = await fetch(fetchUrl);
         const rawData = await response.json();
+        
+        console.log("📥 Resposta recebida do Backend:", rawData);
 
         if (rawData.encontrado) {
             currentData = {
@@ -168,12 +174,16 @@ async function verificarPorEmail(email) {
                 email: email
             };
             renderDashboard();
+            showNotification(`Bem-vinda, ${currentData.nome}!`);
         } else {
-            // Se o e-mail falhar, não renderiza e avisa o erro
-            showNotification(rawData.erro || "Aluna não cadastrada via e-mail.", "error");
+            console.warn("❌ Backend retornou: não encontrado.", rawData);
+            showNotification(rawData.erro || "E-mail não cadastrado na Profissão Pet.", "error");
+            // Se não achou, deixa o CPF visível para login manual
+            document.getElementById('auth-section').style.display = 'flex';
         }
     } catch (error) {
-        showNotification("Erro ao carregar dados por e-mail.", "error");
+        console.error("🚨 Erro crítico na requisição:", error);
+        showNotification("Erro de conexão com a base de dados.", "error");
     } finally {
         loader.style.display = 'none';
         btnEntrar.disabled = false;
