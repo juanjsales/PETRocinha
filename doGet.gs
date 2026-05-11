@@ -43,7 +43,7 @@ function doGet(e) {
       const sheetMembers = ss.getSheetByName("community_members");
       const dataMembers = sheetMembers.getDataRange().getValues();
       for (let i = 1; i < dataMembers.length; i++) {
-        if (String(dataMembers[i][7]).toLowerCase() === emailParam.toLowerCase()) {
+        if (String(dataMembers[i][2]).toLowerCase() === emailParam.toLowerCase()) {
           cpfBuscado = Utils.limparCPF(dataMembers[i][6]);
           break;
         }
