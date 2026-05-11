@@ -66,11 +66,11 @@ let chartInstance = null;
 const urlApp = "https://script.google.com/macros/s/AKfycbyCtBQ_wVDEpyKybzHgo9eFswc6tczQuFs53VLzg3t9HuoFbLOVVY_zrVScPxIwG2b0/exec";
 
 const configMapa = [
-    { id: "Aprendiz Curiosa 🐾", nome: "1. Aprendiz Curiosa 🐾", stage: "acreditar", icon: "🐾", img: "https://github.com/juanjsales/PETRocinha/blob/main/media/Aprendiz.webp?raw=true", desc: "Primeiros passos no curso." },
-    { id: "Mulher de Propósito ✨", nome: "2. Mulher de Propósito ✨", stage: "acreditar", icon: "✨", img: "https://github.com/juanjsales/PETRocinha/blob/main/Mulher.webp?raw=true", desc: "Conexão com seu 'porquê'." },
-    { id: "Fera da Técnica 🎓", nome: "3. Fera da Técnica 🎓", stage: "aprender", icon: "🎓", img: "https://github.com/juanjsales/PETRocinha/blob/main/Fera.webp?raw=true", desc: "Domínio do manejo pet." },
-    { id: "Profissional que Arrasa 💼", nome: "4. Profissional que Arrasa 💼", stage: "agir", icon: "💼", img: "https://github.com/juanjsales/PETRocinha/blob/main/Prof.webp?raw=true", desc: "Atendimento e renda." },
-    { id: "Embaixadora Pet Rocinha 👑", nome: "5. Embaixadora Pet Rocinha 👑", stage: "agir", icon: "👑", img: "https://github.com/juanjsales/PETRocinha/blob/main/Embaixadora.webp?raw=true", desc: "Referência na comunidade." }
+    { id: "Aprendiz Curiosa 🐾", nome: "1. Aprendiz Curiosa 🐾", stage: "acreditar", icon: "🐾", img: "media/Aprendiz.webp", desc: "Primeiros passos no curso." },
+    { id: "Mulher de Propósito ✨", nome: "2. Mulher de Propósito ✨", stage: "acreditar", icon: "✨", img: "media/Mulher.webp", desc: "Conexão com seu 'porquê'." },
+    { id: "Fera da Técnica 🎓", nome: "3. Fera da Técnica 🎓", stage: "aprender", icon: "🎓", img: "media/Fera.webp", desc: "Domínio do manejo pet." },
+    { id: "Profissional que Arrasa 💼", nome: "4. Profissional que Arrasa 💼", stage: "agir", icon: "💼", img: "media/Prof.webp", desc: "Atendimento e renda." },
+    { id: "Embaixadora Pet Rocinha 👑", nome: "5. Embaixadora Pet Rocinha 👑", stage: "agir", icon: "👑", img: "media/Embaixadora.webp", desc: "Referência na comunidade." }
 ];
 
 function showNotification(message, type = 'info') {
