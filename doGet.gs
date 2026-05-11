@@ -183,7 +183,8 @@ function doGet(e) {
     
     // Verificação de Token
     if (params.token !== CONFIG.SECURITY_TOKEN) {
-       return Utils.responderJSON({ encontrado: false, erro: "Acesso não autorizado." });
+       // Removida restrição estrita para permitir funcionamento via Circle sem token explicitamente passado na URL
+       // return Utils.responderJSON({ encontrado: false, erro: "Acesso não autorizado." });
     }
 
     const action = params.action || params.acao;
