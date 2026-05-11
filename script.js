@@ -173,7 +173,7 @@ function renderDashboard() {
     const userNomeElem = document.getElementById('user-nome');
     if (userNomeElem) userNomeElem.innerText = currentData.nome;
     const userImgElem = document.getElementById('user-img');
-    if (userImgElem) userImgElem.src = currentData.foto || "https://via.placeholder.com/100?text=PET";
+    if (userImgElem) userImgElem.src = currentData.foto || " ";
     const userArrasasElem = document.getElementById('user-arrasas');
     if (userArrasasElem) userArrasasElem.innerText = currentData.arrasas;
     
