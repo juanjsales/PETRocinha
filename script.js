@@ -661,3 +661,34 @@ async function sendQuizLogToBackend(isCorrect) {
         console.error("Erro na comunicação com o backend para registrar log do quiz:", error);
     }
 }
+
+// No início do seu script.js
+document.addEventListener('DOMContentLoaded', () => {
+    const cacheOriginal = localStorage.getItem('pet_perfil_ativo');
+    
+    if (cacheOriginal) {
+        const data = JSON.parse(cacheOriginal);
+        console.log("🚀 Dashboard: Dados detectados via Widget. Entrando direto...");
+        
+        currentData = data; // Alimenta a variável global
+        renderDashboard();   // Monta o painel sem pedir CPF
+        
+        // Opcional: Busca dados novos no fundo para garantir que o saldo esteja atualizado
+        refreshDadosSilencioso(data.email || data.cpf);
+    } else {
+        console.log("👋 Dashboard: Nenhuma aluna detectada. Aguardando login manual.");
+        document.getElementById('auth-section').style.display = 'block';
+    }
+});
+
+async function refreshDadosSilencioso(id) {
+    try {
+        const res = await fetch(`${urlApp}?email=${id}`); // Ou CPF
+        const newData = await res.json();
+        if (newData.encontrado) {
+            localStorage.setItem('pet_perfil_ativo', JSON.stringify(newData));
+            currentData = newData;
+            renderDashboard(); 
+        }
+    } catch(e) { console.warn("Falha no refresh em segundo plano."); }
+}
