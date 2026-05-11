@@ -669,13 +669,18 @@ ul, ol {
     to { transform: rotate(360deg); } 
 }
 
-/* ── CHART ── */
-.chart-container { 
-    height: 220px; 
-    margin: 24px 0; 
-    background: #f8fafc; 
-    border-radius: var(--radius-md); 
-    padding: 10px; 
+#quiz-question-area {
+    padding: 20px;
+    background: #ffffff;
+    border-radius: var(--radius-md);
+    border: 1px solid #e2e8f0;
+}
+
+#opcoes-quiz {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 20px;
 }
 
 

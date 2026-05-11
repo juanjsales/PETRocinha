@@ -24,10 +24,20 @@ function getEmailFromCircle() {
     return null;
 }
 
-// Recompensas
-const recompensa1 = `<div class="reward-container gold"><div class="reward-title">🥇 Selo de Ouro - Arrasadora Elite</div><ul class="reward-list"><li>Acesso a Masterclass de Negócios</li><li>Mentoria 1-1 com Especialista</li></ul></div>`;
-const recompensa2 = `<div class="reward-container silver"><div class="reward-title">🥈 Selo de Prata - Parceira Sênior</div><ul class="reward-list"><li>Desconto em materiais de trabalho</li><li>Kit Exclusivo Profissão Pet</li></ul></div>`;
-const recompensa3 = `<div class="reward-container bronze"><div class="reward-title">🥉 Selo de Bronze - Iniciante Promissora</div><ul class="reward-list"><li>Acesso ao grupo de suporte VIP</li><li>Certificado de Conclusão de Módulo</li></ul></div>`;
+function renderJornada() {
+    const jornadaLista = document.getElementById('jornada-lista');
+    if (!jornadaLista) return;
+    
+    jornadaLista.innerHTML = configMapa.map((passo, index) => {
+        const ehAtual = (currentData && currentData.badge === passo.id);
+        const ehAnterior = false; // Lógica simplificada de progresso
+        return `
+            <div class="step-item ${ehAtual ? 'unlocked' : ''}" style="margin: 0 10px;">
+                <div class="step-circle">${passo.icon}</div>
+                <div class="step-label">${passo.nome}</div>
+            </div>`;
+    }).join('');
+}
 
 const DADOS_QUIZ_LOCAL = [
     { pergunta: "Qual é o principal objetivo da jornada de uma Embaixadora?", opcoes: ["Ficar famosa", "Gerar renda própria", "Apenas passear com pets"], respostaCorreta: "Gerar renda própria" },
@@ -294,6 +304,7 @@ function switchTab(tabId, el) {
     document.getElementById(tabId).style.display = 'block';
     if (el) el.classList.add('active');
     if (tabId === 'tab-quiz') renderQuiz();
+    if (tabId === 'tab-jornada') renderJornada();
     if (tabId === 'tab-extrato' && currentData) renderChart();
 }
 
@@ -312,6 +323,8 @@ function renderQuiz() {
     quizData.opcoes.forEach(opt => {
         const btn = document.createElement('button');
         btn.innerText = opt;
+        btn.className = 'btn-glow tab-btn';
+        btn.style.margin = '5px 0';
         btn.onclick = () => {
             Array.from(btn.parentElement.children).forEach(b => b.disabled = true);
             sendQuizLogToBackend(opt === quizData.respostaCorreta);
