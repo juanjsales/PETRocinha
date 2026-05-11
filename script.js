@@ -292,31 +292,26 @@ async function sendQuizLogToBackend(isCorrect) {
     }
 }
 
-    // Jornada 3A
-    window.currentLevelIndex = configMapa.findIndex(l => l.id === currentData.badge);
-    if (window.currentLevelIndex < 0) window.currentLevelIndex = 0;
-    
-    const currentStage = configMapa[window.currentLevelIndex].stage;
-    document.querySelectorAll('.stage-card').forEach(c => c.classList.remove('active'));
-    const stageCardElem = document.getElementById('card-' + currentStage);
-    if (stageCardElem) stageCardElem.classList.add('active');
-
+    // Atualiza a lógica de renderização da jornada
     const jornadaLista = document.getElementById('jornada-lista');
+    const fluxoHeader = document.querySelectorAll('.fluxo-step');
+    
     if (jornadaLista) {
-        jornadaLista.innerHTML = configMapa.map((step, i) => {
-            const badgeNameFromStepId = step.id.replace(/^\d+\.\s*/, '').replace(/\s*[\uD800-\uDFFF].*$/, '').trim();
-            const missoesDoPasso = currentData.missoes ? currentData.missoes.filter(m => m.titulo.includes(badgeNameFromStepId)) : [];
-            const listaMissoes = missoesDoPasso.length > 0 
-                ? `<ul style="font-size:10px; text-align:left; padding-left:15px; margin-top:5px;">${missoesDoPasso.map(m => `<li>${m}</li>`).join('')}</ul>`
-                : '';
-            
+        const currentIndex = configMapa.findIndex(l => l.id === currentData.badge);
+        const activeIndex = currentIndex >= 0 ? currentIndex : 0;
+        
+        // Header 3A
+        fluxoHeader.forEach(el => el.classList.remove('active'));
+        const currentStage = configMapa[activeIndex].stage;
+        document.getElementById(`step-${currentStage}`).classList.add('active');
+
+        // Linha do tempo
+        jornadaLista.innerHTML = configMapa.map((passo, index) => {
+            const isUnlocked = index <= activeIndex;
             return `
-            <div class="step-item ${i <= window.currentLevelIndex ? 'unlocked' : ''}">
-                <div class="step-circle">${i <= window.currentLevelIndex ? step.icon : '🔒'}</div>
-                <div class="step-label">
-                    <b>${step.nome}</b><br><span style="font-size:9px">${step.desc}</span>
-                    ${listaMissoes}
-                </div>
+            <div class="timeline-step ${isUnlocked ? 'unlocked' : 'locked'}">
+                <div class="step-icon">${isUnlocked ? passo.icon : '🔒'}</div>
+                <div class="step-label">${passo.nome.replace(/^\d+\.\s*/, '')}</div>
             </div>`;
         }).join('');
     }

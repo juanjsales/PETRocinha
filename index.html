@@ -156,17 +156,18 @@
                     </div>
 
                     <div id="tab-jornada" class="tab-content" style="display: none;" role="tabpanel" aria-labelledby="tab-btn-jornada">
-                        <div class="modelo-3a-box">
-                            <div class="stage-card" id="card-acreditar"><h5>ACREDITAR</h5><p>Identidade</p></div>
-                            <div class="stage-card" id="card-aprender"><h5>APRENDER</h5><p>Técnica</p></div>
-                            <div class="stage-card" id="card-agir"><h5>AGIR</h5><p>Renda</p></div>
+                        <!-- Indicador do Fluxo 3A -->
+                        <div class="fluxo-3a-header">
+                            <div class="fluxo-step" id="step-acreditar">ACREDITAR</div>
+                            <div class="fluxo-step" id="step-aprender">APRENDER</div>
+                            <div class="fluxo-step" id="step-agir">AGIR</div>
                         </div>
-
-                        <div class="horiz-container">
-                            <div class="horiz-map">
-                                <div class="horiz-line"></div>
-                                <div id="horiz-line-active" class="horiz-line-active"></div>
-                                <div id="jornada-lista" style="display: contents;"></div>
+                        
+                        <!-- Linha do Tempo -->
+                        <div class="timeline-wrapper">
+                            <div class="timeline-line"></div>
+                            <div class="timeline-steps" id="jornada-lista">
+                                <!-- Renderizado via JS -->
                             </div>
                         </div>
                         <p style="text-align: center; font-size: 12px; color: var(--pet-text-sub); font-weight: 600;">Arraste para o lado para ver o seu futuro ➡</p>

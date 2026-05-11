@@ -349,115 +349,82 @@ a:hover {
     border-radius: 10px;
 }
 
-/* ── JORNADA ── */
-.horiz-container { 
-    overflow-x: auto; 
-    padding: 10px 0; 
-    scrollbar-width: none; 
-    width: 100%; 
-}
-
-.horiz-container::-webkit-scrollbar { 
-    display: none; 
-}
-
-.horiz-map { 
-    display: flex; 
-    align-items: center; 
-    position: relative; 
-    min-width: 650px; 
-    padding: 30px 0; 
-}
-
-.horiz-line { 
-    position: absolute; 
-    left: 50px; 
-    right: 50px; 
-    height: 6px; 
-    background: #e2e8f0; 
-    border-radius: 3px; 
-}
-
-.horiz-line-active { 
-    position: absolute; 
-    left: 50px; 
-    height: 6px; 
-    background: linear-gradient(90deg, var(--pet-purple), #93c5fd); 
-    transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1); 
-    border-radius: 3px; 
-}
-
-.horiz-line-active::after {
-    content: '';
-    position: absolute;
-    right: -6px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 14px;
-    height: 14px;
-    background: white;
-    border: 3px solid var(--pet-purple);
-    border-radius: 50%;
-    box-shadow: 0 0 10px rgba(99, 102, 241, 0.6);
-}
-
-.step-item { 
-    display: flex; 
-    flex-direction: column; 
-    align-items: center; 
-    width: 130px; 
-    position: relative; 
-    z-index: 1; 
-}
-
-.step-circle {
-    width: 60px; 
-    height: 60px;
-    background: white;
-    border: 4px solid #e2e8f0;
-    border-radius: 50%;
-    display: flex; 
-    align-items: center; 
-    justify-content: center;
-    font-size: 24px; 
-    transition: var(--transition);
-    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-}
-
-.unlocked .step-circle { 
-    border-color: var(--pet-purple); 
-    background: #f5f3ff; 
-    transform: scale(1.1); 
-    box-shadow: 0 8px 20px rgba(99,102,241,0.2); 
-}
-
-.step-label { 
-    font-size: 11px; 
-    font-weight: 700; 
-    text-align: center; 
-    margin-top: 12px; 
-    color: var(--pet-text-sub); 
-    width: 100px; 
-    line-height: 1.2; 
-}
-
-.unlocked .step-label { 
-    color: var(--pet-purple); 
-    font-weight: 800; 
-}
-
-/* Estilos para missões na Jornada */
-.step-label ul {
-    list-style: disc;
-    text-align: left;
-    padding-left: 15px;
-    margin-top: 5px;
+/* ── NOVA LINHA DO TEMPO ── */
+.fluxo-3a-header {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 20px;
+    font-size: 12px;
+    font-weight: 800;
     color: var(--pet-text-sub);
-    font-size: 10px;
 }
 
-.step-label ul li {
-    margin-bottom: 2px;
+.fluxo-step.active {
+    color: var(--pet-purple);
+    border-bottom: 2px solid var(--pet-purple);
+}
+
+.timeline-wrapper {
+    position: relative;
+    padding: 40px 0;
+    overflow-x: auto;
+    width: 100%;
+}
+
+.timeline-line {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: #e2e8f0;
+    z-index: 0;
+}
+
+.timeline-steps {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+    min-width: 600px;
+}
+
+.timeline-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.step-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: #fff;
+    border: 3px solid #cbd5e1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    transition: all 0.3s ease;
+}
+
+.timeline-step.unlocked .step-icon {
+    border-color: var(--pet-purple);
+    background: #f5f3ff;
+    box-shadow: 0 0 15px rgba(99,102,241,0.4);
+}
+
+.step-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--pet-text-sub);
+    text-align: center;
+}
+
+.unlocked .step-label {
+    color: var(--pet-purple);
 }
 
 
