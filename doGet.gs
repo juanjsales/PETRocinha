@@ -34,18 +34,25 @@ function doGet(e) {
     const action = e.parameter.action || e.parameter.acao; 
     const cpfParam = e.parameter.cpf || "";
     const emailParam = e.parameter.email || "";
-    Logger.log("Email recebido: " + emailParam);
+    
+    console.log("Debug Backend: Action=" + action + " | CPF=" + cpfParam + " | Email=" + emailParam);
+    
     let cpfBuscado = Utils.limparCPF(cpfParam);
     
     // Se email foi passado e não CPF, tentamos encontrar o CPF pelo email na base
     if (emailParam && !cpfBuscado) {
+      console.log("Debug Backend: Tentando localizar CPF pelo email: " + emailParam);
       const sheetMembers = ss.getSheetByName("community_members");
       const dataMembers = sheetMembers.getDataRange().getValues();
       for (let i = 1; i < dataMembers.length; i++) {
-        if (String(dataMembers[i][2]).toLowerCase() === emailParam.toLowerCase()) {
+        if (String(dataMembers[i][2]).toLowerCase().trim() === emailParam.toLowerCase().trim()) {
           cpfBuscado = Utils.limparCPF(dataMembers[i][6]);
+          console.log("Debug Backend: CPF encontrado para o email: " + cpfBuscado);
           break;
         }
+      }
+      if (!cpfBuscado) {
+        console.log("Debug Backend: Nenhum CPF vinculado ao email: " + emailParam);
       }
     }
 
