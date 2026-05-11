@@ -1,14 +1,21 @@
 function getEmailFromCircle() {
+    console.log("Debug: Tentando obter e-mail da Circle...");
     try {
         if (window.circleUser && window.circleUser.email) {
+            console.log("Debug: Encontrado via window.circleUser:", window.circleUser.email);
             return window.circleUser.email.toLowerCase().trim();
         }
-        // Tentativa via template líquido (substitua conforme necessário)
+        
         let liquidEmail = "{{ user.email }}";
-        if (liquidEmail && !liquidEmail.includes('{{')) return liquidEmail.toLowerCase().trim();
+        console.log("Debug: Tentativa via Liquid template:", liquidEmail);
+        
+        if (liquidEmail && !liquidEmail.includes('{{')) {
+            return liquidEmail.toLowerCase().trim();
+        }
     } catch (e) {
-        console.warn("Erro ao tentar obter e-mail da Circle:", e);
+        console.error("Debug: Erro ao tentar obter e-mail da Circle:", e);
     }
+    console.log("Debug: Nenhum e-mail encontrado.");
     return null;
 }
 
@@ -497,12 +504,16 @@ async function verificarPorEmail(email) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Recuperar e-mail da URL ou tentar capturar via mensagem do Circle
     const params = new URLSearchParams(window.location.search);
-    const emailParam = params.get('email') || getEmailFromCircle();
+    const emailParam = params.get('email');
+    const emailCircle = getEmailFromCircle();
     
-    if (emailParam) {
-        verificarPorEmail(emailParam);
+    console.log("Debug Init: emailParam =", emailParam, "emailCircle =", emailCircle);
+    
+    const emailToUse = emailParam || emailCircle;
+    
+    if (emailToUse) {
+        verificarPorEmail(emailToUse);
     } else if (cpf) {
         document.getElementById('cpf-input').value = cpf;
         verificarCPF();
