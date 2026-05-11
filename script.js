@@ -23,7 +23,14 @@ function getEmailFromCircle() {
     }
     return null;
 }
-
+function switchTab(tabId, el) {
+    document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(tabId).style.display = 'block';
+    if (el) el.classList.add('active');
+    if (tabId === 'tab-quiz') renderQuiz();
+    if (tabId === 'tab-extrato' && currentData) renderChart();
+}
 function renderJornada() {
     const jornadaLista = document.getElementById('jornada-lista');
     if (!jornadaLista) return;
