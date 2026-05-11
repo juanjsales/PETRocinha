@@ -510,21 +510,9 @@ async function verificarPorEmail(email) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Solicitar e-mail ao widget pai
-    window.parent.postMessage('REQUEST_EMAIL', '*');
-    window.addEventListener('message', (event) => {
-        if (event.data && event.data.email) {
-            console.log("Debug: E-mail recebido do pai via postMessage:", event.data.email);
-            verificarPorEmail(event.data.email);
-        }
-    });
-    
-    // Fallback: tentar localmente se postMessage falhar
-    const params = new URLSearchParams(window.location.search);
-    const emailParam = params.get('email');
-    if (emailParam && emailParam !== '${user.email}') {
-        verificarPorEmail(emailParam);
-    } else if (localStorage.getItem('ultimoCPF')) {
+    // A autenticação agora é delegada totalmente ao widget na Circle
+    // O dashboard apenas espera a carga inicial se o CPF já estiver gravado localmente
+    if (localStorage.getItem('ultimoCPF')) {
         document.getElementById('cpf-input').value = localStorage.getItem('ultimoCPF');
         verificarCPF();
     }
