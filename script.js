@@ -622,24 +622,6 @@ async function sendQuizLogToBackend(isCorrect) {
     const pontos = isCorrect ? 1 : 0;
     const email = currentData.email || new URLSearchParams(window.location.search).get('email') || "";
     
-    // Webhook Make.com
-    const webhookUrl = "https://hook.eu1.make.com/cl87dsvuhj9tijeurlmjgg0as538syl3";
-    try {
-        fetch(webhookUrl, {
-            method: 'POST',
-            body: JSON.stringify({
-                nome: nome,
-                cpf: cpf,
-                email: email,
-                status: acao,
-                pontos: pontos,
-                data: new Date().toISOString()
-            })
-        });
-    } catch (e) {
-        console.error("Erro ao enviar webhook:", e);
-    }
-    
     // O backend agora resolve o CPF a partir do email se o CPF não for fornecido
     try {
         const url = `${urlApp}?action=logAcertoQuiz&nome=${encodeURIComponent(nome)}&cpf=${cpf}&email=${encodeURIComponent(email)}&status=${acao}&pontos=${pontos}`;
