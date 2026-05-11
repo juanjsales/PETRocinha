@@ -432,6 +432,21 @@ a:hover {
     font-weight: 800; 
 }
 
+/* Estilos para missões na Jornada */
+.step-label ul {
+    list-style: disc;
+    text-align: left;
+    padding-left: 15px;
+    margin-top: 5px;
+    color: var(--pet-text-sub);
+    font-size: 10px;
+}
+
+.step-label ul li {
+    margin-bottom: 2px;
+}
+
+
 /* ── STAGE CARDS ── */
 .modelo-3a-box { 
     display: grid; 

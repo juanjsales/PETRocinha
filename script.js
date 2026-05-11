@@ -301,12 +301,21 @@ async function sendQuizLogToBackend(isCorrect) {
 
     const jornadaLista = document.getElementById('jornada-lista');
     if (jornadaLista) {
-        jornadaLista.innerHTML = configMapa.map((step, i) => `
+        jornadaLista.innerHTML = configMapa.map((step, i) => {
+            const missoesDoPasso = (currentData.missoes && currentData.missoes[step.id]) ? currentData.missoes[step.id] : [];
+            const listaMissoes = missoesDoPasso.length > 0 
+                ? `<ul style="font-size:10px; text-align:left; padding-left:15px; margin-top:5px;">${missoesDoPasso.map(m => `<li>${m}</li>`).join('')}</ul>`
+                : '';
+            
+            return `
             <div class="step-item ${i <= window.currentLevelIndex ? 'unlocked' : ''}">
                 <div class="step-circle">${i <= window.currentLevelIndex ? step.icon : '🔒'}</div>
-                <div class="step-label"><b>${step.nome}</b><br><span style="font-size:9px">${step.desc}</span></div>
-            </div>
-        `).join('');
+                <div class="step-label">
+                    <b>${step.nome}</b><br><span style="font-size:9px">${step.desc}</span>
+                    ${listaMissoes}
+                </div>
+            </div>`;
+        }).join('');
     }
 
 // Inicialização
