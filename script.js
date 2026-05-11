@@ -497,26 +497,7 @@ document.addEventListener('DOMContentLoaded', () => {
         verificarCPF();
     }
 
-    // Ouvir mensagens da Circle
-    window.addEventListener('message', (event) => {
-        const DOMINIO_PERMITIDO = 'https://comunidade.aprenderecuidar.com.br'; 
-        
-        // Validação de origem robusta
-        if (event.origin !== DOMINIO_PERMITIDO) {
-            console.warn("Mensagem recebida de origem não autorizada:", event.origin);
-            return;
-        }
-
-        try {
-            if (event.data && typeof event.data === 'object' && event.data.email) {
-                console.log("E-mail recebido com sucesso da Circle:", event.data.email);
-                userEmail = event.data.email;
-                verificarPorEmail(userEmail);
-            }
-        } catch (err) {
-            console.error("Erro ao processar mensagem da Circle:", err);
-        }
-    });
+  
 });
 
 function renderQuiz() {
