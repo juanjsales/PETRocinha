@@ -38,7 +38,7 @@ async function refreshDadosSilencioso(id) {
 
             const script = document.createElement('script');
             script.id = callbackName;
-            script.src = `${urlApp}?email=\${encodeURIComponent(id)}&callback=\${callbackName}`;
+            script.src = `${urlApp}?email=${encodeURIComponent(id)}&callback=${callbackName}`;
             script.onerror = () => {
                 clearTimeout(timeout);
                 delete window[callbackName];
