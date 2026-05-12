@@ -1,3 +1,61 @@
+// No início do seu script.js
+document.addEventListener('DOMContentLoaded', () => {
+    const cacheOriginal = localStorage.getItem('pet_perfil_ativo');
+    
+    if (cacheOriginal) {
+        const data = JSON.parse(cacheOriginal);
+        console.log("🚀 Dashboard: Dados detectados via Widget. Entrando direto...");
+        
+        currentData = data; // Alimenta a variável global
+        renderDashboard();   // Monta o painel sem pedir CPF
+        
+        // Opcional: Busca dados novos no fundo para garantir que o saldo esteja atualizado
+        refreshDadosSilencioso(data.email || data.cpf);
+    } else {
+        console.log("👋 Dashboard: Nenhuma aluna detectada. Aguardando login manual.");
+        document.getElementById('auth-section').style.display = 'block';
+    }
+});
+
+async function refreshDadosSilencioso(id) {
+    try {
+        const result = await new Promise((resolve, reject) => {
+            const callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
+            const timeout = setTimeout(() => {
+                delete window[callbackName];
+                const s = document.getElementById(callbackName);
+                if (s) document.body.removeChild(s);
+                reject(new Error('Timeout'));
+            }, 10000);
+
+            window[callbackName] = (data) => {
+                clearTimeout(timeout);
+                delete window[callbackName];
+                const s = document.getElementById(callbackName);
+                if (s) document.body.removeChild(s);
+                resolve(data);
+            };
+
+            const script = document.createElement('script');
+            script.id = callbackName;
+            script.src = `${urlApp}?email=\${encodeURIComponent(id)}&callback=\${callbackName}`;
+            script.onerror = () => {
+                clearTimeout(timeout);
+                delete window[callbackName];
+                const s = document.getElementById(callbackName);
+                if (s) document.body.removeChild(s);
+                reject(new Error('Error'));
+            };
+            document.body.appendChild(script);
+        });
+
+        if (result.encontrado) {
+            localStorage.setItem('pet_perfil_ativo', JSON.stringify(result));
+            currentData = result;
+            renderDashboard(); 
+        }
+    } catch(e) { console.warn("Falha no refresh em segundo plano."); }
+}
 async function jsonpRequest(params) {
     return new Promise((resolve, reject) => {
         const callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
@@ -726,61 +784,4 @@ async function sendQuizLogToBackend(isCorrect) {
     }
 }
 
-// No início do seu script.js
-document.addEventListener('DOMContentLoaded', () => {
-    const cacheOriginal = localStorage.getItem('pet_perfil_ativo');
-    
-    if (cacheOriginal) {
-        const data = JSON.parse(cacheOriginal);
-        console.log("🚀 Dashboard: Dados detectados via Widget. Entrando direto...");
-        
-        currentData = data; // Alimenta a variável global
-        renderDashboard();   // Monta o painel sem pedir CPF
-        
-        // Opcional: Busca dados novos no fundo para garantir que o saldo esteja atualizado
-        refreshDadosSilencioso(data.email || data.cpf);
-    } else {
-        console.log("👋 Dashboard: Nenhuma aluna detectada. Aguardando login manual.");
-        document.getElementById('auth-section').style.display = 'block';
-    }
-});
 
-async function refreshDadosSilencioso(id) {
-    try {
-        const result = await new Promise((resolve, reject) => {
-            const callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
-            const timeout = setTimeout(() => {
-                delete window[callbackName];
-                const s = document.getElementById(callbackName);
-                if (s) document.body.removeChild(s);
-                reject(new Error('Timeout'));
-            }, 10000);
-
-            window[callbackName] = (data) => {
-                clearTimeout(timeout);
-                delete window[callbackName];
-                const s = document.getElementById(callbackName);
-                if (s) document.body.removeChild(s);
-                resolve(data);
-            };
-
-            const script = document.createElement('script');
-            script.id = callbackName;
-            script.src = `${urlApp}?email=\${encodeURIComponent(id)}&callback=\${callbackName}`;
-            script.onerror = () => {
-                clearTimeout(timeout);
-                delete window[callbackName];
-                const s = document.getElementById(callbackName);
-                if (s) document.body.removeChild(s);
-                reject(new Error('Error'));
-            };
-            document.body.appendChild(script);
-        });
-
-        if (result.encontrado) {
-            localStorage.setItem('pet_perfil_ativo', JSON.stringify(result));
-            currentData = result;
-            renderDashboard(); 
-        }
-    } catch(e) { console.warn("Falha no refresh em segundo plano."); }
-}
