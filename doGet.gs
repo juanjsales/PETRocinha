@@ -36,6 +36,11 @@ function doGet(e) {
     const indiceNaPlanilha = alunaRel.indice;
     debugLog.aluna_encontrada = perfil.nome;
 
+    // Incluindo dados adicionais
+    perfil.email = perfil.email || params.email || "";
+    perfil.has_company_email = perfil.has_company_email || false;
+    perfil.admin_of_any_paid_community = perfil.admin_of_any_paid_community || false;
+
     // 2. Processamento de Ações (Quiz / Notificações)
     if (action === "logAcertoQuiz") {
       debugLog.etapa = "Processando Quiz";

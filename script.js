@@ -266,6 +266,22 @@ function renderDashboard() {
     const dicaContainer = document.getElementById('dica-ia-container');
     const dicaIA = DICAS_IA_LOCAL[currentData.badge] || "Dica: Mantenha a constância e o foco técnico.";
     
+    // Novo: Exibir informações extras se existirem
+    let infoExtra = "";
+    if (currentData.email) infoExtra += `<div style="font-size: 12px; color: var(--pet-text-sub);">E-mail: ${currentData.email}</div>`;
+    if (currentData.has_company_email) infoExtra += `<span style="background: var(--pet-green); color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px;">E-mail Corporativo</span>`;
+    if (currentData.admin_of_any_paid_community) infoExtra += `<span style="background: var(--pet-purple); color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px;">Admin Comunidade</span>`;
+    
+    if (infoExtra) {
+        let extraContainer = document.getElementById('user-extra-info');
+        if (!extraContainer) {
+            extraContainer = document.createElement('div');
+            extraContainer.id = 'user-extra-info';
+            document.getElementById('user-nome').parentNode.appendChild(extraContainer);
+        }
+        extraContainer.innerHTML = infoExtra;
+    }
+
     if (dicaTexto) dicaTexto.innerText = dicaIA;
     if (dicaContainer) dicaContainer.style.display = 'block';
 
