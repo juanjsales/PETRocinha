@@ -1,49 +1,47 @@
-// No início do seu script.js
 document.addEventListener('DOMContentLoaded', () => {
     const params = new URLSearchParams(window.location.search);
-    const emailURL = params.get('email');
+    
+    // 1. Tenta pegar o e-mail da URL (configurado como ?email={{user.email}} na Circle)
+    let emailURL = params.get('email');
+    if (emailURL === "undefined" || emailURL === "null") emailURL = null;
+
     const cpfURL = params.get('cpf');
     const cacheOriginal = localStorage.getItem('pet_perfil_ativo');
-    let circleUserEmail = null;
+    
+    // 2. Tenta obter o email do cache que o Widget salvou
+    let cachedEmail = localStorage.getItem('pet_user_email');
 
-    // Tenta obter o email do current_user do localStorage da Circle
-    try {
-        const currentUser = localStorage.getItem('pet_user_email');
-        if (currentUser) {
-            const userData = JSON.parse(currentUser);
-            if (userData && userData.email) {
-                circleUserEmail = userData.email;
-                console.log("Email detectado no localStorage da Circle:", circleUserEmail);
-            }
-        }
-    } catch (e) {
-        console.warn("Erro ao ler current_user do localStorage:", e);
-    }
+    // Define qual e-mail usar (Prioridade: URL > Cache)
+    const emailPrioritario = emailURL || cachedEmail;
 
-    const emailPrioritario = circleUserEmail || (emailURL !== "undefined" ? emailURL : null);
-
-    // 1. Tenta carregar via localStorage (nosso cache) primeiro
-    if (cacheOriginal) {
-        const data = JSON.parse(cacheOriginal);
-        console.log("🚀 Dashboard: Dados detectados via localStorage (cache 'pet_perfil_ativo'). Entrando direto...");
+    if (emailPrioritario) {
+        console.log("📍 Usuária identificada por e-mail:", emailPrioritario);
+        // Salva no cache para as próximas vezes
+        localStorage.setItem('pet_user_email', emailPrioritario);
         
-        currentData = data;
-        renderDashboard();
-        refreshDadosSilencioso(data.email || data.cpf);
+        // Se já tem os dados completos no cache, renderiza direto e atualiza por baixo
+        if (cacheOriginal) {
+            currentData = JSON.parse(cacheOriginal);
+            renderDashboard();
+            refreshDadosSilencioso(emailPrioritario);
+        } else {
+            // Se não tem cache, faz a busca inicial
+            verificarPorEmail(emailPrioritario);
+        }
     } 
-    // 2. Se não houver cache, tenta usar o e-mail (prioridade para Circle)
-    else if (emailPrioritario) {
-        console.log("Email detectado. Buscando dados para:", emailPrioritario);
-        verificarPorEmail(emailPrioritario);
-    }
     else if (cpfURL) {
-        console.log("CPF detectado na URL, buscando dados...");
+        console.log("🔎 CPF detectado na URL...");
         document.getElementById('cpf-input').value = cpfURL;
         verificarCPF();
     } 
-    // 4. Caso contrário, pede login
+    else if (cacheOriginal) {
+        // Fallback para cache antigo sem e-mail na URL
+        currentData = JSON.parse(cacheOriginal);
+        renderDashboard();
+        refreshDadosSilencioso(currentData.email || currentData.cpf);
+    }
     else {
-        console.log("👋 Dashboard: Nenhuma aluna detectada. Aguardando login manual.");
+        console.log("👋 Nenhuma aluna detectada. Aguardando login manual.");
         document.getElementById('auth-section').style.display = 'block';
     }
 });
@@ -571,68 +569,53 @@ document.getElementById('cpf-input').addEventListener('keypress', (e) => {
 });
 
 async function verificarPorEmail(email) {
+    if (!email) return;
+
     const btnEntrar = document.getElementById('btn-entrar');
     const loader = document.getElementById('loader');
     
-    btnEntrar.disabled = true;
-    btnEntrar.innerText = "Processando...";
+    if (btnEntrar) {
+        btnEntrar.disabled = true;
+        btnEntrar.innerText = "Processando...";
+    }
     loader.style.display = 'flex';
     
     try {
         const result = await new Promise((resolve, reject) => {
             const callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
-            const timeout = setTimeout(() => {
-                delete window[callbackName];
-                const s = document.getElementById(callbackName);
-                if (s) document.body.removeChild(s);
-                reject(new Error('Tempo limite da requisição excedido.'));
-            }, 10000);
-
+            
             window[callbackName] = (data) => {
-                clearTimeout(timeout);
                 delete window[callbackName];
                 const s = document.getElementById(callbackName);
-                if (s) document.body.removeChild(s);
+                if (s) s.remove();
                 resolve(data);
             };
 
             const script = document.createElement('script');
             script.id = callbackName;
-            
-            // Lógica de e-mail prioritário: localStorage da Circle ou o e-mail passado como parâmetro
-            const circleUserEmail = localStorage.getItem('pet_user_email');
-            const emailParaBackend = circleUserEmail ? JSON.parse(circleUserEmail).email : email;
-            
-            script.src = `${urlApp}?email=${encodeURIComponent(emailParaBackend)}&callback=${callbackName}`;
+            // Enviamos o e-mail limpo para o seu Apps Script
+            script.src = `${urlApp}?email=${encodeURIComponent(email)}&callback=${callbackName}`;
             script.onerror = () => {
-                clearTimeout(timeout);
                 delete window[callbackName];
                 const s = document.getElementById(callbackName);
-                if (s) document.body.removeChild(s);
+                if (s) s.remove();
                 reject(new Error('Erro ao carregar script (CORS ou rede).'));
             };
             document.body.appendChild(script);
         });
 
-        const rawData = result;
-        
-        const parseNestedCSV = (csvStr) => {
-            if (!csvStr || typeof csvStr !== 'string') return [];
-            return csvStr.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(s => s.replace(/"/g, "").trim());
-        };
-
-        if (rawData.encontrado) {
-            console.log("Sucesso! rawData recebido:", rawData);
+        if (result.encontrado) {
+            console.log("Sucesso! result recebido:", result);
             currentData = {
                 encontrado: true,
-                nome: rawData.nome || "Aluna",
-                email: rawData.email || "",
-                foto: rawData.foto || "https://via.placeholder.com/100?text=PET",
-                arrasas: parseInt(rawData.arrasas) || 0,
-                xp_total: parseInt(rawData.xp_total) || 0,
-                badge: rawData.badge || "Aprendiz Curiosa",
-                proximoEvento: rawData.proximoEvento || "Consulte a Circle",
-                ranking: (rawData.ranking || []).map(r => {
+                nome: result.nome || "Aluna",
+                email: result.email || "",
+                foto: result.foto || "https://via.placeholder.com/100?text=PET",
+                arrasas: parseInt(result.arrasas) || 0,
+                xp_total: parseInt(result.xp_total) || 0,
+                badge: result.badge || "Aprendiz Curiosa",
+                proximoEvento: result.proximoEvento || "Consulte a Circle",
+                ranking: (result.ranking || []).map(r => {
                     return {
                         nome: r.nome || "Aluna", 
                         badge: r.badge || " ",
@@ -640,17 +623,18 @@ async function verificarPorEmail(email) {
                         recompensa: r.recompensa || ""
                     };
                 }),
-                jaRespondeuQuiz: rawData.jaRespondeuQuiz || false,
-                historico: (rawData.historico || []).map(h => {
+                jaRespondeuQuiz: result.jaRespondeuQuiz || false,
+                historico: (result.historico || []).map(h => {
                     return {
                         data: h.data || "--/--", 
                         acao: h.acao || "Atividade", 
                         pontos: parseInt(h.pontos) || 0 
                     };
                 }),
-                cpf: rawData.cpf 
+                cpf: result.cpf 
             };
 
+            localStorage.setItem('pet_user_email', result.email); // Mantém o e-mail em cache
             localStorage.setItem('pet_perfil_ativo', JSON.stringify(currentData));
             console.log("Dados finais processados e salvos no localStorage:", currentData);
             renderDashboard();
@@ -663,8 +647,10 @@ async function verificarPorEmail(email) {
         alert("Erro ao carregar seus dados pelo e-mail.");
     } finally {
         loader.style.display = 'none';
-        btnEntrar.disabled = false;
-        btnEntrar.innerText = "Entrar e Arrasar";
+        if (btnEntrar) {
+            btnEntrar.disabled = false;
+            btnEntrar.innerText = "Entrar e Arrasar";
+        }
     }
 }
 
