@@ -747,7 +747,7 @@ async function sendQuizLogToBackend(isCorrect) {
 
             const script = document.createElement('script');
             script.id = callbackName;
-            script.src = `${urlApp}?action=logAcertoQuiz&nome=\${encodeURIComponent(nome)}&cpf=\${cpf}&email=\${encodeURIComponent(email)}&status=\${acao}&pontos=\${pontos}&callback=\${callbackName}`;
+            script.src = `${urlApp}?action=logAcertoQuiz&nome=${encodeURIComponent(nome)}&cpf=${cpf}&email=${encodeURIComponent(email)}&status=${acao}&pontos=${pontos}&callback=${callbackName}`;
             script.onerror = () => {
                 clearTimeout(timeout);
                 delete window[callbackName];
