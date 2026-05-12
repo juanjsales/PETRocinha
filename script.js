@@ -94,8 +94,7 @@ async function refreshDadosSilencioso(id) {
             script.id = callbackName;
             
             // Lógica de e-mail prioritário: localStorage da Circle ou o e-mail passado como parâmetro
-            const circleUserEmail = localStorage.getItem('pet_user_email');
-            const emailParaBackend = circleUserEmail ? JSON.parse(circleUserEmail).email : id;
+const emailParaBackend = localStorage.getItem('pet_user_email') || id;
             
             script.src = `${urlApp}?email=${encodeURIComponent(emailParaBackend)}&callback=${callbackName}`;
             script.onerror = () => {
