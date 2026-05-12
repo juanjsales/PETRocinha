@@ -18,36 +18,32 @@ const DADOS_QUIZ_LOCAL = [
     }
 ];
 
-document.addEventListener('DOMContentLoaded', () => {
-    // 1. Tenta colher o que o Widget plantou (Objeto Completo)
-    const cachePet = localStorage.getItem('pet_perfil_ativo');
-    
-    if (cachePet) {
-        try {
-            const data = JSON.parse(cachePet);
-            // Verifica se o dado no cache é de uma aluna real e não um "false"
-            if (data && data.encontrado && data.email) {
-                console.log("✅ Dashboard: Colheita realizada com sucesso!", data.email);
-                currentData = data;
-                renderDashboard();
-                return; // Para aqui, não precisa pedir CPF
-            }
-        } catch (e) {
-            console.warn("Erro ao ler cache do Widget.");
-        }
-    }
-
-    // 2. Se não tem cache, tenta capturar da URL (caso venha de um redirecionamento)
+document.addEventListener('DOMContentLoaded', async () => {
     const urlParams = new URLSearchParams(window.location.search);
-    const emailUrl = urlParams.get('email');
-    if (emailUrl && emailUrl !== "{{user.email}}") {
-        console.log("📍 Identificado via URL:", emailUrl);
-        verificarPorEmail(emailUrl);
+    const emailDaUrl = urlParams.get('email');
+
+    // 1. Prioridade: Se o e-mail veio na URL pelo Widget
+    if (emailDaUrl && emailDaUrl !== "{{user.email}}") {
+        console.log("📩 E-mail recebido via Widget:", emailDaUrl);
+        
+        // Remove o parâmetro da URL para limpar o visual da barra de endereço
+        window.history.replaceState({}, document.title, window.location.pathname);
+        
+        // Dispara a consulta ao Google Apps Script usando o E-mail
+        consultarDadosPorEmail(emailDaUrl);
         return;
     }
 
-    // 3. Se tudo falhar, mostra a tela de login (CPF)
-    console.log("👋 Nenhuma aluna identificada no cache ou URL.");
+    // 2. Segunda opção: Tentar CPF salvo no LocalStorage do próprio Dashboard
+    const cpfSalvo = localStorage.getItem('pet_rocinha_cpf');
+    if (cpfSalvo) {
+        console.log("♻️ Restaurando sessão via CPF salvo.");
+        verificarCPF(cpfSalvo);
+        return;
+    }
+
+    // 3. Terceira opção: Mostrar tela de login (CPF)
+    console.log("👋 Nenhuma aluna identificada.");
     document.getElementById('auth-section').style.display = 'block';
 });
 
@@ -571,6 +567,30 @@ function switchTab(tabId, el) {
 document.getElementById('cpf-input').addEventListener('keypress', (e) => { 
     if(e.key === 'Enter') verificarCPF(); 
 });
+
+// ... (existing code)
+
+async function consultarDadosPorEmail(email) {
+    document.getElementById('loader').style.display = 'flex';
+    try {
+        const res = await fetch(`${urlApp}?email=${encodeURIComponent(email)}`);
+        const data = await res.json();
+        
+        if (data.encontrado) {
+            currentData = data;
+            // Salva no LocalStorage do Dashboard para as próximas visitas
+            localStorage.setItem('pet_perfil_ativo', JSON.stringify(data));
+            renderDashboard();
+        } else {
+            alert("Aluna não cadastrada no sistema.");
+            document.getElementById('auth-section').style.display = 'block';
+        }
+    } catch (e) {
+        console.error("Erro ao buscar dados:", e);
+    } finally {
+        document.getElementById('loader').style.display = 'none';
+    }
+}
 
 async function verificarPorEmail(email) {
     if (!email) return;
