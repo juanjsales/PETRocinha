@@ -484,7 +484,7 @@ async function verificarPorEmail(email) {
 
             const script = document.createElement('script');
             script.id = callbackName;
-            script.src = `${urlApp}?email=\${encodeURIComponent(email)}&callback=\${callbackName}`;
+            script.src = `${urlApp}?email=${encodeURIComponent(email)}&callback=${callbackName}`;
             script.onerror = () => {
                 clearTimeout(timeout);
                 delete window[callbackName];
