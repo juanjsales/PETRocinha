@@ -20,80 +20,53 @@ const DADOS_QUIZ_LOCAL = [
 
 document.addEventListener('DOMContentLoaded', async () => {
     const urlParams = new URLSearchParams(window.location.search);
-    const emailUrl = urlParams.get('email');
-    const cacheLocal = localStorage.getItem('pet_perfil_ativo');
+    const emailDaUrl = urlParams.get('email');
+    const cacheVercel = localStorage.getItem('pet_perfil_ativo');
 
-    console.log("🔍 Verificando entrada...");
-
-    // 1. Prioridade: Recebeu e-mail do Widget pela URL
-    if (emailUrl && emailUrl !== "{{user.email}}") {
-        console.log("📩 E-mail colhido via URL:", emailUrl);
-        // Limpa a URL para o usuário
+    // 1. Recebeu a "carona" da Circle?
+    if (emailDaUrl && emailDaUrl !== "{{user.email}}") {
+        console.log("📩 E-mail recebido da Circle via URL:", emailDaUrl);
+        // Limpa a URL para ficar bonito
         window.history.replaceState({}, document.title, window.location.pathname);
-        // Busca os dados e planta no LocalStorage do Vercel
-        await buscarEPlantar(emailUrl);
+        // Busca no Google e SALVA NA GAVETA DA VERCEL
+        await buscarESalvarLocal(emailDaUrl);
         return;
     }
 
-    // 2. Cache Local: Já tem semente no domínio Vercel
-    if (cacheLocal) {
-        const data = JSON.parse(cacheLocal);
-        if (data && data.encontrado) {
-            console.log("✅ Cache Local detectado.");
+    // 2. Se já tem o dado na gaveta da Vercel, usa ele
+    if (cacheVercel) {
+        const data = JSON.parse(cacheVercel);
+        if (data.encontrado) {
             currentData = data;
             renderDashboard();
             return;
         }
     }
 
-    // 3. Falha: Mostra login manual
-    console.log("👋 Nenhuma aluna identificada. Mostrando Login.");
+    // 3. Se não tem nada, mostra o login manual
     document.getElementById('auth-section').style.display = 'block';
 });
 
-async function buscarEPlantar(email) {
+async function buscarESalvarLocal(email) {
     document.getElementById('loader').style.display = 'flex';
     try {
         const res = await fetch(`${urlApp}?email=${encodeURIComponent(email)}`);
         const data = await res.json();
         if (data.encontrado) {
             currentData = data;
-            // PLANTA NO LOCAL STORAGE DO VERCEL
-            localStorage.setItem('pet_perfil_ativo', JSON.stringify(data));
+            localStorage.setItem('pet_perfil_ativo', JSON.stringify(data)); // SALVA NO DOMÍNIO VERCEL
             renderDashboard();
-        } else {
-            document.getElementById('auth-section').style.display = 'block';
         }
-    } catch(e) {
-        console.error(e);
-        document.getElementById('auth-section').style.display = 'block';
+    } catch (e) {
+        console.error("Erro na colheita:", e);
     } finally {
         document.getElementById('loader').style.display = 'none';
     }
 }
 
-// Função para buscar e "Semear" no domínio do Dashboard
-async function consultarDadosPorEmail(email) {
-    document.getElementById('loader').style.display = 'flex';
-    try {
-        const res = await fetch(`${urlApp}?email=${encodeURIComponent(email)}`);
-        const data = await res.json();
-        
-        if (data.encontrado) {
-            currentData = data;
-            // AQUI É O SEGREDO: Salva no LocalStorage do Dashboard (vercel.app)
-            localStorage.setItem('pet_perfil_ativo', JSON.stringify(data));
-            renderDashboard();
-        } else {
-            console.warn("Aluna não encontrada na planilha via email.");
-            document.getElementById('auth-section').style.display = 'block';
-        }
-    } catch (e) {
-        console.error("Erro na consulta:", e);
-    } finally {
-        document.getElementById('loader').style.display = 'none';
-    }
-}
+
+
+
 
 async function refreshDadosSilencioso(id) {
     try {
