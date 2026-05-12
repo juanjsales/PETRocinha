@@ -18,87 +18,37 @@ const DADOS_QUIZ_LOCAL = [
     }
 ];
 
-document.addEventListener("DOMContentLoaded", async () => {
-    // Função assíncrona para tentar obter e-mail
-    const buscarEmail = async (tentativas = 5, intervalo = 1000) => {
-        for (let i = 0; i < tentativas; i++) {
-            const email = localStorage.getItem('pet_user_email');
-            if (email) return email;
-            await new Promise(resolve => setTimeout(resolve, intervalo));
-        }
-        return null;
-    };
-
-    // Função para capturar e normalizar e-mail
-    const getEmailRobust = () => {
-        const params = new URLSearchParams(window.location.search);
-        let email = params.get('email');
-        
-        // Se não encontrou na URL, tenta via document.referrer (com fallback try-catch para Cross-Origin)
-        if (!email) {
-            try {
-                const referrerURL = new URL(document.referrer);
-                const referrerParams = new URLSearchParams(referrerURL.search);
-                email = referrerParams.get('email');
-            } catch (e) {
-                console.warn("Não foi possível acessar o referrer (provável restrição de CORS).");
-            }
-        }
-
-        // Tenta obter do objeto global Circle (exemplo hipotético, adaptar conforme API da Circle)
-        if (!email && window.Circle && window.Circle.currentUser) {
-            email = window.Circle.currentUser.email;
-        }
-
-        // Tenta pegar de uma variável global (Liquid que pode ter sido injetado no HTML)
-        if (!email && typeof window.liquidEmail !== 'undefined') {
-            email = window.liquidEmail;
-        }
-
-        if (email === "undefined" || email === "null" || email.includes("{{")) email = null;
-        
-        return email ? email.toLowerCase().trim() : null;
-    };
-
-    const emailIdentificado = getEmailRobust();
-    const params = new URLSearchParams(window.location.search);
-    const cpfURL = params.get('cpf');
-    const cacheOriginal = localStorage.getItem('pet_perfil_ativo');
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. Tenta colher o que o Widget plantou (Objeto Completo)
+    const cachePet = localStorage.getItem('pet_perfil_ativo');
     
-    // Tenta obter do cache de forma assíncrona
-    const cachedEmail = await buscarEmail();
-
-    // Define qual e-mail usar (Prioridade: Identificado > Cache)
-    const emailPrioritario = emailIdentificado || cachedEmail;
-
-    if (emailPrioritario) {
-        console.log("📍 Usuária identificada por e-mail:", emailPrioritario);
-        localStorage.setItem('pet_user_email', emailPrioritario);
-        
-        if (cacheOriginal) {
-            currentData = JSON.parse(cacheOriginal);
-            renderDashboard();
-            refreshDadosSilencioso(emailPrioritario);
-        } else {
-            verificarPorEmail(emailPrioritario);
+    if (cachePet) {
+        try {
+            const data = JSON.parse(cachePet);
+            // Verifica se o dado no cache é de uma aluna real e não um "false"
+            if (data && data.encontrado && data.email) {
+                console.log("✅ Dashboard: Colheita realizada com sucesso!", data.email);
+                currentData = data;
+                renderDashboard();
+                return; // Para aqui, não precisa pedir CPF
+            }
+        } catch (e) {
+            console.warn("Erro ao ler cache do Widget.");
         }
-    } 
-    else if (cpfURL) {
-        console.log("🔎 CPF detectado na URL...");
-        const cpfInput = document.getElementById('cpf-input');
-        if (cpfInput) cpfInput.value = cpfURL;
-        verificarCPF();
-    } 
-    else if (cacheOriginal) {
-        currentData = JSON.parse(cacheOriginal);
-        renderDashboard();
-        refreshDadosSilencioso(currentData.email || currentData.cpf);
     }
-    else {
-        console.log("👋 Nenhuma aluna detectada. Aguardando login manual.");
-        const authSection = document.getElementById('auth-section');
-        if (authSection) authSection.style.display = 'block';
+
+    // 2. Se não tem cache, tenta capturar da URL (caso venha de um redirecionamento)
+    const urlParams = new URLSearchParams(window.location.search);
+    const emailUrl = urlParams.get('email');
+    if (emailUrl && emailUrl !== "{{user.email}}") {
+        console.log("📍 Identificado via URL:", emailUrl);
+        verificarPorEmail(emailUrl);
+        return;
     }
+
+    // 3. Se tudo falhar, mostra a tela de login (CPF)
+    console.log("👋 Nenhuma aluna identificada no cache ou URL.");
+    document.getElementById('auth-section').style.display = 'block';
 });
 
 async function refreshDadosSilencioso(id) {
