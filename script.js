@@ -1,48 +1,73 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const params = new URLSearchParams(window.location.search);
-    
-    // 1. Tenta pegar o e-mail da URL (configurado como ?email={{user.email}} na Circle)
-    let emailURL = params.get('email');
-    if (emailURL === "undefined" || emailURL === "null") emailURL = null;
+    // Função para capturar e normalizar e-mail
+    const getEmailRobust = () => {
+        const params = new URLSearchParams(window.location.search);
+        let email = params.get('email');
+        
+        // Se não encontrou na URL, tenta via document.referrer (com fallback try-catch para Cross-Origin)
+        if (!email) {
+            try {
+                const referrerURL = new URL(document.referrer);
+                const referrerParams = new URLSearchParams(referrerURL.search);
+                email = referrerParams.get('email');
+            } catch (e) {
+                console.warn("Não foi possível acessar o referrer (provável restrição de CORS).");
+            }
+        }
 
+        // Tenta obter do objeto global Circle (exemplo hipotético, adaptar conforme API da Circle)
+        if (!email && window.Circle && window.Circle.currentUser) {
+            email = window.Circle.currentUser.email;
+        }
+
+        // Tenta pegar de uma variável global (Liquid que pode ter sido injetado no HTML)
+        if (!email && typeof window.liquidEmail !== 'undefined') {
+            email = window.liquidEmail;
+        }
+
+        if (email === "undefined" || email === "null") email = null;
+        
+        return email ? email.toLowerCase().trim() : null;
+    };
+
+    const emailIdentificado = getEmailRobust();
+    const params = new URLSearchParams(window.location.search);
     const cpfURL = params.get('cpf');
     const cacheOriginal = localStorage.getItem('pet_perfil_ativo');
     
-    // 2. Tenta obter o email do cache que o Widget salvou
-    let cachedEmail = localStorage.getItem('pet_user_email');
+    // Tenta obter do cache
+    const cachedEmail = localStorage.getItem('pet_user_email');
 
-    // Define qual e-mail usar (Prioridade: URL > Cache)
-    const emailPrioritario = emailURL || cachedEmail;
+    // Define qual e-mail usar (Prioridade: Identificado > Cache)
+    const emailPrioritario = emailIdentificado || cachedEmail;
 
     if (emailPrioritario) {
         console.log("📍 Usuária identificada por e-mail:", emailPrioritario);
-        // Salva no cache para as próximas vezes
         localStorage.setItem('pet_user_email', emailPrioritario);
         
-        // Se já tem os dados completos no cache, renderiza direto e atualiza por baixo
         if (cacheOriginal) {
             currentData = JSON.parse(cacheOriginal);
             renderDashboard();
             refreshDadosSilencioso(emailPrioritario);
         } else {
-            // Se não tem cache, faz a busca inicial
             verificarPorEmail(emailPrioritario);
         }
     } 
     else if (cpfURL) {
         console.log("🔎 CPF detectado na URL...");
-        document.getElementById('cpf-input').value = cpfURL;
+        const cpfInput = document.getElementById('cpf-input');
+        if (cpfInput) cpfInput.value = cpfURL;
         verificarCPF();
     } 
     else if (cacheOriginal) {
-        // Fallback para cache antigo sem e-mail na URL
         currentData = JSON.parse(cacheOriginal);
         renderDashboard();
         refreshDadosSilencioso(currentData.email || currentData.cpf);
     }
     else {
         console.log("👋 Nenhuma aluna detectada. Aguardando login manual.");
-        document.getElementById('auth-section').style.display = 'block';
+        const authSection = document.getElementById('auth-section');
+        if (authSection) authSection.style.display = 'block';
     }
 });
 
