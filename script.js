@@ -1,17 +1,30 @@
 // No início do seu script.js
 document.addEventListener('DOMContentLoaded', () => {
+    const params = new URLSearchParams(window.location.search);
+    const emailURL = params.get('email');
+    const cpfURL = params.get('cpf');
     const cacheOriginal = localStorage.getItem('pet_perfil_ativo');
-    
+
+    // 1. Tenta carregar via localStorage primeiro
     if (cacheOriginal) {
         const data = JSON.parse(cacheOriginal);
-        console.log("🚀 Dashboard: Dados detectados via Widget. Entrando direto...");
+        console.log("🚀 Dashboard: Dados detectados via localStorage. Entrando direto...");
         
-        currentData = data; // Alimenta a variável global
-        renderDashboard();   // Monta o painel sem pedir CPF
-        
-        // Opcional: Busca dados novos no fundo para garantir que o saldo esteja atualizado
+        currentData = data;
+        renderDashboard();
         refreshDadosSilencioso(data.email || data.cpf);
-    } else {
+    } 
+    // 2. Se não houver cache, tenta via URL
+    else if (emailURL && emailURL !== "undefined") {
+        console.log("Email detectado na URL, buscando dados...");
+        verificarPorEmail(emailURL);
+    } else if (cpfURL) {
+        console.log("CPF detectado na URL, buscando dados...");
+        document.getElementById('cpf-input').value = cpfURL;
+        verificarCPF();
+    } 
+    // 3. Caso contrário, pede login
+    else {
         console.log("👋 Dashboard: Nenhuma aluna detectada. Aguardando login manual.");
         document.getElementById('auth-section').style.display = 'block';
     }
@@ -621,24 +634,8 @@ async function verificarPorEmail(email) {
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    const params = new URLSearchParams(window.location.search);
-    const email = params.get('email');
-    const cpf = params.get('cpf');
-
-    if (email && email !== "${user.email}" && email !== "undefined") {
-        console.log("Email encontrado na URL:", email);
-        verificarPorEmail(email);
-    } else if (email === "${user.email}" || email === "undefined") {
-        console.log("Variável de email da Circle não preenchida. Aguardando login.");
-    } else if (cpf) {
-        console.log("CPF encontrado na URL:", cpf);
-        document.getElementById('cpf-input').value = cpf;
-        verificarCPF();
-    } else {
-        console.log("Nenhum parâmetro de identificação encontrado na URL.");
-    }
-});
+// Removido listener duplicado que conflitaria com a nova lógica
+// document.addEventListener('DOMContentLoaded', () => { ... }); (Lines 624-641)
 
 function renderQuiz() {
     const quizContent = document.getElementById('quiz-content');
