@@ -211,33 +211,30 @@ async function verificarCPF() {
         const rawData = result;
       
         if (rawData.encontrado) {
-            const linhaParts = parseNestedCSV(rawData.nome); 
-            
             currentData = {
                 encontrado: true,
-                nome: linhaParts[1] || "Aluna",
-                foto: linhaParts[3] || "",
-                arrasas: parseInt(linhaParts[10]) || 0,
-                xp_total: parseInt(linhaParts[13]) || 0,
-                badge: linhaParts[11] || "Aprendiz Curiosa",
+                nome: rawData.nome || "Aluna",
+                email: rawData.email || "",
+                foto: rawData.foto || "https://via.placeholder.com/100?text=PET",
+                arrasas: parseInt(rawData.arrasas) || 0,
+                xp_total: parseInt(rawData.xp_total) || 0,
+                badge: rawData.badge || "Aprendiz Curiosa",
                 proximoEvento: rawData.proximoEvento || "Consulte a Circle",
 
                 ranking: (rawData.ranking || []).map(r => {
-                    const rParts = parseNestedCSV(r.linhaRaw);
                     return {
-                        nome: rParts[0] || "Aluna", 
-                        badge: rParts[1] || " ",
-                        xp: parseInt(rParts[2]) || 0,
-                        recompensa: rParts[3] || ""
+                        nome: r.nome || "Aluna", 
+                        badge: r.badge || " ",
+                        xp: parseInt(r.xp) || 0,
+                        recompensa: r.recompensa || ""
                     };
                 }),
                 jaRespondeuQuiz: rawData.jaRespondeuQuiz || false,
                 historico: (rawData.historico || []).map(h => {
-                    const hParts = parseNestedCSV(h.acao);
                     return {
                         data: h.data || "--/--", 
-                        acao: hParts[9] || hParts[3] || "Atividade", 
-                        pontos: parseInt(hParts[8]) || 0 
+                        acao: h.acao || "Atividade", 
+                        pontos: parseInt(h.pontos) || 0 
                     };
                 }),
                 cpf: currentCPF
@@ -597,36 +594,36 @@ async function verificarPorEmail(email) {
         };
 
         if (rawData.encontrado) {
-            const linhaParts = parseNestedCSV(rawData.nome); 
-            
             currentData = {
                 encontrado: true,
-                nome: linhaParts[1] || "Aluna",
-                foto: linhaParts[3] || "",
-                arrasas: parseInt(linhaParts[10]) || 0,
-                xp_total: parseInt(linhaParts[13]) || 0,
-                badge: linhaParts[11] || "Aprendiz Curiosa",
+                nome: rawData.nome || "Aluna",
+                email: rawData.email || "",
+                foto: rawData.foto || "https://via.placeholder.com/100?text=PET",
+                arrasas: parseInt(rawData.arrasas) || 0,
+                xp_total: parseInt(rawData.xp_total) || 0,
+                badge: rawData.badge || "Aprendiz Curiosa",
                 proximoEvento: rawData.proximoEvento || "Consulte a Circle",
                 ranking: (rawData.ranking || []).map(r => {
-                    const rParts = parseNestedCSV(r.linhaRaw);
                     return {
-                        nome: rParts[0] || "Aluna", 
-                        badge: rParts[1] || " ",
-                        xp: parseInt(rParts[2]) || 0,
-                        recompensa: rParts[3] || ""
+                        nome: r.nome || "Aluna", 
+                        badge: r.badge || " ",
+                        xp: parseInt(r.xp) || 0,
+                        recompensa: r.recompensa || ""
                     };
                 }),
+                jaRespondeuQuiz: rawData.jaRespondeuQuiz || false,
                 historico: (rawData.historico || []).map(h => {
-                    const hParts = parseNestedCSV(h.acao);
                     return {
                         data: h.data || "--/--", 
-                        acao: hParts[9] || hParts[3] || "Atividade", 
-                        pontos: parseInt(hParts[8]) || 0 
+                        acao: h.acao || "Atividade", 
+                        pontos: parseInt(h.pontos) || 0 
                     };
                 }),
                 cpf: rawData.cpf 
             };
 
+            localStorage.setItem('pet_perfil_ativo', JSON.stringify(currentData));
+            console.log("Dados finais processados e salvos no localStorage:", currentData);
             renderDashboard();
         } else {
             alert("Aluna não cadastrada no sistema via e-mail.");
