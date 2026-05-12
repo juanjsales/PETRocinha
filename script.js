@@ -1,4 +1,24 @@
-document.addEventListener('DOMContentLoaded', () => {
+window.verificarCPF = verificarCPF;
+window.solicitarResgate = solicitarResgate;
+window.abrirModalRecompensas = abrirModalRecompensas;
+window.fecharModalRecompensas = fecharModalRecompensas;
+window.toggleNotificacoes = toggleNotificacoes;
+window.switchTab = switchTab;
+window.closeVideoGate = closeVideoGate;
+
+let currentData = {};
+let chartInstance = null;
+let quizData = null;
+
+const DADOS_QUIZ_LOCAL = [
+    {
+        pergunta: "Qual a importância do manejo correto do pet?",
+        opcoes: ["Segurança e bem-estar", "Apenas estética", "Nenhuma importância"],
+        respostaCorreta: "Segurança e bem-estar"
+    }
+];
+
+document.addEventListener("DOMContentLoaded", async () => {
     // Função assíncrona para tentar obter e-mail
     const buscarEmail = async (tentativas = 5, intervalo = 1000) => {
         for (let i = 0; i < tentativas; i++) {
@@ -397,9 +417,9 @@ function renderDashboard() {
     const jornadaLista = document.getElementById('jornada-lista');
     if (jornadaLista) {
         jornadaLista.innerHTML = configMapa.map((step, i) => `
-            <div class="step-item \${i <= window.currentLevelIndex ? 'unlocked' : ''}">
-                <div class="step-circle">\${i <= window.currentLevelIndex ? step.icon : '🔒'}</div>
-                <div class="step-label"><b>\${step.nome}</b><br><span style="font-size:9px">\${step.desc}</span></div>
+            <div class="step-item ${i <= window.currentLevelIndex ? 'unlocked' : ''}">
+                <div class="step-circle">${i <= window.currentLevelIndex ? step.icon : '🔒'}</div>
+                <div class="step-label"><b>${step.nome}</b><br><span style="font-size:9px">${step.desc}</span></div>
             </div>
         `).join('');
     }
@@ -410,9 +430,9 @@ function renderDashboard() {
         rankingList.innerHTML = currentData.ranking.map((r, i) => `
             <li class="list-item" style="justify-content:space-between; padding: 16px;">
                 <div style="display:flex; width: 100%; align-items:center;">
-                    <div style="width:30px; font-weight:800; color:var(--pet-purple); font-size:16px;">\${i+1}º</div>
-                    <div style="flex:1; margin-left:10px;"><b>\${r.nome}</b><br><small>\${r.badge || 'Aluna'}</small></div>
-                    <div style="font-weight:800; color:var(--pet-indigo); margin-right: 15px;">\${r.xp} XP</div>
+                    <div style="width:30px; font-weight:800; color:var(--pet-purple); font-size:16px;">${i+1}º</div>
+                    <div style="flex:1; margin-left:10px;"><b>${r.nome}</b><br><small>${r.badge || 'Aluna'}</small></div>
+                    <div style="font-weight:800; color:var(--pet-indigo); margin-right: 15px;">${r.xp} XP</div>
                 </div>
             </li>
         `).join('');
@@ -423,8 +443,8 @@ function renderDashboard() {
     if (currentData.historico && currentData.historico.length > 0 && eLista) {
         eLista.innerHTML = currentData.historico.map(h => `
             <li class="list-item" style="justify-content:space-between; padding:12px; cursor: default;">
-                <div><small style="color:var(--pet-purple); font-weight:700;">\${h.data}</small><br><b style="font-size:13px;">\${h.acao}</b></div>
-                <div style="font-weight:800; color:\${h.pontos >= 0 ? 'var(--pet-green)' : '#ef4444'};">\${h.pontos >= 0 ? '+' : ''}\${h.pontos}</div>
+                <div><small style="color:var(--pet-purple); font-weight:700;">${h.data}</small><br><b style="font-size:13px;">${h.acao}</b></div>
+                <div style="font-weight:800; color:${h.pontos >= 0 ? 'var(--pet-green)' : '#ef4444'};">${h.pontos >= 0 ? '+' : ''}${h.pontos}</div>
             </li>
         `).join('');
     }
@@ -436,7 +456,7 @@ function animarJornada() {
     const line = document.getElementById('horiz-line-active');
     const total = configMapa.length - 1;
     const progress = (window.currentLevelIndex / total) * 100;
-    line.style.width = `calc(\${progress}% - 50px)`;
+    line.style.width = `calc(${progress}% - 50px)`;
 }
 
 function renderChart() {
@@ -502,9 +522,9 @@ function solicitarResgate() {
 function abrirModalRecompensas() {
     const modalBody = document.getElementById('modal-recompensas-conteudo');
     modalBody.innerHTML = `
-        \${recompensa1}
-        \${recompensa2}
-        \${recompensa3}
+        ${recompensa1}
+        ${recompensa2}
+        ${recompensa3}
     `;
     document.getElementById('modal-recompensas').style.display = 'flex';
     // Biblioteca confetti carregada via CDN
@@ -815,7 +835,7 @@ async function sendQuizLogToBackend(isCorrect) {
         });
 
         if (result.erro) {
-            document.getElementById('quiz-result').innerHTML = `⏳ \${result.erro}`;
+            document.getElementById('quiz-result').innerHTML = `⏳ ${result.erro}`;
             document.getElementById('quiz-result').style.display = 'block';
             document.getElementById('quiz-result').style.color = '#ef4444';
             document.getElementById('quiz-result').style.fontSize = '18px';
@@ -844,7 +864,7 @@ async function sendQuizLogToBackend(isCorrect) {
                 }
             } else {
                 document.getElementById('quiz-result').style.color = '#ef4444';
-                document.getElementById('quiz-result').innerHTML = `❌ Resposta Incorreta. A resposta certa era: "\${quizData.respostaCorreta}"`;
+                document.getElementById('quiz-result').innerHTML = `❌ Resposta Incorreta. A resposta certa era: "${quizData.respostaCorreta}"`;
                 document.getElementById('quiz-result').style.display = 'block';
             }
 
