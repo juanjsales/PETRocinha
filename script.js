@@ -55,7 +55,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             email = window.liquidEmail;
         }
 
-        if (email === "undefined" || email === "null") email = null;
+        if (email === "undefined" || email === "null" || email.includes("{{")) email = null;
         
         return email ? email.toLowerCase().trim() : null;
     };
