@@ -13,7 +13,7 @@ let quizData = null;
 const DADOS_QUIZ_LOCAL = [
     {
         pergunta: "Qual a importância do manejo correto do pet?",
-        opcoes: ["Segurança e bem-estar", "Apenas estética", "Nenhuma importância"],
+        options: ["Segurança e bem-estar", "Apenas estética", "Nenhuma importância"],
         respostaCorreta: "Segurança e bem-estar"
     }
 ];
@@ -46,6 +46,29 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.log("👋 Nenhuma aluna identificada.");
     document.getElementById('auth-section').style.display = 'block';
 });
+
+// Função auxiliar para buscar no Google usando o E-mail
+async function consultarDadosPorEmail(email) {
+    document.getElementById('loader').style.display = 'flex';
+    try {
+        const res = await fetch(`${urlApp}?email=${encodeURIComponent(email)}`);
+        const data = await res.json();
+        
+        if (data.encontrado) {
+            currentData = data;
+            // Salva no LocalStorage do Dashboard para as próximas visitas
+            localStorage.setItem('pet_perfil_ativo', JSON.stringify(data));
+            renderDashboard();
+        } else {
+            alert("Aluna não cadastrada no sistema.");
+            document.getElementById('auth-section').style.display = 'block';
+        }
+    } catch (e) {
+        console.error("Erro ao buscar dados:", e);
+    } finally {
+        document.getElementById('loader').style.display = 'none';
+    }
+}
 
 async function refreshDadosSilencioso(id) {
     try {
@@ -90,6 +113,7 @@ const emailParaBackend = localStorage.getItem('pet_user_email') || id;
         }
     } catch(e) { console.warn("Falha no refresh em segundo plano."); }
 }
+
 async function jsonpRequest(params) {
     return new Promise((resolve, reject) => {
         const callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
@@ -121,8 +145,6 @@ async function jsonpRequest(params) {
         document.body.appendChild(script);
     });
 }
-
-// ... (existing code)
 
 // ATENÇÃO: COLOQUE AQUI O SEU LINK DO APPS SCRIPT
 const urlApp = "https://script.google.com/macros/s/AKfycbyCtBQ_wVDEpyKybzHgo9eFswc6tczQuFs53VLzg3t9HuoFbLOVVY_zrVScPxIwG2b0/exec";
@@ -280,7 +302,6 @@ function renderDashboard() {
     document.getElementById('auth-section').style.display = 'none';
     document.getElementById('dash-content').style.display = 'block';
     
-    const nomeCurto = currentData.nome.split(' ')[0];
     const userNomeElem = document.getElementById('user-nome');
     if (userNomeElem) userNomeElem.innerText = currentData.nome;
     const userImgElem = document.getElementById('user-img');
@@ -568,30 +589,6 @@ document.getElementById('cpf-input').addEventListener('keypress', (e) => {
     if(e.key === 'Enter') verificarCPF(); 
 });
 
-// ... (existing code)
-
-async function consultarDadosPorEmail(email) {
-    document.getElementById('loader').style.display = 'flex';
-    try {
-        const res = await fetch(`${urlApp}?email=${encodeURIComponent(email)}`);
-        const data = await res.json();
-        
-        if (data.encontrado) {
-            currentData = data;
-            // Salva no LocalStorage do Dashboard para as próximas visitas
-            localStorage.setItem('pet_perfil_ativo', JSON.stringify(data));
-            renderDashboard();
-        } else {
-            alert("Aluna não cadastrada no sistema.");
-            document.getElementById('auth-section').style.display = 'block';
-        }
-    } catch (e) {
-        console.error("Erro ao buscar dados:", e);
-    } finally {
-        document.getElementById('loader').style.display = 'none';
-    }
-}
-
 async function verificarPorEmail(email) {
     if (!email) return;
 
@@ -677,9 +674,6 @@ async function verificarPorEmail(email) {
         }
     }
 }
-
-// Removido listener duplicado que conflitaria com a nova lógica
-// document.addEventListener('DOMContentLoaded', () => { ... }); (Lines 624-641)
 
 function renderQuiz() {
     const quizContent = document.getElementById('quiz-content');
@@ -845,5 +839,3 @@ async function sendQuizLogToBackend(isCorrect) {
         console.error("Erro na comunicação com o backend para registrar log do quiz:", error);
     }
 }
-
-
