@@ -45,14 +45,14 @@ function doGet(e) {
 
     // Busca por Email ou CPF
     if (params.email) {
-      debugLog.emailParam = params.email;
-      Logger.log("doGet: Email recebido: [" + params.email + "]"); // Log do email recebido
-      debugLog.emailParam = params.email; 
-      alunaRel = service.buscarPorEmail(params.email);
+      const email = decodeURIComponent(params.email).toLowerCase().trim();
+      debugLog.emailParam = email;
+      Logger.log("doGet: Email processado: [" + email + "]");
+      alunaRel = service.buscarPorEmail(email);
       if (alunaRel && alunaRel.encontrado) {
-        Logger.log("doGet: Aluna encontrada por e-mail: [" + params.email + "]");
+        Logger.log("doGet: Aluna encontrada por e-mail: [" + email + "]");
       } else {
-        Logger.log("doGet: Aluna NÃO encontrada por e-mail: [" + params.email + "]");
+        Logger.log("doGet: Aluna NÃO encontrada por e-mail: [" + email + "]");
       }
     } else if (params.cpf) {
       debugLog.cpfParam = params.cpf;
@@ -153,7 +153,7 @@ class AlunaService {
     const normalizedEmail = (email || "").toLowerCase().trim();
     if (!normalizedEmail) return null;
 
-    const cacheKey = "aluna_email_" + normalizedEmail;
+    const cacheKey = "aluna_email_" + normalizedEmail.replace(/[^a-zA-Z0-9]/g, "_");
     const cached = CacheService.getScriptCache().get(cacheKey);
     if (cached) {
       Logger.log("AlunaService: Dados de e-mail recuperados do cache para: " + normalizedEmail);

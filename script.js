@@ -1,4 +1,14 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Função assíncrona para tentar obter e-mail
+    const buscarEmail = async (tentativas = 5, intervalo = 1000) => {
+        for (let i = 0; i < tentativas; i++) {
+            const email = localStorage.getItem('pet_user_email');
+            if (email) return email;
+            await new Promise(resolve => setTimeout(resolve, intervalo));
+        }
+        return null;
+    };
+
     // Função para capturar e normalizar e-mail
     const getEmailRobust = () => {
         const params = new URLSearchParams(window.location.search);
@@ -35,8 +45,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const cpfURL = params.get('cpf');
     const cacheOriginal = localStorage.getItem('pet_perfil_ativo');
     
-    // Tenta obter do cache
-    const cachedEmail = localStorage.getItem('pet_user_email');
+    // Tenta obter do cache de forma assíncrona
+    const cachedEmail = await buscarEmail();
 
     // Define qual e-mail usar (Prioridade: Identificado > Cache)
     const emailPrioritario = emailIdentificado || cachedEmail;
