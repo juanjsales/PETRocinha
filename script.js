@@ -594,6 +594,7 @@ async function verificarPorEmail(email) {
         };
 
         if (rawData.encontrado) {
+            console.log("Sucesso! rawData recebido:", rawData);
             currentData = {
                 encontrado: true,
                 nome: rawData.nome || "Aluna",
@@ -626,6 +627,7 @@ async function verificarPorEmail(email) {
             console.log("Dados finais processados e salvos no localStorage:", currentData);
             renderDashboard();
         } else {
+            console.error("Aluna não encontrada no sistema para este e-mail.");
             alert("Aluna não cadastrada no sistema via e-mail.");
         }
     } catch (error) {
