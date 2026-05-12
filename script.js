@@ -73,11 +73,12 @@ async function refreshDadosSilencioso(id) {
         const result = await new Promise((resolve, reject) => {
             const callbackName = "jsonp_callback_" + Math.round(100000 * Math.random());
             const timeout = setTimeout(() => {
-                delete window[callbackName];
+                // Em vez de deletar, transformamos em função vazia para evitar ReferenceError
+                window[callbackName] = () => { delete window[callbackName]; };
                 const s = document.getElementById(callbackName);
                 if (s) document.body.removeChild(s);
-                reject(new Error("Timeout"));
-            }, 10000);
+                reject(new Error("Tempo limite da requisição excedido."));
+            }, 25000); // Aumentado para 25s
 
             window[callbackName] = (data) => {
                 clearTimeout(timeout);
@@ -116,11 +117,11 @@ async function jsonpRequest(params) {
     return new Promise((resolve, reject) => {
         const callbackName = "jsonp_callback_" + Math.round(100000 * Math.random());
         const timeout = setTimeout(() => {
-            delete window[callbackName];
+            window[callbackName] = () => { delete window[callbackName]; };
             const s = document.getElementById(callbackName);
             if (s) document.body.removeChild(s);
             reject(new Error("Tempo limite da requisição excedido."));
-        }, 10000);
+        }, 25000);
 
         window[callbackName] = (data) => {
             clearTimeout(timeout);
@@ -222,11 +223,11 @@ async function verificarCPF() {
         const result = await new Promise((resolve, reject) => {
             const callbackName = "jsonp_callback_" + Math.round(100000 * Math.random());
             const timeout = setTimeout(() => {
-                delete window[callbackName];
+                window[callbackName] = () => { delete window[callbackName]; };
                 const s = document.getElementById(callbackName);
                 if (s) document.body.removeChild(s);
                 reject(new Error("Tempo limite da requisição excedido."));
-            }, 10000);
+            }, 25000);
 
             window[callbackName] = (data) => {
                 clearTimeout(timeout);
@@ -683,11 +684,11 @@ async function sendQuizLogToBackend(isCorrect, quizPergunta) {
         const result = await new Promise((resolve, reject) => {
             const callbackName = "jsonp_callback_" + Math.round(100000 * Math.random());
             const timeout = setTimeout(() => {
-                delete window[callbackName];
+                window[callbackName] = () => { delete window[callbackName]; };
                 const s = document.getElementById(callbackName);
                 if (s) document.body.removeChild(s);
                 reject(new Error("Tempo limite da requisição excedido."));
-            }, 10000);
+            }, 25000);
 
             window[callbackName] = (data) => {
                 clearTimeout(timeout);

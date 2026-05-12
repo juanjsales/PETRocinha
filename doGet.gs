@@ -80,13 +80,24 @@ function doGet(e) {
     }
 
     // Compilação Final
+    const tLog = new Date().getTime();
+    const historico = db.getHistorico(perfil.cpf, perfil.email);
+    const tRank = new Date().getTime();
+    const ranking = db.getRanking();
+    const tFim = new Date().getTime();
+
     const dashboardData = {
       ...perfil,
-      historico: db.getHistorico(perfil.cpf, perfil.email),
-      ranking: db.getRanking(),
+      historico: historico,
+      ranking: ranking,
       recompensas: db.getConfigs("RECOMPENSA"),
       proximoEvento: db.getSingleConfig("PROXIMO_EVENTO"),
-      debug: { ...debugLog, tempo: (new Date().getTime() - startTime) + "ms" }
+      debug: { 
+        ...debugLog, 
+        tempoTotal: (tFim - startTime) + "ms",
+        tempoHistorico: (tRank - tLog) + "ms",
+        tempoRanking: (tFim - tRank) + "ms"
+      }
     };
 
     return Utils.responderCustom(dashboardData, callback);
