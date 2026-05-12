@@ -45,17 +45,24 @@ function doGet(e) {
 
     // Busca por Email ou CPF
     if (params.email) {
+      debugLog.emailParam = params.email;
+      Logger.log("doGet: Email recebido: " + params.email); 
       alunaRel = service.buscarPorEmail(params.email);
     } else if (params.cpf) {
+      debugLog.cpfParam = params.cpf;
+      Logger.log("doGet: CPF recebido: " + params.cpf); 
       alunaRel = service.buscarPorCPF(params.cpf);
     }
 
     if (!alunaRel) {
+      debugLog.encontrado = false;
+      Logger.log("doGet: Aluna não encontrada para os parâmetros: " + JSON.stringify(params)); 
       return Utils.responderCustom({ encontrado: false, erro: "Não encontrada.", debug: debugLog }, callback);
     }
 
     const perfil = alunaRel.dados;
     const indice = alunaRel.indice;
+    debugLog.alunaEncontrada = perfil.email || perfil.cpf;
 
     // Processamento de Ações (Quiz/Notif)
     if (action === "logAcertoQuiz") {
@@ -79,6 +86,7 @@ function doGet(e) {
     return Utils.responderCustom(dashboardData, callback);
 
   } catch (error) {
+    debugLog.erroCatch = error.toString();
     return Utils.responderCustom({ encontrado: false, erro: error.toString(), debug: debugLog }, e.parameter.callback);
   }
 }
@@ -90,15 +98,22 @@ class Database {
   }
 
   getSheetData(nomeAba) {
-    return this.ss.getSheetByName(nomeAba).getDataRange().getValues();
+    const sheet = this.ss.getSheetByName(nomeAba);
+    if (!sheet) {
+        Logger.log("Database: Aba '" + nomeAba + "' não encontrada.");
+        return [];
+    }
+    return sheet.getDataRange().getValues();
   }
 
   appendLog(dados) {
-    this.ss.getSheetByName("Log").appendRow(dados);
+    const sheet = this.ss.getSheetByName("Log");
+    if (sheet) sheet.appendRow(dados);
   }
 
   getHistorico(cpf, email) {
     const logs = this.getSheetData("Log");
+    if (!logs || logs.length === 0) return [];
     // CORREÇÃO: Índices das colunas de log conforme CONFIG
     return logs.filter(r => (r && String(r[CONFIG.COLUNAS_LOG.CPF]).replace(/\D/g,"") === cpf) || (r && String(r[CONFIG.COLUNAS_LOG.EMAIL]).toLowerCase() === email.toLowerCase()))
                .reverse().slice(0, 15)
@@ -107,17 +122,21 @@ class Database {
 
   getRanking() {
     const r = this.getSheetData("Ranking");
+    if (!r || r.length <= 1) return [];
     // CORREÇÃO: Índices das colunas de ranking
     return r.slice(1).sort((a,b) => b[CONFIG.COLUNAS_RANKING.XP] - a[CONFIG.COLUNAS_RANKING.XP]).slice(0,10).map(x => ({ nome: x[CONFIG.COLUNAS_RANKING.NOME], badge: x[CONFIG.COLUNAS_RANKING.BADGE], xp: x[CONFIG.COLUNAS_RANKING.XP] }));
   }
 
   getConfigs(tipo) {
     const d = this.getSheetData("Config");
+    if (!d || d.length === 0) return [];
     return d.filter(r => r[CONFIG.COLUNAS_CONFIG.TIPO] === tipo).map(r => ({ titulo: r[CONFIG.COLUNAS_CONFIG.VALOR1], desc: r[CONFIG.COLUNAS_CONFIG.VALOR2] }));
   }
 
   getSingleConfig(tipo) {
-    const row = this.getSheetData("Config").find(r => r[CONFIG.COLUNAS_CONFIG.TIPO] === tipo);
+    const data = this.getSheetData("Config");
+    if (!data) return "";
+    const row = data.find(r => r[CONFIG.COLUNAS_CONFIG.TIPO] === tipo);
     return row ? row[CONFIG.COLUNAS_CONFIG.VALOR1] : "";
   }
 }
@@ -125,28 +144,56 @@ class Database {
 class AlunaService {
   constructor(db) { this.db = db; }
   buscarPorEmail(email) {
+    if (!email) return null;
     const d = this.db.getSheetData("community_members");
+    const targetEmail = String(email).toLowerCase().trim();
+    Logger.log("AlunaService: Buscando por e-mail: " + targetEmail);
+    
     for (let i=1; i<d.length; i++) {
-      // CORREÇÃO: Índice correto EMAIL
-      if (String(d[i][CONFIG.COLUNAS_MEMBROS.EMAIL]).toLowerCase().trim() === email.toLowerCase().trim()) return this.format(d[i], i+1);
+      const currentEmail = String(d[i][CONFIG.COLUNAS_MEMBROS.EMAIL]).toLowerCase().trim();
+      if (currentEmail === targetEmail) {
+        Logger.log("AlunaService: E-mail encontrado na linha " + (i+1));
+        return this.format(d[i], i+1);
+      }
     }
+    Logger.log("AlunaService: E-mail não encontrado.");
     return null;
   }
   buscarPorCPF(cpf) {
+    if (!cpf) return null;
     const d = this.db.getSheetData("community_members");
-    const c = cpf.replace(/\D/g,"");
+    const targetCpf = String(cpf).replace(/\D/g,"");
+    Logger.log("AlunaService: Buscando por CPF: " + targetCpf);
+    
     for (let i=1; i<d.length; i++) {
-      // CORREÇÃO: Índice correto CPF
-      if (String(d[i][CONFIG.COLUNAS_MEMBROS.CPF]).replace(/\D/g,"") === c) return this.format(d[i], i+1);
+      const currentCpf = String(d[i][CONFIG.COLUNAS_MEMBROS.CPF]).replace(/\D/g,"");
+      if (currentCpf === targetCpf) {
+        Logger.log("AlunaService: CPF encontrado na linha " + (i+1));
+        return this.format(d[i], i+1);
+      }
     }
+    Logger.log("AlunaService: CPF não encontrado.");
     return null;
   }
   format(r, i) {
     // CORREÇÃO: Índices corretos para mapeamento da linha
-    return { indice: i, dados: { encontrado: true, nome: r[CONFIG.COLUNAS_MEMBROS.NOME], email: r[CONFIG.COLUNAS_MEMBROS.EMAIL], foto: r[CONFIG.COLUNAS_MEMBROS.FOTO], cpf: String(r[CONFIG.COLUNAS_MEMBROS.CPF]).replace(/\D/g,""), arrasas: r[CONFIG.COLUNAS_MEMBROS.ARRASAS], badge: r[CONFIG.COLUNAS_MEMBROS.BADGE], xp: r[CONFIG.COLUNAS_MEMBROS.XP] } };
+    return { 
+      indice: i, 
+      dados: { 
+        encontrado: true, 
+        nome: r[CONFIG.COLUNAS_MEMBROS.NOME], 
+        email: r[CONFIG.COLUNAS_MEMBROS.EMAIL], 
+        foto: r[CONFIG.COLUNAS_MEMBROS.FOTO], 
+        cpf: String(r[CONFIG.COLUNAS_MEMBROS.CPF]).replace(/\D/g,""), 
+        arrasas: r[CONFIG.COLUNAS_MEMBROS.ARRASAS], 
+        badge: r[CONFIG.COLUNAS_MEMBROS.BADGE], 
+        xp: r[CONFIG.COLUNAS_MEMBROS.XP] 
+      } 
+    };
   }
   verificarQuizHoje(cpf) {
     const logs = this.db.getSheetData("Log");
+    if (!logs) return false;
     const hoje = new Date().toLocaleDateString();
     // CORREÇÃO: Índices de colunas de log
     return logs.some(r => r && String(r[CONFIG.COLUNAS_LOG.CPF]).replace(/\D/g,"") === cpf && r[CONFIG.COLUNAS_LOG.TIPO] === "quiz_diario" && new Date(r[CONFIG.COLUNAS_LOG.DATA]).toLocaleDateString() === hoje);

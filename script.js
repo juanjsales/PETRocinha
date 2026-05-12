@@ -4,17 +4,37 @@ document.addEventListener('DOMContentLoaded', () => {
     const emailURL = params.get('email');
     const cpfURL = params.get('cpf');
     const cacheOriginal = localStorage.getItem('pet_perfil_ativo');
+    let circleUserEmail = null;
 
-    // 1. Tenta carregar via localStorage primeiro
+    // Tenta obter o email do current_user do localStorage da Circle
+    try {
+        const currentUser = localStorage.getItem('current_user');
+        if (currentUser) {
+            const userData = JSON.parse(currentUser);
+            if (userData && userData.email) {
+                circleUserEmail = userData.email;
+                console.log("Email detectado no localStorage da Circle:", circleUserEmail);
+            }
+        }
+    } catch (e) {
+        console.warn("Erro ao ler current_user do localStorage:", e);
+    }
+
+    // 1. Tenta carregar via localStorage (nosso cache) primeiro
     if (cacheOriginal) {
         const data = JSON.parse(cacheOriginal);
-        console.log("🚀 Dashboard: Dados detectados via localStorage. Entrando direto...");
+        console.log("🚀 Dashboard: Dados detectados via localStorage (cache 'pet_perfil_ativo'). Entrando direto...");
         
         currentData = data;
         renderDashboard();
         refreshDadosSilencioso(data.email || data.cpf);
     } 
-    // 2. Se não houver cache, tenta via URL
+    // 2. Se não houver cache, tenta usar o email do localStorage da Circle
+    else if (circleUserEmail && circleUserEmail !== "undefined") {
+        console.log("Email detectado no localStorage da Circle. Buscando dados...");
+        verificarPorEmail(circleUserEmail);
+    }
+    // 3. Se não houver cache nem email da Circle, tenta via URL
     else if (emailURL && emailURL !== "undefined") {
         console.log("Email detectado na URL, buscando dados...");
         verificarPorEmail(emailURL);
@@ -23,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('cpf-input').value = cpfURL;
         verificarCPF();
     } 
-    // 3. Caso contrário, pede login
+    // 4. Caso contrário, pede login
     else {
         console.log("👋 Dashboard: Nenhuma aluna detectada. Aguardando login manual.");
         document.getElementById('auth-section').style.display = 'block';
