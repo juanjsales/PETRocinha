@@ -626,10 +626,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const email = params.get('email');
     const cpf = params.get('cpf');
 
-    if (email && email !== "${user.email}") {
+    if (email && email !== "${user.email}" && email !== "undefined") {
         console.log("Email encontrado na URL:", email);
         verificarPorEmail(email);
-    } else if (email === "${user.email}") {
+    } else if (email === "${user.email}" || email === "undefined") {
         console.log("Variável de email da Circle não preenchida. Aguardando login.");
     } else if (cpf) {
         console.log("CPF encontrado na URL:", cpf);
