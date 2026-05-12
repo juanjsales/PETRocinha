@@ -20,6 +20,8 @@ document.addEventListener('DOMContentLoaded', () => {
         console.warn("Erro ao ler current_user do localStorage:", e);
     }
 
+    const emailPrioritario = circleUserEmail || (emailURL !== "undefined" ? emailURL : null);
+
     // 1. Tenta carregar via localStorage (nosso cache) primeiro
     if (cacheOriginal) {
         const data = JSON.parse(cacheOriginal);
@@ -29,16 +31,12 @@ document.addEventListener('DOMContentLoaded', () => {
         renderDashboard();
         refreshDadosSilencioso(data.email || data.cpf);
     } 
-    // 2. Se não houver cache, tenta usar o email do localStorage da Circle
-    else if (circleUserEmail && circleUserEmail !== "undefined") {
-        console.log("Email detectado no localStorage da Circle. Buscando dados...");
-        verificarPorEmail(circleUserEmail);
+    // 2. Se não houver cache, tenta usar o e-mail (prioridade para Circle)
+    else if (emailPrioritario) {
+        console.log("Email detectado. Buscando dados para:", emailPrioritario);
+        verificarPorEmail(emailPrioritario);
     }
-    // 3. Se não houver cache nem email da Circle, tenta via URL
-    else if (emailURL && emailURL !== "undefined") {
-        console.log("Email detectado na URL, buscando dados...");
-        verificarPorEmail(emailURL);
-    } else if (cpfURL) {
+    else if (cpfURL) {
         console.log("CPF detectado na URL, buscando dados...");
         document.getElementById('cpf-input').value = cpfURL;
         verificarCPF();
@@ -71,7 +69,11 @@ async function refreshDadosSilencioso(id) {
 
             const script = document.createElement('script');
             script.id = callbackName;
-            const emailParaBackend = localStorage.getItem("pet_user_email") || id;
+            
+            // Lógica de e-mail prioritário: localStorage da Circle ou o e-mail passado como parâmetro
+            const circleUserEmail = localStorage.getItem('pet_user_email');
+            const emailParaBackend = circleUserEmail ? JSON.parse(circleUserEmail).email : id;
+            
             script.src = `${urlApp}?email=${encodeURIComponent(emailParaBackend)}&callback=${callbackName}`;
             script.onerror = () => {
                 clearTimeout(timeout);
@@ -596,7 +598,11 @@ async function verificarPorEmail(email) {
 
             const script = document.createElement('script');
             script.id = callbackName;
-            const emailParaBackend = localStorage.getItem("pet_user_email") || email;
+            
+            // Lógica de e-mail prioritário: localStorage da Circle ou o e-mail passado como parâmetro
+            const circleUserEmail = localStorage.getItem('pet_user_email');
+            const emailParaBackend = circleUserEmail ? JSON.parse(circleUserEmail).email : email;
+            
             script.src = `${urlApp}?email=${encodeURIComponent(emailParaBackend)}&callback=${callbackName}`;
             script.onerror = () => {
                 clearTimeout(timeout);
@@ -752,7 +758,10 @@ async function sendQuizLogToBackend(isCorrect) {
     const cpf = currentData.cpf;
     const acao = isCorrect ? "acerto" : "erro";
     const pontos = isCorrect ? 1 : 0;
-    const email = localStorage.getItem("pet_user_email") || new URLSearchParams(window.location.search).get('email') || currentData.email || "";
+    
+    // Lógica de e-mail prioritário: localStorage da Circle
+    const circleUserEmail = localStorage.getItem("pet_user_email");
+    const email = circleUserEmail ? JSON.parse(circleUserEmail).email : (currentData.email || "");
 
     try {
         const result = await new Promise((resolve, reject) => {
