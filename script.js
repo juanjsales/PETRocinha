@@ -752,7 +752,7 @@ async function sendQuizLogToBackend(isCorrect) {
     const cpf = currentData.cpf;
     const acao = isCorrect ? "acerto" : "erro";
     const pontos = isCorrect ? 1 : 0;
-    const email = new URLSearchParams(window.location.search).get('email') || "";
+    const email = localStorage.getItem("pet_user_email") || new URLSearchParams(window.location.search).get('email') || currentData.email || "";
 
     try {
         const result = await new Promise((resolve, reject) => {
