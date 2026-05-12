@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Tenta obter o email do current_user do localStorage da Circle
     try {
-        const currentUser = localStorage.getItem('current_user');
+        const currentUser = localStorage.getItem('pet_user_email');
         if (currentUser) {
             const userData = JSON.parse(currentUser);
             if (userData && userData.email) {
@@ -71,7 +71,8 @@ async function refreshDadosSilencioso(id) {
 
             const script = document.createElement('script');
             script.id = callbackName;
-            script.src = `${urlApp}?email=${encodeURIComponent(id)}&callback=${callbackName}`;
+            const emailParaBackend = localStorage.getItem("pet_user_email") || id;
+            script.src = `${urlApp}?email=${encodeURIComponent(emailParaBackend)}&callback=${callbackName}`;
             script.onerror = () => {
                 clearTimeout(timeout);
                 delete window[callbackName];
@@ -595,7 +596,8 @@ async function verificarPorEmail(email) {
 
             const script = document.createElement('script');
             script.id = callbackName;
-            script.src = `${urlApp}?email=${encodeURIComponent(email)}&callback=${callbackName}`;
+            const emailParaBackend = localStorage.getItem("pet_user_email") || email;
+            script.src = `${urlApp}?email=${encodeURIComponent(emailParaBackend)}&callback=${callbackName}`;
             script.onerror = () => {
                 clearTimeout(timeout);
                 delete window[callbackName];

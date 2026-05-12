@@ -46,8 +46,14 @@ function doGet(e) {
     // Busca por Email ou CPF
     if (params.email) {
       debugLog.emailParam = params.email;
-      Logger.log("doGet: Email recebido: " + params.email); 
+      Logger.log("doGet: Email recebido: [" + params.email + "]"); // Log do email recebido
+      debugLog.emailParam = params.email; 
       alunaRel = service.buscarPorEmail(params.email);
+      if (alunaRel && alunaRel.encontrado) {
+        Logger.log("doGet: Aluna encontrada por e-mail: [" + params.email + "]");
+      } else {
+        Logger.log("doGet: Aluna NÃO encontrada por e-mail: [" + params.email + "]");
+      }
     } else if (params.cpf) {
       debugLog.cpfParam = params.cpf;
       Logger.log("doGet: CPF recebido: " + params.cpf); 
@@ -144,20 +150,46 @@ class Database {
 class AlunaService {
   constructor(db) { this.db = db; }
   buscarPorEmail(email) {
-    if (!email) return null;
-    const d = this.db.getSheetData("community_members");
-    const targetEmail = String(email).toLowerCase().trim();
-    Logger.log("AlunaService: Buscando por e-mail: " + targetEmail);
-    
-    for (let i=1; i<d.length; i++) {
-      const currentEmail = String(d[i][CONFIG.COLUNAS_MEMBROS.EMAIL]).toLowerCase().trim();
-      if (currentEmail === targetEmail) {
-        Logger.log("AlunaService: E-mail encontrado na linha " + (i+1));
-        return this.format(d[i], i+1);
+    const normalizedEmail = (email || "").toLowerCase().trim();
+    if (!normalizedEmail) return null;
+
+    const cacheKey = "aluna_email_" + normalizedEmail;
+    const cached = CacheService.getScriptCache().get(cacheKey);
+    if (cached) {
+      Logger.log("AlunaService: Dados de e-mail recuperados do cache para: " + normalizedEmail);
+      return JSON.parse(cached);
+    }
+
+    const data = this.db.getSheetData("community_members");
+    const COL_NOME = 1;
+    const COL_EMAIL = 2;
+    const COL_ARRASAS = 10;
+    const COL_BADGE = 11;
+
+    for (let i = 1; i < data.length; i++) {
+      const linha = data[i];
+      const currentEmail = String(linha[COL_EMAIL] || "").toLowerCase().trim();
+      
+      // Log para debug de comparação
+      if (i < 5) { // Log apenas para as primeiras linhas para não inundar o log
+        Logger.log("AlunaService: Comparando [" + normalizedEmail + "] com [" + currentEmail + "] na linha " + (i + 1));
+      }
+
+      if (currentEmail === normalizedEmail) {
+        const result = {
+          encontrado: true,
+          nome: linha[COL_NOME],
+          arrasas: parseInt(linha[COL_ARRASAS]) || 0,
+          badge: linha[COL_BADGE] || "Aprendiz Curiosa 🐾"
+        };
+        CacheService.getScriptCache().put(cacheKey, JSON.stringify(result), 300);
+        Logger.log("AlunaService: E-mail encontrado e cacheado: " + normalizedEmail);
+        return result;
       }
     }
-    Logger.log("AlunaService: E-mail não encontrado.");
-    return null;
+
+    Logger.log("AlunaService: E-mail não encontrado: [" + normalizedEmail + "]");
+    return { encontrado: false };
   }
   buscarPorCPF(cpf) {
     if (!cpf) return null;
