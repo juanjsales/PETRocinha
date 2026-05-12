@@ -1,24 +1,49 @@
+/**
+ * SISTEMA PROFISSÃO PET 2026 - v6.0
+ * Backend Unificado com ID de Planilha e Classes de Serviço
+ */
+
+// 1. CONFIGURAÇÕES GLOBAIS (O ID DA SUA PLANILHA ESTÁ AQUI)
+const CONFIG = {
+  SS_ID: "1e2MfXxnGHnkifeh-uJiRrSYuI8rxbp-GCdWvNpj-lgI", // <-- O ID que você me passou
+  SECURITY_TOKEN: "PET_ROCINHA_2026_SECRET",
+  COLUNAS_MEMBROS: {
+    NOME: 1,      // B
+    EMAIL: 2,     // C
+    FOTO: 3,      // D
+    CPF: 7,       // H
+    ARRASAS: 10,  // K
+    BADGE: 11,    // L
+    NOTIF: 12,    // M
+    XP: 13        // N
+  },
+  COLUNAS_LOG: {
+    DATA: 0, TIPO: 3, CPF: 6, EMAIL: 7, PONTOS: 8, DESCRICAO: 9
+  },
+  COLUNAS_CONFIG: {
+    TIPO: 0, VALOR1: 1, VALOR2: 2, VALOR3: 3, VALOR4: 4, VALOR5: 5
+  },
+  COLUNAS_RANKING: {
+    NOME: 0, BADGE: 1, XP: 2
+  }
+};
+
+// 2. FUNÇÃO PRINCIPAL (O DOGET)
 function doGet(e) {
   const startTime = new Date().getTime();
   const db = new Database();
   const service = new AlunaService(db);
   
-  // Objeto de Debug para rastreio
-  let debugLog = {
-    etapa: "Iniciando",
-    params: e.parameter,
-    performance: {}
-  };
+  let debugLog = { etapa: "Iniciando", params: e.parameter };
   
   try {
     const params = e.parameter;
-    const callback = params.callback; // Captura callback para JSONP (Widget)
+    const callback = params.callback; 
     const action = params.action || params.acao;
     
     let alunaRel = null;
 
-    // 1. Identificação da Aluna (E-mail Circle ou CPF Dashboard)
-    debugLog.etapa = "Identificando Aluna";
+    // Busca por Email ou CPF
     if (params.email) {
       alunaRel = service.buscarPorEmail(params.email);
     } else if (params.cpf) {
@@ -26,118 +51,114 @@ function doGet(e) {
     }
 
     if (!alunaRel) {
-      return Utils.responderCustom(
-        { encontrado: false, erro: "Usuária não localizada.", debug: debugLog }, 
-        callback
-      );
+      return Utils.responderCustom({ encontrado: false, erro: "Não encontrada.", debug: debugLog }, callback);
     }
 
     const perfil = alunaRel.dados;
-    const indiceNaPlanilha = alunaRel.indice;
-    debugLog.aluna_encontrada = perfil.nome;
+    const indice = alunaRel.indice;
 
-    // Incluindo dados adicionais
-    perfil.email = perfil.email || params.email || "";
-    perfil.has_company_email = perfil.has_company_email || false;
-    perfil.admin_of_any_paid_community = perfil.admin_of_any_paid_community || false;
-
-    // 2. Processamento de Ações (Quiz / Notificações)
+    // Processamento de Ações (Quiz/Notif)
     if (action === "logAcertoQuiz") {
-      debugLog.etapa = "Processando Quiz";
-      if (service.verificarQuizHoje(perfil.cpf)) {
-        return Utils.responderCustom({ sucesso: false, erro: "Quiz já realizado hoje." }, callback);
+      if (!service.verificarQuizHoje(perfil.cpf)) {
+        // CORREÇÃO: Corrigido o índice das colunas do log
+        db.appendLog([new Date(), "", perfil.nome, "quiz_diario", "Quiz Diário", "", perfil.cpf, perfil.email, params.pontos || 0, "Acertou quiz"]);
+        perfil.arrasas += Number(params.pontos || 0);
       }
-      db.appendLog([
-        new Date(), "", params.nome || perfil.nome, "quiz_diario", 
-        "Quiz Diário", "", perfil.cpf, params.email || perfil.email || "", 
-        params.pontos || 0, "Acertou quiz"
-      ]);
-      // Após o log, atualizamos o saldo no objeto de retorno para o Dashboard refletir na hora
-      perfil.arrasas += Number(params.pontos || 0);
     }
 
-    if (action === "updateNotif") {
-      db.updateMemberField(indiceNaPlanilha, CONFIG.COLUNAS_MEMBROS.NOTIF, params.status);
-      perfil.notificacoes = params.status;
-    }
-
-    // 3. Compilação de Dados (O "Pacote Completo")
-    debugLog.etapa = "Compilando Dashboard Data";
+    // Compilação Final
     const dashboardData = {
       ...perfil,
-      jaRespondeuQuiz: service.verificarQuizHoje(perfil.cpf),
-      historico: [],
-      ranking: [],
-      recompensas: [],
-      proximoEvento: "Carregando..."
+      historico: db.getHistorico(perfil.cpf, perfil.email),
+      ranking: db.getRanking(),
+      recompensas: db.getConfigs("RECOMPENSA"),
+      proximoEvento: db.getSingleConfig("PROXIMO_EVENTO"),
+      debug: { ...debugLog, tempo: (new Date().getTime() - startTime) + "ms" }
     };
-
-    // --- CARREGAR LOG (EXTRATO) ---
-    try {
-      const logData = db.getSheetData("Log");
-      const colsL = CONFIG.COLUNAS_LOG;
-      dashboardData.historico = logData
-        .filter(row => row[colsL.CPF] && Utils.limparCPF(row[colsL.CPF]) === perfil.cpf)
-        .reverse()
-        .slice(0, 15)
-        .map(row => ({
-          data: Utils.formatarData(row[colsL.DATA]),
-          tipo: row[colsL.TIPO],
-          pontos: Number(row[colsL.PONTOS]) || 0,
-          descricao: row[colsL.DESCRICAO] || "Ação"
-        }));
-    } catch (err) { console.error("Erro Log:", err); }
-
-    // --- CARREGAR CONFIGS (EVENTO/RECOMPENSAS) ---
-    try {
-      const configData = db.getSheetData("Config");
-      const colsC = CONFIG.COLUNAS_CONFIG;
-      
-      // Próximo Evento
-      const ev = configData.find(r => r[colsC.TIPO] === "PROXIMO_EVENTO");
-      if (ev) dashboardData.proximoEvento = ev[colsC.VALOR1];
-
-      // Recompensas
-      dashboardData.recompensas = configData
-        .filter(r => r[colsC.TIPO] === "RECOMPENSA")
-        .map(r => ({ titulo: r[colsC.VALOR1], desc: r[colsC.VALOR2] }));
-    } catch (err) { console.error("Erro Config:", err); }
-
-    // --- CARREGAR RANKING ---
-    try {
-      const rankData = db.getSheetData("Ranking");
-      const colsR = CONFIG.COLUNAS_RANKING;
-      dashboardData.ranking = rankData.slice(1)
-        .filter(r => r[colsR.NOME] !== "")
-        .sort((a, b) => Number(b[colsR.XP]) - Number(a[colsR.XP]))
-        .slice(0, 10)
-        .map(r => ({ nome: r[colsR.NOME], badge: r[colsR.BADGE], xp: Number(r[colsR.XP]) }));
-    } catch (err) { console.error("Erro Ranking:", err); }
-
-    debugLog.tempo_total = (new Date().getTime() - startTime) + "ms";
-    dashboardData.debug = debugLog;
 
     return Utils.responderCustom(dashboardData, callback);
 
   } catch (error) {
-    return Utils.responderCustom({ 
-      encontrado: false, 
-      erro: error.toString(),
-      debug: debugLog 
-    }, e.parameter.callback);
+    return Utils.responderCustom({ encontrado: false, erro: error.toString(), debug: debugLog }, e.parameter.callback);
   }
 }
 
-// Adicione a função Utils.responderCustom se ela não existir
-if (typeof Utils === 'undefined') {
-  var Utils = {};
+// 3. CLASSES DE SUPORTE (DATABASE E SERVIÇO)
+class Database {
+  constructor() {
+    this.ss = SpreadsheetApp.openById(CONFIG.SS_ID);
+  }
+
+  getSheetData(nomeAba) {
+    return this.ss.getSheetByName(nomeAba).getDataRange().getValues();
+  }
+
+  appendLog(dados) {
+    this.ss.getSheetByName("Log").appendRow(dados);
+  }
+
+  getHistorico(cpf, email) {
+    const logs = this.getSheetData("Log");
+    // CORREÇÃO: Índices das colunas de log conforme CONFIG
+    return logs.filter(r => (r && String(r[CONFIG.COLUNAS_LOG.CPF]).replace(/\D/g,"") === cpf) || (r && String(r[CONFIG.COLUNAS_LOG.EMAIL]).toLowerCase() === email.toLowerCase()))
+               .reverse().slice(0, 15)
+               .map(r => ({ data: Utils.formatarData(r[CONFIG.COLUNAS_LOG.DATA]), tipo: r[CONFIG.COLUNAS_LOG.TIPO], pontos: r[CONFIG.COLUNAS_LOG.PONTOS], descricao: r[CONFIG.COLUNAS_LOG.DESCRICAO] }));
+  }
+
+  getRanking() {
+    const r = this.getSheetData("Ranking");
+    // CORREÇÃO: Índices das colunas de ranking
+    return r.slice(1).sort((a,b) => b[CONFIG.COLUNAS_RANKING.XP] - a[CONFIG.COLUNAS_RANKING.XP]).slice(0,10).map(x => ({ nome: x[CONFIG.COLUNAS_RANKING.NOME], badge: x[CONFIG.COLUNAS_RANKING.BADGE], xp: x[CONFIG.COLUNAS_RANKING.XP] }));
+  }
+
+  getConfigs(tipo) {
+    const d = this.getSheetData("Config");
+    return d.filter(r => r[CONFIG.COLUNAS_CONFIG.TIPO] === tipo).map(r => ({ titulo: r[CONFIG.COLUNAS_CONFIG.VALOR1], desc: r[CONFIG.COLUNAS_CONFIG.VALOR2] }));
+  }
+
+  getSingleConfig(tipo) {
+    const row = this.getSheetData("Config").find(r => r[CONFIG.COLUNAS_CONFIG.TIPO] === tipo);
+    return row ? row[CONFIG.COLUNAS_CONFIG.VALOR1] : "";
+  }
 }
 
-Utils.responderCustom = function(data, callback) {
-  const jsonString = JSON.stringify(data);
-  if (callback) {
-    return ContentService.createTextOutput(`${callback}(${jsonString})`).setMimeType(ContentService.MimeType.JAVASCRIPT);
-  } else {
-    return ContentService.createTextOutput(jsonString).setMimeType(ContentService.MimeType.JSON);
+class AlunaService {
+  constructor(db) { this.db = db; }
+  buscarPorEmail(email) {
+    const d = this.db.getSheetData("community_members");
+    for (let i=1; i<d.length; i++) {
+      // CORREÇÃO: Índice correto EMAIL
+      if (String(d[i][CONFIG.COLUNAS_MEMBROS.EMAIL]).toLowerCase().trim() === email.toLowerCase().trim()) return this.format(d[i], i+1);
+    }
+    return null;
+  }
+  buscarPorCPF(cpf) {
+    const d = this.db.getSheetData("community_members");
+    const c = cpf.replace(/\D/g,"");
+    for (let i=1; i<d.length; i++) {
+      // CORREÇÃO: Índice correto CPF
+      if (String(d[i][CONFIG.COLUNAS_MEMBROS.CPF]).replace(/\D/g,"") === c) return this.format(d[i], i+1);
+    }
+    return null;
+  }
+  format(r, i) {
+    // CORREÇÃO: Índices corretos para mapeamento da linha
+    return { indice: i, dados: { encontrado: true, nome: r[CONFIG.COLUNAS_MEMBROS.NOME], email: r[CONFIG.COLUNAS_MEMBROS.EMAIL], foto: r[CONFIG.COLUNAS_MEMBROS.FOTO], cpf: String(r[CONFIG.COLUNAS_MEMBROS.CPF]).replace(/\D/g,""), arrasas: r[CONFIG.COLUNAS_MEMBROS.ARRASAS], badge: r[CONFIG.COLUNAS_MEMBROS.BADGE], xp: r[CONFIG.COLUNAS_MEMBROS.XP] } };
+  }
+  verificarQuizHoje(cpf) {
+    const logs = this.db.getSheetData("Log");
+    const hoje = new Date().toLocaleDateString();
+    // CORREÇÃO: Índices de colunas de log
+    return logs.some(r => r && String(r[CONFIG.COLUNAS_LOG.CPF]).replace(/\D/g,"") === cpf && r[CONFIG.COLUNAS_LOG.TIPO] === "quiz_diario" && new Date(r[CONFIG.COLUNAS_LOG.DATA]).toLocaleDateString() === hoje);
+  }
+}
+
+var Utils = {
+  limparCPF: (v) => String(v).replace(/\D/g,""),
+  formatarData: (d) => d instanceof Date ? Utilities.formatDate(d, "GMT-3", "dd/MM/yyyy") : "--/--",
+  responderCustom: (data, cb) => {
+    const s = JSON.stringify(data);
+    if (cb) return ContentService.createTextOutput(`${cb}(${s})`).setMimeType(ContentService.MimeType.JAVASCRIPT);
+    return ContentService.createTextOutput(s).setMimeType(ContentService.MimeType.JSON).addHeader('Access-Control-Allow-Origin', '*');
   }
 };

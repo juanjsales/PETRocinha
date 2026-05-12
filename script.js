@@ -277,6 +277,13 @@ function renderDashboard() {
     // Render Dica IA - AGORA USA DICAS_IA_LOCAL
     const dicaTexto = document.getElementById('dica-ia-texto');
     const dicaContainer = document.getElementById('dica-ia-container');
+    const DICAS_IA_LOCAL = {
+        "Aprendiz Curiosa 🐾": "Dica: Explore todas as aulas e não hesite em perguntar!",
+        "Mulher de Propósito ✨": "Dica: Conecte-se com seu propósito e compartilhe suas paixões.",
+        "Fera da Técnica 🎓": "Dica: Pratique as técnicas de manejo e cuidado com os pets.",
+        "Profissional que Arrasa 💼": "Dica: Busque feedbacks e aprimore seu atendimento para aumentar sua renda.",
+        "Embaixadora Pet Rocinha 👑": "Dica: Incentive e apoie outras alunas na comunidade!"
+    };
     const dicaIA = DICAS_IA_LOCAL[currentData.badge] || "Dica: Mantenha a constância e o foco técnico.";
     
     // Novo: Exibir informações extras se existirem
