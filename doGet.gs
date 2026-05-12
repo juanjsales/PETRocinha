@@ -73,8 +73,8 @@ function doGet(e) {
     // Processamento de Ações (Quiz/Notif)
     if (action === "logAcertoQuiz") {
       if (!service.verificarQuizHoje(perfil.cpf)) {
-        // CORREÇÃO: Corrigido o índice das colunas do log
-        db.appendLog([new Date(), "", perfil.nome, "quiz_diario", "Quiz Diário", "", perfil.cpf, perfil.email, params.pontos || 0, "Acertou quiz"]);
+        const descLog = params.status === "acerto" ? "Acertou quiz: " + (params.pergunta || "") : "Errou quiz: " + (params.pergunta || "");
+        db.appendLog([new Date(), "", perfil.nome, "quiz_diario", "Quiz Diário", "", perfil.cpf, perfil.email, params.pontos || 0, descLog]);
         perfil.arrasas += Number(params.pontos || 0);
       }
     }

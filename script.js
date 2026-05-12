@@ -646,9 +646,9 @@ async function checkQuizAnswer(selectedOption, opcoesQuizElement, quizResultElem
     loaderQuiz.style.display = "flex";
 
     if (selectedOption === quizData.respostaCorreta) {
-        await sendQuizLogToBackend(true);
+        await sendQuizLogToBackend(true, quizData.pergunta);
     } else {
-        await sendQuizLogToBackend(false);
+        await sendQuizLogToBackend(false, quizData.pergunta);
     }
 
     loaderQuiz.style.display = "none";
@@ -664,7 +664,7 @@ async function checkQuizAnswer(selectedOption, opcoesQuizElement, quizResultElem
     });
 }
 
-async function sendQuizLogToBackend(isCorrect) {
+async function sendQuizLogToBackend(isCorrect, quizPergunta) {
     if (!currentData || !currentData.cpf) {
         console.error("Dados do usuário não disponíveis para enviar o log do quiz.");
         return;
@@ -699,7 +699,7 @@ async function sendQuizLogToBackend(isCorrect) {
 
             const script = document.createElement("script");
             script.id = callbackName;
-            script.src = `${urlApp}?action=logAcertoQuiz&nome=${encodeURIComponent(nome)}&cpf=${cpf}&email=${encodeURIComponent(email)}&status=${acao}&pontos=${pontos}&callback=${callbackName}`;
+            script.src = `${urlApp}?action=logAcertoQuiz&nome=${encodeURIComponent(nome)}&cpf=${cpf}&email=${encodeURIComponent(email)}&status=${acao}&pontos=${pontos}&pergunta=${encodeURIComponent(quizPergunta)}&callback=${callbackName}`;
             script.onerror = () => {
                 clearTimeout(timeout);
                 delete window[callbackName];
