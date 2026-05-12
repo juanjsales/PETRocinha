@@ -1,15 +1,36 @@
-/* A variável DADOS_QUIZ_LOCAL foi movida para index.html para evitar conflitos */
-const DICAS_IA_LOCAL = {
-  "Aprendiz Curiosa": "Dica: Revise os conceitos básicos de comportamento animal para otimizar os atendimentos.",
-  "Mulher de Propósito": "Dica: Mapeie seus diferenciais competitivos e estruture sua oferta de serviços.",
-  "Fera da Técnica": "Dica: Aumente a eficiência dos procedimentos técnicos para reduzir o tempo de execução.",
-  "Profissional que Arrasa": "Dica: Organize sua agenda e mantenha controle rigoroso de entradas e saídas financeiras.",
-  "Embaixadora Pet Rocinha": "Dica: Utilize métricas de desempenho para gerenciar o crescimento da sua rede de atendimentos."
-};
+async function jsonpRequest(params) {
+    return new Promise((resolve, reject) => {
+        const callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
+        const timeout = setTimeout(() => {
+            delete window[callbackName];
+            const s = document.getElementById(callbackName);
+            if (s) document.body.removeChild(s);
+            reject(new Error('Tempo limite da requisição excedido.'));
+        }, 10000);
 
-let quizData = null;
-let currentData = null;
-let chartInstance = null;
+        window[callbackName] = (data) => {
+            clearTimeout(timeout);
+            delete window[callbackName];
+            const s = document.getElementById(callbackName);
+            if (s) document.body.removeChild(s);
+            resolve(data);
+        };
+
+        const script = document.createElement('script');
+        script.id = callbackName;
+        const queryString = Object.keys(params).map(key => `${key}=${encodeURIComponent(params[key])}`).join('&');
+        script.src = `${urlApp}?${queryString}&callback=${callbackName}`;
+        script.onerror = () => {
+            clearTimeout(timeout);
+            delete window[callbackName];
+            if (script.parentNode) script.parentNode.removeChild(script);
+            reject(new Error('Erro ao carregar script (CORS ou rede).'));
+        };
+        document.body.appendChild(script);
+    });
+}
+
+// ... (existing code)
 
 // ATENÇÃO: COLOQUE AQUI O SEU LINK DO APPS SCRIPT
 const urlApp = "https://script.google.com/macros/s/AKfycbyCtBQ_wVDEpyKybzHgo9eFswc6tczQuFs53VLzg3t9HuoFbLOVVY_zrVScPxIwG2b0/exec";
@@ -86,19 +107,39 @@ async function verificarCPF() {
     loader.style.display = 'flex';
     
     try {
-        const response = await fetch(`${urlApp}?cpf=${encodeURIComponent(currentCPF)}`);
-        if (!response.ok) throw new Error('Servidor indisponível.');
+        const result = await new Promise((resolve, reject) => {
+            const callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
+            const timeout = setTimeout(() => {
+                delete window[callbackName];
+                const s = document.getElementById(callbackName);
+                if (s) document.body.removeChild(s);
+                reject(new Error('Tempo limite da requisição excedido.'));
+            }, 10000);
+
+            window[callbackName] = (data) => {
+                clearTimeout(timeout);
+                delete window[callbackName];
+                const s = document.getElementById(callbackName);
+                if (s) document.body.removeChild(s);
+                resolve(data);
+            };
+
+            const script = document.createElement('script');
+            script.id = callbackName;
+            script.src = `${urlApp}?cpf=${encodeURIComponent(currentCPF)}&callback=${callbackName}`;
+            script.onerror = () => {
+                clearTimeout(timeout);
+                delete window[callbackName];
+                document.body.removeChild(script);
+                reject(new Error('Erro ao carregar script (CORS ou rede).'));
+            };
+            document.body.appendChild(script);
+        });
         
-        const rawData = await response.json();
-        console.log("Dados brutos do Apps Script:", rawData);
-
-        const parseNestedCSV = (csvStr) => {
-            if (!csvStr || typeof csvStr !== 'string') return [];
-            return csvStr.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(s => s.replace(/"/g, "").trim());
-        };
-
-        if (rawData.encontrado) {
+        console.log("Dados brutos do Apps Script:", result);
+        const rawData = result;
       
+        if (rawData.encontrado) {
             const linhaParts = parseNestedCSV(rawData.nome); 
             
             currentData = {
@@ -138,7 +179,7 @@ async function verificarCPF() {
         }
     } catch (error) {
         console.error("Erro no processamento:", error);
-        alert("Erro ao carregar seus dados. Verifique sua conexão.");
+        alert("Erro ao carregar seus dados. Verifique sua conexão ou se o sistema está online.");
     } finally {
         loader.style.display = 'none';
         btnEntrar.disabled = false;
@@ -210,9 +251,9 @@ function renderDashboard() {
     const jornadaLista = document.getElementById('jornada-lista');
     if (jornadaLista) {
         jornadaLista.innerHTML = configMapa.map((step, i) => `
-            <div class="step-item ${i <= window.currentLevelIndex ? 'unlocked' : ''}">
-                <div class="step-circle">${i <= window.currentLevelIndex ? step.icon : '🔒'}</div>
-                <div class="step-label"><b>${step.nome}</b><br><span style="font-size:9px">${step.desc}</span></div>
+            <div class="step-item \${i <= window.currentLevelIndex ? 'unlocked' : ''}">
+                <div class="step-circle">\${i <= window.currentLevelIndex ? step.icon : '🔒'}</div>
+                <div class="step-label"><b>\${step.nome}</b><br><span style="font-size:9px">\${step.desc}</span></div>
             </div>
         `).join('');
     }
@@ -223,9 +264,9 @@ function renderDashboard() {
         rankingList.innerHTML = currentData.ranking.map((r, i) => `
             <li class="list-item" style="justify-content:space-between; padding: 16px;">
                 <div style="display:flex; width: 100%; align-items:center;">
-                    <div style="width:30px; font-weight:800; color:var(--pet-purple); font-size:16px;">${i+1}º</div>
-                    <div style="flex:1; margin-left:10px;"><b>${r.nome}</b><br><small>${r.badge || 'Aluna'}</small></div>
-                    <div style="font-weight:800; color:var(--pet-indigo); margin-right: 15px;">${r.xp} XP</div>
+                    <div style="width:30px; font-weight:800; color:var(--pet-purple); font-size:16px;">\${i+1}º</div>
+                    <div style="flex:1; margin-left:10px;"><b>\${r.nome}</b><br><small>\${r.badge || 'Aluna'}</small></div>
+                    <div style="font-weight:800; color:var(--pet-indigo); margin-right: 15px;">\${r.xp} XP</div>
                 </div>
             </li>
         `).join('');
@@ -236,8 +277,8 @@ function renderDashboard() {
     if (currentData.historico && currentData.historico.length > 0 && eLista) {
         eLista.innerHTML = currentData.historico.map(h => `
             <li class="list-item" style="justify-content:space-between; padding:12px; cursor: default;">
-                <div><small style="color:var(--pet-purple); font-weight:700;">${h.data}</small><br><b style="font-size:13px;">${h.acao}</b></div>
-                <div style="font-weight:800; color:${h.pontos >= 0 ? 'var(--pet-green)' : '#ef4444'};">${h.pontos >= 0 ? '+' : ''}${h.pontos}</div>
+                <div><small style="color:var(--pet-purple); font-weight:700;">\${h.data}</small><br><b style="font-size:13px;">\${h.acao}</b></div>
+                <div style="font-weight:800; color:\${h.pontos >= 0 ? 'var(--pet-green)' : '#ef4444'};">\${h.pontos >= 0 ? '+' : ''}\${h.pontos}</div>
             </li>
         `).join('');
     }
@@ -249,7 +290,7 @@ function animarJornada() {
     const line = document.getElementById('horiz-line-active');
     const total = configMapa.length - 1;
     const progress = (window.currentLevelIndex / total) * 100;
-    line.style.width = `calc(${progress}% - 50px)`;
+    line.style.width = `calc(\${progress}% - 50px)`;
 }
 
 function renderChart() {
@@ -315,9 +356,9 @@ function solicitarResgate() {
 function abrirModalRecompensas() {
     const modalBody = document.getElementById('modal-recompensas-conteudo');
     modalBody.innerHTML = `
-        ${recompensa1}
-        ${recompensa2}
-        ${recompensa3}
+        \${recompensa1}
+        \${recompensa2}
+        \${recompensa3}
     `;
     document.getElementById('modal-recompensas').style.display = 'flex';
     // Biblioteca confetti carregada via CDN
@@ -351,7 +392,11 @@ async function toggleNotificacoes() {
     loader.style.display = 'flex';
 
     try {
-        const response = await fetch(`${urlApp}?action=updateNotif&cpf=${userCpf}&status=${novoStatus}`);
+        const result = await jsonpRequest({
+            action: 'updateNotif',
+            cpf: userCpf,
+            status: novoStatus
+        });
         
         if (novoStatus === 'Não') {
             btn.innerText = 'DESATIVADAS';
@@ -420,10 +465,37 @@ async function verificarPorEmail(email) {
     loader.style.display = 'flex';
     
     try {
-        const response = await fetch(`${urlApp}?email=${encodeURIComponent(email)}`);
-        if (!response.ok) throw new Error('Servidor indisponível.');
-        
-        const rawData = await response.json();
+        const result = await new Promise((resolve, reject) => {
+            const callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
+            const timeout = setTimeout(() => {
+                delete window[callbackName];
+                const s = document.getElementById(callbackName);
+                if (s) document.body.removeChild(s);
+                reject(new Error('Tempo limite da requisição excedido.'));
+            }, 10000);
+
+            window[callbackName] = (data) => {
+                clearTimeout(timeout);
+                delete window[callbackName];
+                const s = document.getElementById(callbackName);
+                if (s) document.body.removeChild(s);
+                resolve(data);
+            };
+
+            const script = document.createElement('script');
+            script.id = callbackName;
+            script.src = `${urlApp}?email=\${encodeURIComponent(email)}&callback=\${callbackName}`;
+            script.onerror = () => {
+                clearTimeout(timeout);
+                delete window[callbackName];
+                const s = document.getElementById(callbackName);
+                if (s) document.body.removeChild(s);
+                reject(new Error('Erro ao carregar script (CORS ou rede).'));
+            };
+            document.body.appendChild(script);
+        });
+
+        const rawData = result;
         
         const parseNestedCSV = (csvStr) => {
             if (!csvStr || typeof csvStr !== 'string') return [];
@@ -582,11 +654,38 @@ async function sendQuizLogToBackend(isCorrect) {
     const email = new URLSearchParams(window.location.search).get('email') || "";
 
     try {
-        const response = await fetch(`${urlApp}?action=logAcertoQuiz&nome=${encodeURIComponent(nome)}&cpf=${cpf}&email=${encodeURIComponent(email)}&status=${acao}&pontos=${pontos}`);
-        const result = await response.json();
-        
+        const result = await new Promise((resolve, reject) => {
+            const callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
+            const timeout = setTimeout(() => {
+                delete window[callbackName];
+                const s = document.getElementById(callbackName);
+                if (s) document.body.removeChild(s);
+                reject(new Error('Tempo limite da requisição excedido.'));
+            }, 10000);
+
+            window[callbackName] = (data) => {
+                clearTimeout(timeout);
+                delete window[callbackName];
+                const s = document.getElementById(callbackName);
+                if (s) document.body.removeChild(s);
+                resolve(data);
+            };
+
+            const script = document.createElement('script');
+            script.id = callbackName;
+            script.src = `${urlApp}?action=logAcertoQuiz&nome=\${encodeURIComponent(nome)}&cpf=\${cpf}&email=\${encodeURIComponent(email)}&status=\${acao}&pontos=\${pontos}&callback=\${callbackName}`;
+            script.onerror = () => {
+                clearTimeout(timeout);
+                delete window[callbackName];
+                const s = document.getElementById(callbackName);
+                if (s) document.body.removeChild(s);
+                reject(new Error('Erro ao carregar script (CORS ou rede).'));
+            };
+            document.body.appendChild(script);
+        });
+
         if (result.erro) {
-            document.getElementById('quiz-result').innerHTML = `⏳ ${result.erro}`;
+            document.getElementById('quiz-result').innerHTML = `⏳ \${result.erro}`;
             document.getElementById('quiz-result').style.display = 'block';
             document.getElementById('quiz-result').style.color = '#ef4444';
             document.getElementById('quiz-result').style.fontSize = '18px';
@@ -615,47 +714,12 @@ async function sendQuizLogToBackend(isCorrect) {
                 }
             } else {
                 document.getElementById('quiz-result').style.color = '#ef4444';
-                document.getElementById('quiz-result').innerHTML = `❌ Resposta Incorreta. A resposta certa era: "${quizData.respostaCorreta}"`;
+                document.getElementById('quiz-result').innerHTML = `❌ Resposta Incorreta. A resposta certa era: "\${quizData.respostaCorreta}"`;
                 document.getElementById('quiz-result').style.display = 'block';
             }
 
-            const updatedResponse = await fetch(`${urlApp}?cpf=${cpf}`);
-            const updatedRawData = await updatedResponse.json();
-            if (updatedRawData.encontrado) {
-                const parseNestedCSV = (csvStr) => {
-                    if (!csvStr || typeof csvStr !== 'string') return [];
-                    return csvStr.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(s => s.replace(/"/g, "").trim());
-                };
-                const linhaParts = parseNestedCSV(updatedRawData.nome);
-                currentData = {
-                    encontrado: true,
-                    nome: linhaParts[1] || "Aluna",
-                    foto: linhaParts[3] || "",
-                    arrasas: parseInt(linhaParts[10]) || 0,
-                    xp_total: parseInt(linhaParts[13]) || 0,
-                    badge: linhaParts[11] || "Aprendiz Curiosa",
-                    proximoEvento: updatedRawData.proximoEvento || "Consulte a Circle",
-                    ranking: (updatedRawData.ranking || []).map(r => {
-                        const rParts = parseNestedCSV(r.linhaRaw);
-                        return {
-                            nome: rParts[0] || "Aluna",
-                            badge: rParts[1] || " ",
-                            xp: parseInt(rParts[2]) || 0,
-                            recompensa: rParts[3] || ""
-                        };
-                    }),
-                    historico: (updatedRawData.historico || []).map(h => {
-                        const hParts = parseNestedCSV(h.acao);
-                        return {
-                            data: h.data || "--/--",
-                            acao: hParts[9] || hParts[3] || "Atividade",
-                            pontos: parseInt(hParts[8]) || 0
-                        };
-                    }),
-                    cpf: cpf
-                };
-                renderDashboard();
-            }
+            // Atualização silenciosa dos dados
+            refreshDadosSilencioso(cpf);
         }
     } catch (error) {
         console.error("Erro na comunicação com o backend para registrar log do quiz:", error);
@@ -683,11 +747,39 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function refreshDadosSilencioso(id) {
     try {
-        const res = await fetch(`${urlApp}?email=${id}`); // Ou CPF
-        const newData = await res.json();
-        if (newData.encontrado) {
-            localStorage.setItem('pet_perfil_ativo', JSON.stringify(newData));
-            currentData = newData;
+        const result = await new Promise((resolve, reject) => {
+            const callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
+            const timeout = setTimeout(() => {
+                delete window[callbackName];
+                const s = document.getElementById(callbackName);
+                if (s) document.body.removeChild(s);
+                reject(new Error('Timeout'));
+            }, 10000);
+
+            window[callbackName] = (data) => {
+                clearTimeout(timeout);
+                delete window[callbackName];
+                const s = document.getElementById(callbackName);
+                if (s) document.body.removeChild(s);
+                resolve(data);
+            };
+
+            const script = document.createElement('script');
+            script.id = callbackName;
+            script.src = `${urlApp}?email=\${encodeURIComponent(id)}&callback=\${callbackName}`;
+            script.onerror = () => {
+                clearTimeout(timeout);
+                delete window[callbackName];
+                const s = document.getElementById(callbackName);
+                if (s) document.body.removeChild(s);
+                reject(new Error('Error'));
+            };
+            document.body.appendChild(script);
+        });
+
+        if (result.encontrado) {
+            localStorage.setItem('pet_perfil_ativo', JSON.stringify(result));
+            currentData = result;
             renderDashboard(); 
         }
     } catch(e) { console.warn("Falha no refresh em segundo plano."); }

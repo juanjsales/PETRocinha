@@ -122,3 +122,17 @@ function doGet(e) {
     }, e.parameter.callback);
   }
 }
+
+// Adicione a função Utils.responderCustom se ela não existir
+if (typeof Utils === 'undefined') {
+  var Utils = {};
+}
+
+Utils.responderCustom = function(data, callback) {
+  const jsonString = JSON.stringify(data);
+  if (callback) {
+    return ContentService.createTextOutput(`${callback}(${jsonString})`).setMimeType(ContentService.MimeType.JAVASCRIPT);
+  } else {
+    return ContentService.createTextOutput(jsonString).setMimeType(ContentService.MimeType.JSON);
+  }
+};
