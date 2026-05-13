@@ -52,10 +52,12 @@
             if (!userEmail || userEmail === "undefined" || userEmail === "null") {
                 if (window.circleUser && window.circleUser.email) {
                     userEmail = window.circleUser.email;
+                    safeStorage('set', 'pet_login_source', 'circle');
                 } else {
                     let liquidEmail = "{{ user.email }}";
-                    if (liquidEmail && liquidEmail.indexOf('{{') === -1) {
+                    if (liquidEmail && liquidEmail.indexOf('{{') === -1 && liquidEmail.trim() !== "") {
                         userEmail = liquidEmail;
+                        safeStorage('set', 'pet_login_source', 'liquid');
                     }
                 }
 
@@ -192,8 +194,8 @@
 
             const contentVisitante = `
                 <div class="widget-badge" style="display: flex; align-items: center; justify-content: center; font-size: 24px; background: rgba(0,0,0,0.05); border-radius: 50%;">👋</div>
-                <div class="widget-info" style="justify-content: center;">
-                    <span class="widget-value" style="font-size: 13px; white-space: normal; line-height: 1.2; text-align: left;">Cadastre-se ou<br>Faça Login</span>
+                <div class="widget-info" style="display: flex; flex-direction: column; justify-content: center; width: 100%;">
+                    <span class="widget-value" style="font-size: 13px; font-weight: bold; white-space: normal; line-height: 1.2; text-align: left; color: var(--pet-text-main, #333);">Cadastre-se ou<br>Faça Login</span>
                 </div>
             `;
 
@@ -241,23 +243,36 @@
 
     // 6. BACKEND
     function iniciarWidget() {
-        // --- DETECÇÃO DE LOGOUT DO CIRCLE ---
+        // --- DETECÇÃO DE LOGOUT SEGURA ---
         const cachedEmail = safeStorage('get', 'pet_user_email');
-        const isCircleUserPresent = window.circleUser && window.circleUser.email;
+        const loginSource = safeStorage('get', 'pet_login_source');
+        
+        let isLoggedOut = false;
+        if (loginSource === 'circle' && (!window.circleUser || !window.circleUser.email)) {
+            isLoggedOut = true; // Estava no Circle e agora não tem mais usuário
+        } else if (loginSource === 'liquid') {
+            let liquidEmail = "{{ user.email }}";
+            if (!liquidEmail || liquidEmail.indexOf('{{') !== -1 || liquidEmail.trim() === "") {
+                isLoggedOut = true; // Estava logado via Liquid e agora a tag está vazia
+            }
+        }
 
-        // Se tínhamos um e-mail salvo, mas agora não há mais usuário no Circle, é um logout.
-        if (cachedEmail && !isCircleUserPresent) {
+        // Se tínhamos um e-mail salvo, mas ocorreu logout na plataforma origem
+        if (cachedEmail && isLoggedOut) {
             safeStorage('remove', 'pet_user_email');
             safeStorage('remove', 'userSaldo');
             safeStorage('remove', 'userBadge');
+            safeStorage('remove', 'pet_login_source');
             
-            // Renderiza o widget no estado de "visitante" e para o fluxo.
             renderizar({ encontrado: false, arrasas: 0, badge: null, isCache: true });
             return;
         }
 
         var email = getEmail();
-        if (!email) return; // Se não tem email, não faz nada (o estado inicial já é de visitante)
+        if (!email) {
+            renderizar({ encontrado: false, arrasas: 0, badge: null, isCache: true });
+            return;
+        }
 
         var script = document.createElement('script');
         var ts = new Date().getTime();
@@ -275,6 +290,13 @@
             if (data.email) safeStorage('set', 'pet_user_email', data.email.toLowerCase().trim());
             data.isCache = false;
             renderizar(data); 
+        } else {
+            // Resposta do servidor: E-mail não está cadastrado (Visitante)
+            safeStorage('remove', 'pet_user_email');
+            safeStorage('remove', 'userSaldo');
+            safeStorage('remove', 'userBadge');
+            safeStorage('remove', 'pet_login_source');
+            renderizar({ encontrado: false, arrasas: 0, badge: null, isCache: false });
         }
     };
 
@@ -303,8 +325,15 @@
 
     // 8. START
     injectAnimationStyles();
+    const cEmail = safeStorage('get', 'pet_user_email');
     const cS = safeStorage('get', 'userSaldo');
-    renderizar({ encontrado: !!cS, arrasas: cS || 0, badge: safeStorage('get', 'userBadge'), isCache: true });
+    
+    // Evita que a string "0" seja interpretada como 'true' sem um e-mail salvo no cache
+    const isProvavelAluna = !!cEmail && cS !== null && cS !== undefined;
+    
+    renderizar({ 
+        encontrado: isProvavelAluna, arrasas: cS || 0, badge: safeStorage('get', 'userBadge'), isCache: true 
+    });
 
     setTimeout(iniciarWidget, 1500);
     setInterval(iniciarWidget, 45000);

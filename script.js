@@ -73,13 +73,29 @@ window.addEventListener('message', (event) => {
     }
 });
 
+// --- COMUNICAÇÃO COM O WIDGET ---
+// Notifica a janela pai (Circle) para atualizar o widget instantaneamente
+function notificarWidget() {
+    if (currentData && currentData.encontrado && currentData.email) {
+        window.parent.postMessage({
+            type: 'PET_UPDATE',
+            payload: {
+                encontrado: true,
+                email: currentData.email,
+                arrasas: currentData.arrasas,
+                badge: currentData.badge
+            }
+        }, '*'); // Envia para a janela pai (Circle)
+    }
+}
+
 // Função vital para impedir que a dashboard quebre por falta de dados
 function processarDadosAluno(rawData, identificador) {
     return {
         encontrado: true,
         nome: rawData.nome || "Aluna",
         email: rawData.email || "",
-        foto: rawData.foto || "https://via.placeholder.com/100?text=PET",
+        foto: rawData.foto || "",
         arrasas: parseInt(rawData.arrasas) || 0,
         xp_total: parseInt(rawData.xp_total) || 0,
         badge: rawData.badge || "Aprendiz Curiosa 🐾",
@@ -110,6 +126,7 @@ async function buscarESalvarLocal(email) {
             localStorage.setItem('pet_perfil_ativo', JSON.stringify(currentData)); 
             localStorage.setItem('pet_user_email', email); // Salva para uso no Quiz
             renderDashboard();
+            notificarWidget(); // Atualiza o widget
         } else {
             console.warn("⚠️ E-mail não encontrado na base de dados:", email);
             document.getElementById('auth-section').style.display = 'block'; // Mostra login via CPF
@@ -145,6 +162,7 @@ async function refreshDadosSilencioso(identificador) {
             currentData = processarDadosAluno(result, identificador);
             localStorage.setItem("pet_perfil_ativo", JSON.stringify(currentData));
             renderDashboard(); 
+            notificarWidget(); // Atualiza o widget silenciosamente
         }
     } catch(e) { console.warn("Falha no refresh em segundo plano."); }
 }
@@ -267,6 +285,7 @@ async function verificarCPF() {
 
             console.log("Dados finais processados:", currentData);
             renderDashboard();
+            notificarWidget(); // Atualiza o widget após login
         } else {
             alert("Aluna não cadastrada no sistema.");
         }
@@ -748,6 +767,7 @@ async function sendQuizLogToBackend(isCorrect, quizPergunta) {
                     document.querySelector(".progress-bar").setAttribute("aria-valuenow", percent);
                     document.getElementById("bar-fill").style.width = percent + "%";
                     if (currentData.arrasas >= 100) document.getElementById("btn-resgate").style.display = "flex";
+                    notificarWidget(); // Dispara a animação no widget na hora do acerto!
                 }
             } else {
                 document.getElementById("quiz-result").style.color = "#ef4444";
