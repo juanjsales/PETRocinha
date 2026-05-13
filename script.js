@@ -39,11 +39,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 2. Se já tem o dado na gaveta da Vercel, usa ele
     if (cacheVercel) {
-        const data = JSON.parse(cacheVercel);
-        if (data.encontrado) {
-            currentData = data;
-            renderDashboard();
-            return;
+        try {
+            const data = JSON.parse(cacheVercel);
+            if (data.encontrado) {
+                currentData = data;
+                renderDashboard();
+                return;
+            }
+        } catch (error) {
+            console.warn("⚠️ Falha ao ler o cache local, limpando...", error);
+            localStorage.removeItem('pet_perfil_ativo');
         }
     }
 
@@ -447,6 +452,34 @@ function solicitarResgate() {
 
 function abrirModalRecompensas() {
     const modalBody = document.getElementById("modal-recompensas-conteudo");
+    
+    // Correção: Definição dos templates de recompensas para evitar ReferenceError
+    const recompensa1 = `
+        <div class="reward-container gold">
+            <div class="reward-title">🏆 1º Lugar</div>
+            <ul class="reward-list">
+                <li>Kit Profissional Completo</li>
+                <li>Mentoria Exclusiva de Negócios</li>
+            </ul>
+        </div>`;
+        
+    const recompensa2 = `
+        <div class="reward-container silver">
+            <div class="reward-title">🥈 2º Lugar</div>
+            <ul class="reward-list">
+                <li>Kit Empreendedora Iniciante</li>
+                <li>Destaque na Comunidade</li>
+            </ul>
+        </div>`;
+        
+    const recompensa3 = `
+        <div class="reward-container bronze">
+            <div class="reward-title">🥉 3º Lugar</div>
+            <ul class="reward-list">
+                <li>Selo de Especialista</li>
+            </ul>
+        </div>`;
+
     modalBody.innerHTML = `
         ${recompensa1}
         ${recompensa2}
