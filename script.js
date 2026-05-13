@@ -62,26 +62,54 @@ window.addEventListener('message', (event) => {
     }
 });
 
+// Função vital para impedir que a dashboard quebre por falta de dados
+function processarDadosAluno(rawData, identificador) {
+    return {
+        encontrado: true,
+        nome: rawData.nome || "Aluna",
+        email: rawData.email || "",
+        foto: rawData.foto || "https://via.placeholder.com/100?text=PET",
+        arrasas: parseInt(rawData.arrasas) || 0,
+        xp_total: parseInt(rawData.xp_total) || 0,
+        badge: rawData.badge || "Aprendiz Curiosa 🐾",
+        proximoEvento: rawData.proximoEvento || "Consulte a Circle",
+        ranking: (rawData.ranking || []).map(r => ({
+            nome: r.nome || "Aluna", 
+            badge: r.badge || " ",
+            xp: parseInt(r.xp) || 0,
+            recompensa: r.recompensa || ""
+        })),
+        jaRespondeuQuiz: rawData.jaRespondeuQuiz || false,
+        historico: (rawData.historico || []).map(h => ({
+            data: h.data || "--/--", 
+            acao: h.acao || "Atividade", 
+            pontos: parseInt(h.pontos) || 0 
+        })),
+        cpf: rawData.cpf || identificador
+    };
+}
+
 async function buscarESalvarLocal(email) {
     document.getElementById('loader').style.display = 'flex';
     try {
         const result = await jsonpRequest({ email: email });
         
         if (result.encontrado) {
-            currentData = result;
-            localStorage.setItem('pet_perfil_ativo', JSON.stringify(result)); // SALVA NO DOMÍNIO VERCEL
+            currentData = processarDadosAluno(result, email);
+            localStorage.setItem('pet_perfil_ativo', JSON.stringify(currentData)); 
+            localStorage.setItem('pet_user_email', email); // Salva para uso no Quiz
             renderDashboard();
+        } else {
+            console.warn("⚠️ E-mail não encontrado na base de dados:", email);
+            document.getElementById('auth-section').style.display = 'block'; // Mostra login via CPF
         }
     } catch (e) {
         console.error("Erro na colheita:", e);
+        document.getElementById('auth-section').style.display = 'block';
     } finally {
         document.getElementById('loader').style.display = 'none';
     }
 }
-
-
-
-
 
 async function refreshDadosSilencioso(id) {
     try {
@@ -91,8 +119,8 @@ async function refreshDadosSilencioso(id) {
         const result = await jsonpRequest({ email: emailParaBackend });
 
         if (result.encontrado) {
-            localStorage.setItem("pet_perfil_ativo", JSON.stringify(result));
-            currentData = result;
+            currentData = processarDadosAluno(result, result.cpf || emailParaBackend);
+            localStorage.setItem("pet_perfil_ativo", JSON.stringify(currentData));
             renderDashboard(); 
         }
     } catch(e) { console.warn("Falha no refresh em segundo plano."); }
