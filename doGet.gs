@@ -50,6 +50,7 @@ function doGet(e) {
       Logger.log("doGet: Email processado: [" + email + "]");
       alunaRel = service.buscarPorEmail(email);
       if (alunaRel && alunaRel.encontrado) {
+      if (alunaRel) {
         Logger.log("doGet: Aluna encontrada por e-mail: [" + email + "]");
       } else {
         Logger.log("doGet: Aluna NÃO encontrada por e-mail: [" + email + "]");
@@ -165,6 +166,8 @@ class AlunaService {
     if (!normalizedEmail) return null;
 
     const cacheKey = "aluna_email_" + normalizedEmail.replace(/[^a-zA-Z0-9]/g, "_");
+    // Mudamos o nome da chave para limpar o cache corrompido antigo do Google
+    const cacheKey = "aluna_email_v2_" + normalizedEmail.replace(/[^a-zA-Z0-9]/g, "_");
     const cached = CacheService.getScriptCache().get(cacheKey);
     if (cached) {
       Logger.log("AlunaService: Dados de e-mail recuperados do cache para: " + normalizedEmail);
@@ -180,6 +183,7 @@ class AlunaService {
     for (let i = 1; i < data.length; i++) {
       const linha = data[i];
       const currentEmail = String(linha[COL_EMAIL] || "").toLowerCase().trim();
+      const currentEmail = String(linha[CONFIG.COLUNAS_MEMBROS.EMAIL] || "").toLowerCase().trim();
       
       // Log para debug de comparação
       if (i < 5) { // Log apenas para as primeiras linhas para não inundar o log
@@ -193,6 +197,7 @@ class AlunaService {
           arrasas: parseInt(linha[COL_ARRASAS]) || 0,
           badge: linha[COL_BADGE] || "Aprendiz Curiosa 🐾"
         };
+        const result = this.format(linha, i + 1);
         CacheService.getScriptCache().put(cacheKey, JSON.stringify(result), 300);
         Logger.log("AlunaService: E-mail encontrado e cacheado: " + normalizedEmail);
         return result;
@@ -201,6 +206,7 @@ class AlunaService {
 
     Logger.log("AlunaService: E-mail não encontrado: [" + normalizedEmail + "]");
     return { encontrado: false };
+    return null;
   }
   buscarPorCPF(cpf) {
     if (!cpf) return null;
