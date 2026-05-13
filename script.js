@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const emailDaUrl = urlParams.get('email');
     const cacheVercel = localStorage.getItem('pet_perfil_ativo');
 
-    // 1. Recebeu a "carona" da Circle?
+    // 1. Tenta receber a "carona" da Circle via URL primeiro
     if (emailDaUrl && emailDaUrl !== "{{user.email}}") {
         console.log("📩 E-mail recebido da Circle via URL:", emailDaUrl);
         // Limpa a URL para ficar bonito
@@ -32,6 +32,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         await buscarESalvarLocal(emailDaUrl);
         return;
     }
+
+    // Se não veio na URL, pede ao iframe pai (Circle) como plano B
+    console.log("📡 Pedindo e-mail via PostMessage para a Circle...");
+    window.parent.postMessage('REQUEST_EMAIL', '*');
 
     // 2. Se já tem o dado na gaveta da Vercel, usa ele
     if (cacheVercel) {
@@ -47,34 +51,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('auth-section').style.display = 'block';
 });
 
-function obterEmailDaUrl() {
-    // 1. Tenta pegar o e-mail da URL (?email=...)
-    const urlParams = new URLSearchParams(window.location.search);
-    let email = urlParams.get('email');
-
-    // 2. Se não estiver na URL ou vier a tag crua do Circle, tenta o PostMessage
-    if (!email || email.includes('{{')) {
-        console.log("📡 E-mail não encontrado na URL, pedindo via PostMessage...");
-        window.parent.postMessage('REQUEST_EMAIL', '*');
-        return;
-    }
-
-    if (email) {
-        console.log("✅ E-mail capturado da URL:", email);
-        // Chame aqui sua função de carregar dados, ex: carregarDados(email);
-    }
-}
-
 // Ouvinte de reserva (Caso a URL falhe, o Widget responde por aqui)
 window.addEventListener('message', (event) => {
-    if (event.data && event.data.email) {
+    if (event.data && event.data.email && event.data.email !== "{{user.email}}") {
         console.log("✅ E-mail recebido via PostMessage:", event.data.email);
-        // carregarDados(event.data.email);
+        // Só carrega se o dashboard não estiver renderizado ainda
+        if (document.getElementById('auth-section').style.display !== 'none') {
+            buscarESalvarLocal(event.data.email);
+        }
     }
 });
-
-// Executa ao carregar
-window.onload = obterEmailDaUrl;
 
 async function buscarESalvarLocal(email) {
     document.getElementById('loader').style.display = 'flex';
