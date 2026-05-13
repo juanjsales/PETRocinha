@@ -94,6 +94,17 @@ function doGet(e) {
       }
     }
 
+    // 🚀 MODO WIDGET: Resposta leve e rápida, sem ler abas adicionais
+    if (action === "widget") {
+      const ultimoSaldo = parseInt(params.ultimoSaldo || 0);
+      return Utils.responderCustom({
+        encontrado: true,
+        arrasas: perfil.arrasas,
+        badge: perfil.badge || "Aprendiz Curiosa 🐾",
+        festejar: (perfil.arrasas > ultimoSaldo)
+      }, callback);
+    }
+
     // Compilação Final
     const tLog = new Date().getTime();
     const historico = db.getHistorico(perfil.cpf, perfil.email);

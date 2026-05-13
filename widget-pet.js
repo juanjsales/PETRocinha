@@ -1,6 +1,6 @@
 (function() {
     // ⚠️ URL DO SEU APP SCRIPT
-    var urlApp = "https://script.google.com/macros/s/AKfycbxKYHhL6caVrF83jISARJlU2adlD6M-q2UqfGOxxQNO_fb6RoaHjLixBjA65a41jR6N/exec";
+    var urlApp = "https://script.google.com/macros/s/AKfycbyCtBQ_wVDEpyKybzHgo9eFswc6tczQuFs53VLzg3t9HuoFbLOVVY_zrVScPxIwG2b0/exec";
 
     // ⚠️ DOMÍNIO CONFIÁVEL DO SEU DASHBOARD (Ajuste para a URL real do seu Vercel)
     var TRUSTED_ORIGIN = "https://map-rocinha.vercel.app";
@@ -278,6 +278,7 @@
         var ts = new Date().getTime();
         script.src = urlApp + "?email=" + encodeURIComponent(email) + 
                      "&ultimoSaldo=" + (safeStorage('get', 'userSaldo') || 0) + 
+                     "&action=widget" +
                      "&callback=receberDadosPet&t=" + ts;
 
         document.body.appendChild(script);
