@@ -44,6 +44,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (data.encontrado) {
                 currentData = data;
                 renderDashboard();
+                
+                // MÁGICA AQUI: Dispara uma atualização silenciosa para trazer o saldo novo do servidor
+                const idParaRefresh = localStorage.getItem("pet_user_email") || data.cpf || data.email;
+                if (idParaRefresh) {
+                    refreshDadosSilencioso(idParaRefresh);
+                }
                 return;
             }
         } catch (error) {
@@ -116,15 +122,27 @@ async function buscarESalvarLocal(email) {
     }
 }
 
-async function refreshDadosSilencioso(id) {
+async function refreshDadosSilencioso(identificador) {
     try {
         // Lógica de e-mail prioritário: localStorage da Circle ou o e-mail passado como parâmetro
-        const emailParaBackend = localStorage.getItem("pet_user_email") || id;
+        const emailParaBackend = localStorage.getItem("pet_user_email");
         
-        const result = await jsonpRequest({ email: emailParaBackend });
+        let params = {};
+        if (emailParaBackend) {
+            params.email = emailParaBackend;
+        } else {
+            const cleanId = String(identificador).replace(/\D/g, '');
+            if (cleanId.length === 11) {
+                params.cpf = cleanId;
+            } else {
+                params.email = identificador;
+            }
+        }
+        
+        const result = await jsonpRequest(params);
 
         if (result.encontrado) {
-            currentData = processarDadosAluno(result, result.cpf || emailParaBackend);
+            currentData = processarDadosAluno(result, identificador);
             localStorage.setItem("pet_perfil_ativo", JSON.stringify(currentData));
             renderDashboard(); 
         }
@@ -270,8 +288,27 @@ function renderDashboard() {
     if (userNomeElem) userNomeElem.innerText = currentData.nome;
     const userImgElem = document.getElementById("user-img");
     if (userImgElem) userImgElem.src = currentData.foto || "https://via.placeholder.com/100?text=PET";
+    
     const userArrasasElem = document.getElementById("user-arrasas");
-    if (userArrasasElem) userArrasasElem.innerText = currentData.arrasas;
+    if (userArrasasElem) {
+        const valorAnterior = parseInt(userArrasasElem.innerText);
+        
+        if (!userArrasasElem.style.transition) {
+            userArrasasElem.style.transition = "transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.4s ease";
+        }
+        
+        userArrasasElem.innerText = currentData.arrasas;
+        
+        // Efeito visual (pulo verde) quando o saldo entra atualizado via segundo plano
+        if (!isNaN(valorAnterior) && valorAnterior !== currentData.arrasas) {
+            userArrasasElem.style.transform = "scale(1.2)";
+            userArrasasElem.style.color = "var(--pet-green)";
+            setTimeout(() => {
+                userArrasasElem.style.transform = "scale(1)";
+                userArrasasElem.style.color = "var(--pet-indigo)";
+            }, 800);
+        }
+    }
     
     const badgeDisplay = document.getElementById("user-badge-display");
     const badgeImg = document.querySelector(".badge-img");
