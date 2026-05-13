@@ -727,7 +727,7 @@ async function sendQuizLogToBackend(isCorrect, quizPergunta) {
     
     // Lógica de e-mail prioritário: localStorage da Circle
     const circleUserEmail = localStorage.getItem("pet_user_email");
-    const email = circleUserEmail ? JSON.parse(circleUserEmail).email : (currentData.email || "");
+    const email = circleUserEmail ? circleUserEmail : (currentData.email || "");
 
     try {
         const result = await jsonpRequest({
