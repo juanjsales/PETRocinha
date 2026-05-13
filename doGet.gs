@@ -49,7 +49,6 @@ function doGet(e) {
       debugLog.emailParam = email;
       Logger.log("doGet: Email processado: [" + email + "]");
       alunaRel = service.buscarPorEmail(email);
-      if (alunaRel && alunaRel.encontrado) {
       if (alunaRel) {
         Logger.log("doGet: Aluna encontrada por e-mail: [" + email + "]");
       } else {
@@ -165,7 +164,6 @@ class AlunaService {
     const normalizedEmail = (email || "").toLowerCase().trim();
     if (!normalizedEmail) return null;
 
-    const cacheKey = "aluna_email_" + normalizedEmail.replace(/[^a-zA-Z0-9]/g, "_");
     // Mudamos o nome da chave para limpar o cache corrompido antigo do Google
     const cacheKey = "aluna_email_v2_" + normalizedEmail.replace(/[^a-zA-Z0-9]/g, "_");
     const cached = CacheService.getScriptCache().get(cacheKey);
@@ -175,14 +173,9 @@ class AlunaService {
     }
 
     const data = this.db.getSheetData("community_members");
-    const COL_NOME = 1;
-    const COL_EMAIL = 2;
-    const COL_ARRASAS = 10;
-    const COL_BADGE = 11;
 
     for (let i = 1; i < data.length; i++) {
       const linha = data[i];
-      const currentEmail = String(linha[COL_EMAIL] || "").toLowerCase().trim();
       const currentEmail = String(linha[CONFIG.COLUNAS_MEMBROS.EMAIL] || "").toLowerCase().trim();
       
       // Log para debug de comparação
@@ -191,12 +184,6 @@ class AlunaService {
       }
 
       if (currentEmail === normalizedEmail) {
-        const result = {
-          encontrado: true,
-          nome: linha[COL_NOME],
-          arrasas: parseInt(linha[COL_ARRASAS]) || 0,
-          badge: linha[COL_BADGE] || "Aprendiz Curiosa 🐾"
-        };
         const result = this.format(linha, i + 1);
         CacheService.getScriptCache().put(cacheKey, JSON.stringify(result), 300);
         Logger.log("AlunaService: E-mail encontrado e cacheado: " + normalizedEmail);
@@ -205,7 +192,6 @@ class AlunaService {
     }
 
     Logger.log("AlunaService: E-mail não encontrado: [" + normalizedEmail + "]");
-    return { encontrado: false };
     return null;
   }
   buscarPorCPF(cpf) {

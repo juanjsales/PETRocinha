@@ -5,11 +5,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "frame-ancestors 'self' https://*.circle.so https://circle.so;"
-        },
-        {
-          "key": "X-Frame-Options",
-          "value": "ALLOW-FROM https://circle.so"
+          "value": "frame-ancestors 'self' https://*.circle.so https://circle.so https://comunidade.aprenderecuidar.com.br https://*.aprenderecuidar.com.br;"
         }
       ]
     }
