@@ -79,11 +79,11 @@ window.onload = obterEmailDaUrl;
 async function buscarESalvarLocal(email) {
     document.getElementById('loader').style.display = 'flex';
     try {
-        const res = await fetch(`${urlApp}?email=${encodeURIComponent(email)}`);
-        const data = await res.json();
-        if (data.encontrado) {
-            currentData = data;
-            localStorage.setItem('pet_perfil_ativo', JSON.stringify(data)); // SALVA NO DOMÍNIO VERCEL
+        const result = await jsonpRequest({ email: email });
+        
+        if (result.encontrado) {
+            currentData = result;
+            localStorage.setItem('pet_perfil_ativo', JSON.stringify(result)); // SALVA NO DOMÍNIO VERCEL
             renderDashboard();
         }
     } catch (e) {
