@@ -2,6 +2,9 @@
     // ⚠️ URL DO SEU APP SCRIPT
     var urlApp = "https://script.google.com/macros/s/AKfycbxKYHhL6caVrF83jISARJlU2adlD6M-q2UqfGOxxQNO_fb6RoaHjLixBjA65a41jR6N/exec";
 
+    // ⚠️ DOMÍNIO CONFIÁVEL DO SEU DASHBOARD (Ajuste para a URL real do seu Vercel)
+    var TRUSTED_ORIGIN = "https://map-rocinha.vercel.app";
+
     // --- SISTEMA DE ARMAZENAMENTO SEGURO (Para Aba Anônima) ---
     var memoryStorage = {};
     function safeStorage(action, key, value) {
@@ -21,6 +24,24 @@
             if (action === 'set') memoryStorage[key] = value;
             if (action === 'remove') delete memoryStorage[key];
         }
+    }
+
+    // --- INJETAR ESTILOS DE ANIMAÇÃO ---
+    function injectAnimationStyles() {
+        const style = document.createElement('style');
+        style.innerHTML = `
+            @keyframes pet-tada {
+              from { transform: scale3d(1, 1, 1); }
+              10%, 20% { transform: scale3d(0.9, 0.9, 0.9) rotate3d(0, 0, 1, -3deg); }
+              30%, 50%, 70%, 90% { transform: scale3d(1.1, 1.1, 1.1) rotate3d(0, 0, 1, 3deg); }
+              40%, 60%, 80% { transform: scale3d(1.1, 1.1, 1.1) rotate3d(0, 0, 1, -3deg); }
+              to { transform: scale3d(1, 1, 1); }
+            }
+            .pet-celebrate {
+              animation: pet-tada 1s ease-in-out;
+            }
+        `;
+        document.head.appendChild(style);
     }
 
     // 1. CAPTURA DE E-MAIL COM PERSISTÊNCIA
@@ -83,8 +104,15 @@
             let cy = e.clientY || (e.touches ? e.touches[0].clientY : 0);
             pos1 = pos3 - cx; pos2 = pos4 - cy;
             pos3 = cx; pos4 = cy;
-            elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
-            elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+            
+            // Impede que o widget seja arrastado para fora da tela
+            let newTop = elmnt.offsetTop - pos2;
+            let newLeft = elmnt.offsetLeft - pos1;
+            newTop = Math.max(0, Math.min(newTop, window.innerHeight - elmnt.offsetHeight));
+            newLeft = Math.max(0, Math.min(newLeft, window.innerWidth - elmnt.offsetWidth));
+
+            elmnt.style.top = newTop + "px";
+            elmnt.style.left = newLeft + "px";
             elmnt.style.bottom = 'auto'; elmnt.style.right = 'auto';
         }
 
@@ -97,7 +125,7 @@
     }
 
     // 3. MINIMIZAR
-    window.togglePetWidget = function(e) {
+    function togglePetWidget(e) {
         if (e) e.stopPropagation();
         const isMin = safeStorage('get', 'petMinimized') === 'true';
         safeStorage('set', 'petMinimized', !isMin);
@@ -108,7 +136,7 @@
             badge: safeStorage('get', 'userBadge') || "Aprendiz Curiosa 🐾", 
             isCache: true 
         });
-    };
+    }
 
     // 4. ANIMAÇÃO
     function animateValue(obj, start, end, duration) {
@@ -143,7 +171,7 @@
         }
 
         if (isMinimized) {
-            widget.innerHTML = `<div class="minimized-icon" onclick="togglePetWidget(event)">🐾</div>`;
+            widget.innerHTML = `<div class="minimized-icon" id="pet-btn-maximize">🐾</div>`;
         } else {
             const imgs = {
                 "Aprendiz Curiosa 🐾": "https://raw.githubusercontent.com/juanjsales/PETRocinha/main/Aprendiz.webp",
@@ -154,17 +182,28 @@
             };
             const badge = imgs[data?.badge] || imgs["Aprendiz Curiosa 🐾"];
 
+            const contentAluna = `
+                <img src="${badge}" class="widget-badge" ondragstart="return false">
+                <div class="widget-info">
+                    <span class="widget-label">Saldo</span>
+                    <span class="widget-value" id="pet-val">${valorAnterior} Arrasas</span>
+                </div>
+            `;
+
+            const contentVisitante = `
+                <div class="widget-badge" style="display: flex; align-items: center; justify-content: center; font-size: 24px; background: rgba(0,0,0,0.05); border-radius: 50%;">👋</div>
+                <div class="widget-info" style="justify-content: center;">
+                    <span class="widget-value" style="font-size: 13px; white-space: normal; line-height: 1.2; text-align: left;">Cadastre-se ou<br>Faça Login</span>
+                </div>
+            `;
+
             widget.innerHTML = `
                 <div class="widget-container">
                     <div class="drag-handle">⠿</div>
-                    <div class="widget-main-content" onclick="window.open('${isAluna ? "/dash_aluna" : "/sign_up"}', '_self')">
-                        <img src="${badge}" class="widget-badge" ondragstart="return false">
-                        <div class="widget-info">
-                            <span class="widget-label">Saldo</span>
-                            <span class="widget-value" id="pet-val">${valorAnterior} Arrasas</span>
-                        </div>
+                    <div class="widget-main-content" id="pet-main-content">
+                        ${isAluna ? contentAluna : contentVisitante}
                     </div>
-                    <button class="btn-minimize" onclick="togglePetWidget(event)">✕</button>
+                    <button class="btn-minimize" id="pet-btn-minimize">✕</button>
                 </div>
             `;
             
@@ -172,10 +211,31 @@
             if (valEl) {
                 if (valorNovo !== valorAnterior) {
                     animateValue(valEl, valorAnterior, valorNovo, 1500);
+
+                    // ✨ Animação de celebração ao ganhar pontos!
+                    if (valorNovo > valorAnterior && !isMinimized) {
+                        widget.classList.add('pet-celebrate');
+                        setTimeout(() => {
+                            widget.classList.remove('pet-celebrate');
+                        }, 1000); // Duração da animação em ms
+                    }
+
                 } else {
                     valEl.innerText = valorNovo + " Arrasas";
                 }
             }
+        }
+
+        // Adicionando os event listeners programaticamente (Evita uso do Window/escopo global)
+        const btnMinimize = document.getElementById('pet-btn-minimize');
+        const btnMaximize = document.getElementById('pet-btn-maximize');
+        const mainContent = document.getElementById('pet-main-content');
+
+        if (btnMinimize) btnMinimize.addEventListener('click', togglePetWidget);
+        if (btnMaximize) btnMaximize.addEventListener('click', togglePetWidget);
+        if (mainContent) {
+            mainContent.style.cursor = "pointer";
+            mainContent.addEventListener('click', () => window.open(isAluna ? "/dash_aluna" : "/sign_up", '_self'));
         }
     }
 
@@ -192,6 +252,7 @@
 
         document.body.appendChild(script);
         script.onload = function() { if(this.parentNode) this.parentNode.removeChild(this); };
+        script.onerror = function() { if(this.parentNode) this.parentNode.removeChild(this); }; // Limpeza em caso de falha de rede
     }
 
     window.receberDadosPet = function(data) {
@@ -204,6 +265,9 @@
 
     // 7. LISTENER PARA VERCEL (O que você precisa para o Dashboard!)
     window.addEventListener('message', (event) => {
+        // Descomente e ative a linha abaixo quando estiver em produção para evitar que outros sites roubem o e-mail:
+        // if (event.origin !== TRUSTED_ORIGIN && event.origin !== "http://localhost:3000") return;
+
         if (event.data === 'REQUEST_EMAIL') {
             const email = getEmail();
             if (email) event.source.postMessage({ email: email }, event.origin);
@@ -211,6 +275,7 @@
     });
 
     // 8. START
+    injectAnimationStyles();
     const cS = safeStorage('get', 'userSaldo');
     renderizar({ encontrado: !!cS, arrasas: cS || 0, badge: safeStorage('get', 'userBadge'), isCache: true });
 
