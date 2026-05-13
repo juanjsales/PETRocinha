@@ -99,40 +99,10 @@ async function buscarESalvarLocal(email) {
 
 async function refreshDadosSilencioso(id) {
     try {
-        const result = await new Promise((resolve, reject) => {
-            const callbackName = "jsonp_callback_" + Math.round(100000 * Math.random());
-            const timeout = setTimeout(() => {
-                // Em vez de deletar, transformamos em função vazia para evitar ReferenceError
-                window[callbackName] = () => { delete window[callbackName]; };
-                const s = document.getElementById(callbackName);
-                if (s) document.body.removeChild(s);
-                reject(new Error("Tempo limite da requisição excedido."));
-            }, 25000); // Aumentado para 25s
-
-            window[callbackName] = (data) => {
-                clearTimeout(timeout);
-                delete window[callbackName];
-                const s = document.getElementById(callbackName);
-                if (s) document.body.removeChild(s);
-                resolve(data);
-            };
-
-            const script = document.createElement("script");
-            script.id = callbackName;
-            
-            // Lógica de e-mail prioritário: localStorage da Circle ou o e-mail passado como parâmetro
-const emailParaBackend = localStorage.getItem("pet_user_email") || id;
-            
-            script.src = `${urlApp}?email=${encodeURIComponent(emailParaBackend)}&callback=${callbackName}`;
-            script.onerror = () => {
-                clearTimeout(timeout);
-                delete window[callbackName];
-                const s = document.getElementById(callbackName);
-                if (s) document.body.removeChild(s);
-                reject(new Error("Error"));
-            };
-            document.body.appendChild(script);
-        });
+        // Lógica de e-mail prioritário: localStorage da Circle ou o e-mail passado como parâmetro
+        const emailParaBackend = localStorage.getItem("pet_user_email") || id;
+        
+        const result = await jsonpRequest({ email: emailParaBackend });
 
         if (result.encontrado) {
             localStorage.setItem("pet_perfil_ativo", JSON.stringify(result));
@@ -249,67 +219,14 @@ async function verificarCPF() {
     loader.style.display = "flex";
     
     try {
-        const result = await new Promise((resolve, reject) => {
-            const callbackName = "jsonp_callback_" + Math.round(100000 * Math.random());
-            const timeout = setTimeout(() => {
-                window[callbackName] = () => { delete window[callbackName]; };
-                const s = document.getElementById(callbackName);
-                if (s) document.body.removeChild(s);
-                reject(new Error("Tempo limite da requisição excedido."));
-            }, 25000);
-
-            window[callbackName] = (data) => {
-                clearTimeout(timeout);
-                delete window[callbackName];
-                const s = document.getElementById(callbackName);
-                if (s) document.body.removeChild(s);
-                resolve(data);
-            };
-
-            const script = document.createElement("script");
-            script.id = callbackName;
-            script.src = `${urlApp}?cpf=${encodeURIComponent(currentCPF)}&callback=${callbackName}`;
-            script.onerror = () => {
-                clearTimeout(timeout);
-                delete window[callbackName];
-                document.body.removeChild(script);
-                reject(new Error("Erro ao carregar script (CORS ou rede)."));
-            };
-            document.body.appendChild(script);
-        });
+        const result = await jsonpRequest({ cpf: currentCPF });
         
         console.log("Dados brutos do Apps Script:", result);
         const rawData = result;
       
         if (rawData.encontrado) {
-            currentData = {
-                encontrado: true,
-                nome: rawData.nome || "Aluna",
-                email: rawData.email || "",
-                foto: rawData.foto || "https://via.placeholder.com/100?text=PET",
-                arrasas: parseInt(rawData.arrasas) || 0,
-                xp_total: parseInt(rawData.xp_total) || 0,
-                badge: rawData.badge || "Aprendiz Curiosa",
-                proximoEvento: rawData.proximoEvento || "Consulte a Circle",
-
-                ranking: (rawData.ranking || []).map(r => {
-                    return {
-                        nome: r.nome || "Aluna", 
-                        badge: r.badge || " ",
-                        xp: parseInt(r.xp) || 0,
-                        recompensa: r.recompensa || ""
-                    };
-                }),
-                jaRespondeuQuiz: rawData.jaRespondeuQuiz || false,
-                historico: (rawData.historico || []).map(h => {
-                    return {
-                        data: h.data || "--/--", 
-                        acao: h.acao || "Atividade", 
-                        pontos: parseInt(h.pontos) || 0 
-                    };
-                }),
-                cpf: currentCPF
-            };
+            currentData = processarDadosAluno(rawData, currentCPF);
+            localStorage.setItem("pet_perfil_ativo", JSON.stringify(currentData)); // Armazenamos o cache também no CPF
 
             console.log("Dados finais processados:", currentData);
             renderDashboard();
@@ -710,34 +627,14 @@ async function sendQuizLogToBackend(isCorrect, quizPergunta) {
     const email = circleUserEmail ? JSON.parse(circleUserEmail).email : (currentData.email || "");
 
     try {
-        const result = await new Promise((resolve, reject) => {
-            const callbackName = "jsonp_callback_" + Math.round(100000 * Math.random());
-            const timeout = setTimeout(() => {
-                window[callbackName] = () => { delete window[callbackName]; };
-                const s = document.getElementById(callbackName);
-                if (s) document.body.removeChild(s);
-                reject(new Error("Tempo limite da requisição excedido."));
-            }, 25000);
-
-            window[callbackName] = (data) => {
-                clearTimeout(timeout);
-                delete window[callbackName];
-                const s = document.getElementById(callbackName);
-                if (s) document.body.removeChild(s);
-                resolve(data);
-            };
-
-            const script = document.createElement("script");
-            script.id = callbackName;
-            script.src = `${urlApp}?action=logAcertoQuiz&nome=${encodeURIComponent(nome)}&cpf=${cpf}&email=${encodeURIComponent(email)}&status=${acao}&pontos=${pontos}&pergunta=${encodeURIComponent(quizPergunta)}&callback=${callbackName}`;
-            script.onerror = () => {
-                clearTimeout(timeout);
-                delete window[callbackName];
-                const s = document.getElementById(callbackName);
-                if (s) document.body.removeChild(s);
-                reject(new Error("Erro ao carregar script (CORS ou rede)."));
-            };
-            document.body.appendChild(script);
+        const result = await jsonpRequest({
+            action: "logAcertoQuiz",
+            nome: nome,
+            cpf: cpf,
+            email: email,
+            status: acao,
+            pontos: pontos,
+            pergunta: quizPergunta
         });
 
         if (result.erro) {
