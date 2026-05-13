@@ -241,8 +241,23 @@
 
     // 6. BACKEND
     function iniciarWidget() {
+        // --- DETECÇÃO DE LOGOUT DO CIRCLE ---
+        const cachedEmail = safeStorage('get', 'pet_user_email');
+        const isCircleUserPresent = window.circleUser && window.circleUser.email;
+
+        // Se tínhamos um e-mail salvo, mas agora não há mais usuário no Circle, é um logout.
+        if (cachedEmail && !isCircleUserPresent) {
+            safeStorage('remove', 'pet_user_email');
+            safeStorage('remove', 'userSaldo');
+            safeStorage('remove', 'userBadge');
+            
+            // Renderiza o widget no estado de "visitante" e para o fluxo.
+            renderizar({ encontrado: false, arrasas: 0, badge: null, isCache: true });
+            return;
+        }
+
         var email = getEmail();
-        if (!email) return;
+        if (!email) return; // Se não tem email, não faz nada (o estado inicial já é de visitante)
 
         var script = document.createElement('script');
         var ts = new Date().getTime();
@@ -271,6 +286,18 @@
         if (event.data === 'REQUEST_EMAIL') {
             const email = getEmail();
             if (email) event.source.postMessage({ email: email }, event.origin);
+        }
+
+        // Recebe atualizações instantâneas do dashboard (Vercel)
+        if (event.data && event.data.type === 'PET_UPDATE') {
+            const updatePayload = event.data.payload;
+            const currentUserEmail = getEmail();
+
+            // Garante que a atualização é para o usuário logado no widget
+            if (updatePayload && updatePayload.email && updatePayload.email.toLowerCase().trim() === currentUserEmail) {
+                updatePayload.isCache = false; // Força a animação e atualização do cache
+                renderizar(updatePayload);
+            }
         }
     });
 
