@@ -47,24 +47,34 @@
     // 1. CAPTURA DE E-MAIL COM PERSISTÊNCIA
     function getEmail() {
         let userEmail = safeStorage('get', 'pet_user_email');
+        let currentSystemEmail = null;
+        let currentSource = null;
 
         try {
-            if (!userEmail || userEmail === "undefined" || userEmail === "null") {
-                if (window.circleUser && window.circleUser.email) {
-                    userEmail = window.circleUser.email;
-                    safeStorage('set', 'pet_login_source', 'circle');
-                } else {
-                    let liquidEmail = "{{ user.email }}";
-                    if (liquidEmail && liquidEmail.indexOf('{{') === -1 && liquidEmail.trim() !== "") {
-                        userEmail = liquidEmail;
-                        safeStorage('set', 'pet_login_source', 'liquid');
-                    }
+            if (window.circleUser && window.circleUser.email) {
+                currentSystemEmail = window.circleUser.email.toLowerCase().trim();
+                currentSource = 'circle';
+            } else {
+                let liquidEmail = "{{ user.email }}";
+                if (liquidEmail && liquidEmail.indexOf('{{') === -1 && liquidEmail.trim() !== "") {
+                    currentSystemEmail = liquidEmail.toLowerCase().trim();
+                    currentSource = 'liquid';
                 }
+            }
 
-                if (userEmail) {
-                    userEmail = userEmail.toLowerCase().trim();
-                    safeStorage('set', 'pet_user_email', userEmail);
-                }
+            // Detecta se houve troca de conta em relação ao cache salvo
+            if (currentSystemEmail && userEmail && currentSystemEmail !== userEmail) {
+                safeStorage('remove', 'userSaldo');
+                safeStorage('remove', 'userBadge');
+                userEmail = currentSystemEmail;
+                safeStorage('set', 'pet_user_email', userEmail);
+                if (currentSource) safeStorage('set', 'pet_login_source', currentSource);
+            } 
+            // Se não tinha cache, mas tem usuário ativo no sistema
+            else if (currentSystemEmail && (!userEmail || userEmail === "undefined" || userEmail === "null")) {
+                userEmail = currentSystemEmail;
+                safeStorage('set', 'pet_user_email', userEmail);
+                if (currentSource) safeStorage('set', 'pet_login_source', currentSource);
             }
         } catch (e) { console.warn("Erro ao capturar e-mail."); }
         

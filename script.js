@@ -66,8 +66,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 window.addEventListener('message', (event) => {
     if (event.data && event.data.email && event.data.email !== "{{user.email}}") {
         console.log("✅ E-mail recebido via PostMessage:", event.data.email);
-        // Só carrega se o dashboard não estiver renderizado ainda
-        if (document.getElementById('auth-section').style.display !== 'none') {
+        const cachedEmail = localStorage.getItem('pet_user_email');
+        
+        // Força recarregamento se for uma conta diferente ou se o dashboard não estiver renderizado
+        if (cachedEmail !== event.data.email || document.getElementById('auth-section').style.display !== 'none') {
+            if (cachedEmail && cachedEmail !== event.data.email) {
+                console.log("🔄 Troca de conta detectada. Atualizando dados...");
+            }
             buscarESalvarLocal(event.data.email);
         }
     }
@@ -282,6 +287,12 @@ async function verificarCPF() {
         if (rawData.encontrado) {
             currentData = processarDadosAluno(rawData, currentCPF);
             localStorage.setItem("pet_perfil_ativo", JSON.stringify(currentData)); // Armazenamos o cache também no CPF
+
+            if (currentData.email) {
+                localStorage.setItem("pet_user_email", currentData.email);
+            } else {
+                localStorage.removeItem("pet_user_email");
+            }
 
             console.log("Dados finais processados:", currentData);
             renderDashboard();
