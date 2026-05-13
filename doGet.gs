@@ -71,11 +71,26 @@ function doGet(e) {
     debugLog.alunaEncontrada = perfil.email || perfil.cpf;
 
     // Processamento de Ações (Quiz/Notif)
-    if (action === "logAcertoQuiz") {
-      if (!service.verificarQuizHoje(perfil.cpf)) {
-        const descLog = params.status === "acerto" ? "Acertou quiz: " + (params.pergunta || "") : "Errou quiz: " + (params.pergunta || "");
-        db.appendLog([new Date(), "", perfil.nome, "quiz_diario", "Quiz Diário", "", perfil.cpf, perfil.email, params.pontos || 0, descLog]);
-        perfil.arrasas += Number(params.pontos || 0);
+    if (action) {
+      let dadosAlterados = false;
+      
+      if (action === "logAcertoQuiz") {
+        if (!service.verificarQuizHoje(perfil.cpf)) {
+          const descLog = params.status === "acerto" ? "Acertou quiz: " + (params.pergunta || "") : "Errou quiz: " + (params.pergunta || "");
+          db.appendLog([new Date(), "", perfil.nome, "quiz_diario", "Quiz Diário", "", perfil.cpf, perfil.email, params.pontos || 0, descLog]);
+          perfil.arrasas += Number(params.pontos || 0);
+          dadosAlterados = true;
+        }
+      } else if (action === "updateNotif") {
+        const sheet = db.ss.getSheetByName("community_members");
+        if (sheet && alunaRel.indice) {
+          sheet.getRange(alunaRel.indice, CONFIG.COLUNAS_MEMBROS.NOTIF + 1).setValue(params.status);
+          dadosAlterados = true;
+        }
+      }
+      
+      if (dadosAlterados) {
+        service.limparCache(perfil.email); // Invalida o cache para os dados se atualizarem no refresh silencioso
       }
     }
 
@@ -194,6 +209,14 @@ class AlunaService {
     Logger.log("AlunaService: E-mail não encontrado: [" + normalizedEmail + "]");
     return null;
   }
+
+  limparCache(email) {
+    if (!email) return;
+    const normalizedEmail = String(email).toLowerCase().trim();
+    const cacheKey = "aluna_email_v2_" + normalizedEmail.replace(/[^a-zA-Z0-9]/g, "_");
+    CacheService.getScriptCache().remove(cacheKey);
+  }
+
   buscarPorCPF(cpf) {
     if (!cpf) return null;
     const d = this.db.getSheetData("community_members");
@@ -229,9 +252,15 @@ class AlunaService {
   verificarQuizHoje(cpf) {
     const logs = this.db.getSheetData("Log");
     if (!logs) return false;
-    const hoje = new Date().toLocaleDateString();
-    // CORREÇÃO: Índices de colunas de log
-    return logs.some(r => r && String(r[CONFIG.COLUNAS_LOG.CPF]).replace(/\D/g,"") === cpf && r[CONFIG.COLUNAS_LOG.TIPO] === "quiz_diario" && new Date(r[CONFIG.COLUNAS_LOG.DATA]).toLocaleDateString() === hoje);
+    const hoje = Utilities.formatDate(new Date(), "GMT-3", "dd/MM/yyyy");
+    return logs.some(r => {
+      if (!r || !r[CONFIG.COLUNAS_LOG.DATA]) return false;
+      try {
+        const dataLog = Utilities.formatDate(new Date(r[CONFIG.COLUNAS_LOG.DATA]), "GMT-3", "dd/MM/yyyy");
+        const cpfLinha = String(r[CONFIG.COLUNAS_LOG.CPF]).replace(/\D/g,"");
+        return cpfLinha === cpf && r[CONFIG.COLUNAS_LOG.TIPO] === "quiz_diario" && dataLog === hoje;
+      } catch(e) { return false; }
+    });
   }
 }
 

@@ -768,6 +768,16 @@ async function sendQuizLogToBackend(isCorrect, quizPergunta) {
                     document.getElementById("bar-fill").style.width = percent + "%";
                     if (currentData.arrasas >= 100) document.getElementById("btn-resgate").style.display = "flex";
                     notificarWidget(); // Dispara a animação no widget na hora do acerto!
+                    
+                    // Adiciona uma linha ao Log (Console) e também ao Extrato (Histórico visual)
+                    console.log("✅ Log: A aluna respondeu o quiz corretamente e ganhou +1 Arrasa!");
+                    if (!currentData.historico) currentData.historico = [];
+                    currentData.historico.unshift({
+                        data: new Date().toLocaleDateString('pt-BR'),
+                        acao: "Quiz Diário - Acerto",
+                        pontos: 1
+                    });
+                    renderDashboard(); // Atualiza a tela para exibir a nova linha no Extrato imediatamente
                 }
             } else {
                 document.getElementById("quiz-result").style.color = "#ef4444";
