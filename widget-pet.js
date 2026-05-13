@@ -51,14 +51,29 @@
         let currentSource = null;
 
         try {
-            if (window.circleUser && window.circleUser.email) {
-                currentSystemEmail = window.circleUser.email.toLowerCase().trim();
-                currentSource = 'circle';
-            } else {
-                let liquidEmail = "{{ user.email }}";
-                if (liquidEmail && liquidEmail.indexOf('{{') === -1 && liquidEmail.trim() !== "") {
-                    currentSystemEmail = liquidEmail.toLowerCase().trim();
-                    currentSource = 'liquid';
+            // 1. Tenta pegar da chave do Pundit (Circle)
+            let punditContext = localStorage.getItem('V1-PunditUserContext');
+            if (punditContext) {
+                try {
+                    let parsedContext = JSON.parse(punditContext);
+                    if (parsedContext && parsedContext.current_user && parsedContext.current_user.email) {
+                        currentSystemEmail = parsedContext.current_user.email.toLowerCase().trim();
+                        currentSource = 'circle_pundit';
+                    }
+                } catch(e) {}
+            }
+
+            // 2. Fallbacks antigos
+            if (!currentSystemEmail) {
+                if (window.circleUser && window.circleUser.email) {
+                    currentSystemEmail = window.circleUser.email.toLowerCase().trim();
+                    currentSource = 'circle';
+                } else {
+                    let liquidEmail = "{{ user.email }}";
+                    if (liquidEmail && liquidEmail.indexOf('{{') === -1 && liquidEmail.trim() !== "") {
+                        currentSystemEmail = liquidEmail.toLowerCase().trim();
+                        currentSource = 'liquid';
+                    }
                 }
             }
 
@@ -258,12 +273,26 @@
         const loginSource = safeStorage('get', 'pet_login_source');
         
         let isLoggedOut = false;
-        if (loginSource === 'circle' && (!window.circleUser || !window.circleUser.email)) {
-            isLoggedOut = true; // Estava no Circle e agora não tem mais usuário
+        
+        let punditContext = localStorage.getItem('V1-PunditUserContext');
+        let hasPunditUser = false;
+        if (punditContext) {
+            try {
+                let parsedContext = JSON.parse(punditContext);
+                if (parsedContext && parsedContext.current_user && parsedContext.current_user.email) {
+                    hasPunditUser = true;
+                }
+            } catch(e) {}
+        }
+
+        if (loginSource === 'circle_pundit' && !hasPunditUser) {
+            isLoggedOut = true; // Estava logado via Pundit e a chave sumiu (Logout)
+        } else if (loginSource === 'circle' && !hasPunditUser && (!window.circleUser || !window.circleUser.email)) {
+            isLoggedOut = true; // Fallback
         } else if (loginSource === 'liquid') {
             let liquidEmail = "{{ user.email }}";
             if (!liquidEmail || liquidEmail.indexOf('{{') !== -1 || liquidEmail.trim() === "") {
-                isLoggedOut = true; // Estava logado via Liquid e agora a tag está vazia
+                isLoggedOut = true;
             }
         }
 
