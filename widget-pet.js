@@ -272,7 +272,7 @@
             const contentVisitante = `
                 <div class="widget-badge" style="display: flex; align-items: center; justify-content: center; font-size: 24px; background: rgba(0,0,0,0.05); border-radius: 50%;">👋</div>
                 <div class="widget-info" style="display: flex; flex-direction: column; justify-content: center; width: 100%;">
-                    <span class="widget-value" style="font-size: 13px; font-weight: bold; white-space: normal; line-height: 1.2; text-align: left; color: var(--pet-text-main, #333);">Cadastre-se ou<br>Faça Login</span>
+                    <span class="widget-value" style="font-size: 10px; font-weight: bold; white-space: normal; line-height: 1.2; text-align: left; color: var(--pet-text-main, #333);">Cadastre-se ou<br>Faça Login</span>
                 </div>
             `;
 
