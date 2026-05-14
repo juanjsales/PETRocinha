@@ -107,13 +107,16 @@ function doGet(e) {
 
     // Compilação Final
     const tLog = new Date().getTime();
-    const historico = db.getHistorico(perfil.cpf, perfil.email);
+    const histor = db.getHistorico(perfil.cpf, perfil.email);
     const tRank = new Date().getTime();
     const ranking = db.getRanking();
     const tFim = new Date().getTime();
+    
+    const quizDiario = IAService.obterQuizDiario();
 
     const dashboardData = {
       ...perfil,
+      quizDiario: quizDiario,
       historico: historico,
       ranking: ranking,
       recompensas: db.getConfigs("RECOMPENSA"),
@@ -272,6 +275,48 @@ class AlunaService {
         return cpfLinha === cpf && r[CONFIG.COLUNAS_LOG.TIPO] === "quiz_diario" && dataLog === hoje;
       } catch(e) { return false; }
     });
+  }
+}
+
+class IAService {
+  static obterQuizDiario() {
+    const cache = CacheService.getScriptCache();
+    const hoje = Utilities.formatDate(new Date(), "GMT-3", "yyyy-MM-dd");
+    const cacheKey = "quiz_ia_diario_" + hoje;
+
+    // Se a IA já gerou o quiz de hoje nas últimas 6 horas, devolve instantâneo
+    const quizCache = cache.get(cacheKey);
+    if (quizCache) return JSON.parse(quizCache);
+
+    // Pega a chave da API salva nas configurações do Apps Script
+    const apiKey = PropertiesService.getScriptProperties().getProperty("GEMINI_API_KEY");
+
+    const fallbackQuiz = {
+       pergunta: "Qual a melhor estratégia para reter clientes no seu banho e tosa?",
+       opcoes: ["Oferecer laços e brindes como cortesia", "Dar banho rápido com água fria", "Não responder aos feedbacks"],
+       respostaCorreta: "Oferecer laços e brindes como cortesia"
+    };
+
+    if (!apiKey) return fallbackQuiz; // Se não configurou a chave, usa o manual
+
+    try {
+      const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + apiKey;
+      const prompt = "Gere uma pergunta criativa de múltipla escolha sobre empreendedorismo feminino no mercado pet (banho e tosa, atendimento, precificação). Retorne APENAS um objeto JSON válido neste formato exato, sem crases ou markdown: {\"pergunta\": \"Texto\", \"opcoes\": [\"Opcao 1\", \"Opcao 2\", \"Opcao 3\"], \"respostaCorreta\": \"Texto da certa\"}";
+      
+      const options = { method: "post", contentType: "application/json", muteHttpExceptions: true, payload: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) };
+      const response = UrlFetchApp.fetch(url, options);
+      const json = JSON.parse(response.getContentText());
+
+      if (json.candidates && json.candidates[0].content.parts[0].text) {
+         let textoIA = json.candidates[0].content.parts[0].text.replace(/```json/g, "").replace(/```/g, "").trim();
+         const quizIA = JSON.parse(textoIA);
+         cache.put(cacheKey, JSON.stringify(quizIA), 21600); // Salva no cache por 6h
+         return quizIA;
+      }
+    } catch (e) {
+      Logger.log("Erro na IA: " + e);
+    }
+    return fallbackQuiz;
   }
 }
 
