@@ -457,7 +457,14 @@ function animarJornada() {
     line.style.width = `calc(${progress}% - 50px)`;
 }
 
+let chartRenderedDataHash = null;
+
 function renderChart() {
+    // Evita recriar o gráfico do zero se os dados do histórico não sofreram mutação
+    const currentHash = JSON.stringify(currentData.historico || []);
+    if (chartRenderedDataHash === currentHash && chartInstance) return;
+    chartRenderedDataHash = currentHash;
+
     const ctx = document.getElementById("arrasasChart").getContext("2d");
     if (chartInstance) chartInstance.destroy();
     

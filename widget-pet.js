@@ -188,6 +188,9 @@
             const AudioContext = window.AudioContext || window.webkitAudioContext;
             if (AudioContext) {
                 const ctx = new AudioContext();
+                if (ctx.state === 'suspended') {
+                    ctx.resume(); // Tenta destravar o áudio caso as políticas de Autoplay do navegador o bloqueiem
+                }
                 const osc = ctx.createOscillator();
                 const gain = ctx.createGain();
                 osc.connect(gain); gain.connect(ctx.destination);
@@ -433,5 +436,11 @@
     });
 
     setTimeout(iniciarWidget, 1500);
-    setInterval(iniciarWidget, 45000);
+    
+    // Otimização: Apenas faz o polling no servidor se a aba do navegador estiver visível e ativa
+    setInterval(() => {
+        if (document.visibilityState === 'visible') {
+            iniciarWidget();
+        }
+    }, 45000);
 })();
