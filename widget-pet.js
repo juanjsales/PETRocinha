@@ -40,6 +40,10 @@
             .pet-celebrate {
               animation: pet-tada 1s ease-in-out;
             }
+            @keyframes pet-float-up {
+              0% { transform: translate(-50%, 0) scale(1); opacity: 1; }
+              100% { transform: translate(-50%, -50px) scale(1.5); opacity: 0; }
+            }
         `;
         document.head.appendChild(style);
     }
@@ -177,6 +181,51 @@
         window.requestAnimationFrame(step);
     }
 
+    // 4.1 CELEBRAÇÃO (Confetes, Som e +Pontos)
+    function showCelebration(widget, amount) {
+        // 1. Som de "Ding" gerado nativamente (sem depender de arquivos externos)
+        try {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (AudioContext) {
+                const ctx = new AudioContext();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain); gain.connect(ctx.destination);
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(880, ctx.currentTime); // Frequência inicial
+                osc.frequency.exponentialRampToValueAtTime(1760, ctx.currentTime + 0.1); // Agudo final
+                gain.gain.setValueAtTime(0.1, ctx.currentTime); // Volume inicial baixo
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5); // Fade out
+                osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.5);
+            }
+        } catch(e) {}
+
+        // 2. Texto Flutuante (+X)
+        const floatText = document.createElement('div');
+        floatText.innerText = '+' + amount;
+        floatText.style.cssText = 'position:absolute; top:-10px; left:50%; transform:translateX(-50%); color:#22c55e; font-weight:900; font-size:26px; text-shadow:0 3px 6px rgba(0,0,0,0.3); pointer-events:none; z-index:2147483647; animation:pet-float-up 1.5s ease-out forwards;';
+        widget.appendChild(floatText);
+        setTimeout(() => { if (floatText.parentNode) floatText.parentNode.removeChild(floatText); }, 1500);
+
+        // 3. Mini Confetes
+        const colors = ['#f8a5c2', '#6366f1', '#22c55e', '#FFD700', '#ff2a7a'];
+        for (let i = 0; i < 20; i++) {
+            const conf = document.createElement('div');
+            const size = Math.random() > 0.5 ? '8px' : '6px';
+            const isCircle = Math.random() > 0.5 ? '50%' : '2px';
+            conf.style.cssText = `position:absolute; width:${size}; height:${size}; background-color:${colors[Math.floor(Math.random() * colors.length)]}; top:30px; left:50%; border-radius:${isCircle}; pointer-events:none; z-index:2147483646;`;
+            
+            const angle = Math.random() * Math.PI * 2;
+            const velocity = 30 + Math.random() * 50;
+            const tx = Math.cos(angle) * velocity;
+            const ty = Math.sin(angle) * velocity - 40; 
+            
+            conf.animate([{ transform: 'translate(-50%, 0) scale(1) rotate(0deg)', opacity: 1 }, { transform: `translate(calc(-50% + ${tx}px), ${ty}px) scale(0.5) rotate(${Math.random() * 360}deg)`, opacity: 0 }], { duration: 800 + Math.random() * 400, easing: 'cubic-bezier(.37,0,.23,1)', fill: 'forwards' });
+            widget.appendChild(conf);
+            setTimeout(() => { if (conf.parentNode) conf.parentNode.removeChild(conf); }, 1200);
+        }
+    }
+
     // 5. RENDERIZAÇÃO
     function renderizar(data) {
         let widget = document.getElementById('pet-floating-widget');
@@ -242,6 +291,8 @@
                     // ✨ Animação de celebração ao ganhar pontos!
                     if (valorNovo > valorAnterior && !isMinimized) {
                         widget.classList.add('pet-celebrate');
+                        const pontosGanhos = valorNovo - valorAnterior;
+                        showCelebration(widget, pontosGanhos);
                         setTimeout(() => {
                             widget.classList.remove('pet-celebrate');
                         }, 1000); // Duração da animação em ms

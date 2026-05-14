@@ -522,7 +522,7 @@ function closeVideoGate() {
 
 function solicitarResgate() {
     if (confirm("Deseja solicitar o resgate do seu auxílio de R$ 100,00? Você será redirecionada para o WhatsApp de suporte.")) {
-        window.open("https://wa.me/5521982013090?text=Quero%20resgatar%20meu%20auxilio%20Profissao%20Pet", "_blank");
+        window.open("https://wa.me/5521982013090?text=Quero%20resgatar%20meu%20auxilio%20de%20100%20reais", "_blank");
     }
 }
 
