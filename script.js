@@ -132,6 +132,7 @@ function processarDadosAluno(rawData, identificador) {
             recompensa: r.recompensa || ""
         })),
         jaRespondeuQuiz: rawData.jaRespondeuQuiz || false,
+        quizDiario: rawData.quizDiario || null,
         historico: (rawData.historico || []).map(h => ({
             data: h.data || "--/--", 
             acao: h.acao || "Atividade", 
@@ -393,7 +394,10 @@ function renderDashboard() {
     }
 
     if (dicaTexto) dicaTexto.innerText = dicaIA;
-    if (dicaContainer) dicaContainer.style.display = "block";
+    if (dicaContainer) {
+        dicaContainer.style.display = "block";
+        dicaContainer.classList.add("animate-fade-in-down");
+    }
 
     if (badgeDisplay) {
         const bText = badgeDisplay.querySelector(".badge-text");
@@ -688,7 +692,7 @@ function renderQuiz() {
     const quizContent = document.getElementById("quiz-content");
 
     quizContent.innerHTML = `
-        <h4 style="color: var(--pet-purple);">🧠 Quiz Diário da Embaixadora</h4>
+        <h4 style="color: var(--pet-purple);">🧠 Quiz Diário da Embaixadora <span style="font-size: 10px; background: #fef3c7; color: #b45309; padding: 2px 6px; border-radius: 8px; vertical-align: middle; font-weight: bold;">IA ✨</span></h4>
         <div id="quiz-question-area">
             <p id="pergunta-txt" style="font-size: 16px; font-weight: 700; margin-bottom: 15px;"></p>
             <div id="opcoes-quiz" style="display: flex; flex-direction: column; gap: 10px;"></div>
@@ -709,13 +713,12 @@ function renderQuiz() {
         return;
     }
 
-    if (DADOS_QUIZ_LOCAL.length === 0) {
+    if (!currentData.quizDiario && DADOS_QUIZ_LOCAL.length === 0) {
         currentPerguntaTxt.innerText = "Nenhuma pergunta de quiz disponível no momento.";
         return;
     }
 
-    const randomIndex = Math.floor(Math.random() * DADOS_QUIZ_LOCAL.length);
-    quizData = DADOS_QUIZ_LOCAL[randomIndex];
+    quizData = currentData.quizDiario || DADOS_QUIZ_LOCAL[Math.floor(Math.random() * DADOS_QUIZ_LOCAL.length)];
 
     currentPerguntaTxt.innerText = quizData.pergunta;
     currentOpcoesQuiz.innerHTML = "";
@@ -799,7 +802,7 @@ async function sendQuizLogToBackend(isCorrect, quizPergunta) {
             return;
         }
 
-        if (result.sucesso) {
+        if (result.encontrado) {
             if (isCorrect) {
                 document.getElementById("quiz-result").style.color = "var(--pet-green)";
                 document.getElementById("quiz-result").innerHTML = "🎉 Resposta Correta! Você ganhou 1 Arrasa!";

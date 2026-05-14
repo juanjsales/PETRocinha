@@ -146,5 +146,13 @@
         100% { transform: rotate(360deg); }
     }
 
-    .hidden { display: none !important; }
+@keyframes gentle-bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-3px); }
+}
 
+.widget-alert-text {
+    animation: gentle-bounce 2s ease-in-out infinite;
+}
+
+    .hidden { display: none !important; }

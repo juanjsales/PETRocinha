@@ -107,7 +107,7 @@ function doGet(e) {
 
     // Compilação Final
     const tLog = new Date().getTime();
-    const histor = db.getHistorico(perfil.cpf, perfil.email);
+    const historico = db.getHistorico(perfil.cpf, perfil.email);
     const tRank = new Date().getTime();
     const ranking = db.getRanking();
     const tFim = new Date().getTime();
@@ -116,6 +116,7 @@ function doGet(e) {
 
     const dashboardData = {
       ...perfil,
+      jaRespondeuQuiz: service.verificarQuizHoje(perfil.cpf),
       quizDiario: quizDiario,
       historico: historico,
       ranking: ranking,
