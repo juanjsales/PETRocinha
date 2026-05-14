@@ -461,12 +461,21 @@ function renderChart() {
     const ctx = document.getElementById("arrasasChart").getContext("2d");
     if (chartInstance) chartInstance.destroy();
     
-    let sum = 0;
-    const points = currentData.historico.map(h => { 
-        sum += h.pontos; 
-        return Math.max(0, sum); 
+    // Garante que o histórico está em ordem cronológica (mais antigo para o mais novo)
+    const historicoCronologico = [...currentData.historico].reverse();
+    
+    // Calcula o total de pontos deste histórico para encontrar o saldo antes desses eventos
+    const pontosNoHistorico = historicoCronologico.reduce((sum, h) => sum + h.pontos, 0);
+    let saldoAtual = currentData.arrasas - pontosNoHistorico;
+    
+    const points = [Math.max(0, saldoAtual)];
+    const labels = ["Início"];
+
+    historicoCronologico.forEach(h => { 
+        saldoAtual += h.pontos; 
+        points.push(Math.max(0, saldoAtual));
+        labels.push(h.data);
     });
-    const labels = currentData.historico.map(h => h.data);
 
     chartInstance = new Chart(ctx, {
         type: "line",
