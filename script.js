@@ -549,7 +549,7 @@ function renderChart() {
 
 function showVideoGate() {
     document.getElementById("video-gate").style.display = "flex";
-    document.getElementById("video-iframe").src = "https://drive.google.com/file/d/1r3sF2U6-KzkQEHOJy6c5u3FaZ_t5IH2s/preview?autoplay=1";
+    document.getElementById("video-iframe").src = "https://drive.google.com/file/d/19NY5n9xfR2nNUqEhS2sfvacc6UhMS9l_/preview?autoplay=1";
 }
 
 function closeVideoGate() {
@@ -572,8 +572,11 @@ function abrirModalRecompensas() {
         <div class="reward-container gold">
             <div class="reward-title">🏆 1º Lugar</div>
             <ul class="reward-list">
-                <li>Kit Profissional Completo</li>
-                <li>Mentoria Exclusiva de Negócios</li>
+                <li>Investimento semente para seu negócio</li>
+                <li>Destaque no topo do Banco de Talentos</li>
+                <li>50% de desconto na mentoria TATA EDUCAÇÃO PRO</li>
+                <li>Selo/Placa "Mulher que Arrasa"</li>
+                <li>Kit "Ela Arrasa"</li>
             </ul>
         </div>`;
         
@@ -581,8 +584,11 @@ function abrirModalRecompensas() {
         <div class="reward-container silver">
             <div class="reward-title">🥈 2º Lugar</div>
             <ul class="reward-list">
-                <li>Kit Empreendedora Iniciante</li>
-                <li>Destaque na Comunidade</li>
+                <li>Investimento semente para seu negócio</li>
+                <li>30% de desconto na mentoria TATA EDUCAÇÃO PRO</li>
+                <li>Recomendação preferencial p/ Vagas</li>
+                <li>Selo/Placa "Mulher que Arrasa"</li>
+                <li>Kit "Ela Arrasa"</li>
             </ul>
         </div>`;
         
@@ -590,7 +596,10 @@ function abrirModalRecompensas() {
         <div class="reward-container bronze">
             <div class="reward-title">🥉 3º Lugar</div>
             <ul class="reward-list">
-                <li>Selo de Especialista</li>
+                <li>Investimento semente para seu negócio</li>
+                <li>20% de desconto na mentoria TATA EDUCAÇÃO PRO</li>
+                <li>Recomendação para parceiros (Pet Shops)</li>
+                <li>Kit "Ela Arrasa"</li>
             </ul>
         </div>`;
 
