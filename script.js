@@ -6,6 +6,26 @@ window.toggleNotificacoes = toggleNotificacoes;
 window.switchTab = switchTab;
 window.closeVideoGate = closeVideoGate;
 
+// --- SISTEMA DE ARMAZENAMENTO SEGURO ---
+const memoryStorage = {};
+function safeStorage(action, key, value) {
+    try {
+        if (action === 'get') return localStorage.getItem(key) || memoryStorage[key];
+        if (action === 'set') {
+            localStorage.setItem(key, value);
+            memoryStorage[key] = value;
+        }
+        if (action === 'remove') {
+            localStorage.removeItem(key);
+            delete memoryStorage[key];
+        }
+    } catch (e) {
+        if (action === 'get') return memoryStorage[key];
+        if (action === 'set') memoryStorage[key] = value;
+        if (action === 'remove') delete memoryStorage[key];
+    }
+}
+
 let currentData = {};
 let chartInstance = null;
 let quizData = null;
@@ -21,7 +41,7 @@ const DADOS_QUIZ_LOCAL = [
 document.addEventListener('DOMContentLoaded', async () => {
     const urlParams = new URLSearchParams(window.location.search);
     const emailDaUrl = urlParams.get('email');
-    const cacheVercel = localStorage.getItem('pet_perfil_ativo');
+    const cacheVercel = safeStorage('get', 'pet_perfil_ativo');
 
     // 1. Tenta receber a "carona" da Circle via URL primeiro
     if (emailDaUrl && emailDaUrl !== "{{user.email}}") {
@@ -46,7 +66,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 renderDashboard();
                 
                 // MÁGICA AQUI: Dispara uma atualização silenciosa para trazer o saldo novo do servidor
-                const idParaRefresh = localStorage.getItem("pet_user_email") || data.cpf || data.email;
+                const idParaRefresh = safeStorage('get', 'pet_user_email') || data.cpf || data.email;
                 if (idParaRefresh) {
                     refreshDadosSilencioso(idParaRefresh);
                 }
@@ -54,7 +74,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         } catch (error) {
             console.warn("⚠️ Falha ao ler o cache local, limpando...", error);
-            localStorage.removeItem('pet_perfil_ativo');
+            safeStorage('remove', 'pet_perfil_ativo');
         }
     }
 
@@ -66,7 +86,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 window.addEventListener('message', (event) => {
     if (event.data && event.data.email && event.data.email !== "{{user.email}}") {
         console.log("✅ E-mail recebido via PostMessage:", event.data.email);
-        const cachedEmail = localStorage.getItem('pet_user_email');
+        const cachedEmail = safeStorage('get', 'pet_user_email');
         
         // Força recarregamento se for uma conta diferente ou se o dashboard não estiver renderizado
         if (cachedEmail !== event.data.email || document.getElementById('auth-section').style.display !== 'none') {
@@ -128,8 +148,8 @@ async function buscarESalvarLocal(email) {
         
         if (result.encontrado) {
             currentData = processarDadosAluno(result, email);
-            localStorage.setItem('pet_perfil_ativo', JSON.stringify(currentData)); 
-            localStorage.setItem('pet_user_email', email); // Salva para uso no Quiz
+            safeStorage('set', 'pet_perfil_ativo', JSON.stringify(currentData)); 
+            safeStorage('set', 'pet_user_email', email); // Salva para uso no Quiz
             renderDashboard();
             notificarWidget(); // Atualiza o widget
         } else {
@@ -147,7 +167,7 @@ async function buscarESalvarLocal(email) {
 async function refreshDadosSilencioso(identificador) {
     try {
         // Lógica de e-mail prioritário: localStorage da Circle ou o e-mail passado como parâmetro
-        const emailParaBackend = localStorage.getItem("pet_user_email");
+        const emailParaBackend = safeStorage('get', 'pet_user_email');
         
         let params = {};
         if (emailParaBackend) {
@@ -165,7 +185,7 @@ async function refreshDadosSilencioso(identificador) {
 
         if (result.encontrado) {
             currentData = processarDadosAluno(result, identificador);
-            localStorage.setItem("pet_perfil_ativo", JSON.stringify(currentData));
+            safeStorage('set', 'pet_perfil_ativo', JSON.stringify(currentData));
             renderDashboard(); 
             notificarWidget(); // Atualiza o widget silenciosamente
         }
@@ -252,11 +272,11 @@ function aplicarMascaraCPF(input) {
 
 document.getElementById("cpf-input").addEventListener("input", (e) => {
     aplicarMascaraCPF(e.target);
-    localStorage.setItem("ultimoCPF", e.target.value);
+    safeStorage('set', 'ultimoCPF', e.target.value);
 });
 
 window.addEventListener("load", () => {
-    const savedCPF = localStorage.getItem("ultimoCPF");
+    const savedCPF = safeStorage('get', 'ultimoCPF');
     if (savedCPF) {
         document.getElementById("cpf-input").value = savedCPF;
     }
@@ -286,12 +306,12 @@ async function verificarCPF() {
       
         if (rawData.encontrado) {
             currentData = processarDadosAluno(rawData, currentCPF);
-            localStorage.setItem("pet_perfil_ativo", JSON.stringify(currentData)); // Armazenamos o cache também no CPF
+            safeStorage('set', 'pet_perfil_ativo', JSON.stringify(currentData)); // Armazenamos o cache também no CPF
 
             if (currentData.email) {
-                localStorage.setItem("pet_user_email", currentData.email);
+                safeStorage('set', 'pet_user_email', currentData.email);
             } else {
-                localStorage.removeItem("pet_user_email");
+                safeStorage('remove', 'pet_user_email');
             }
 
             console.log("Dados finais processados:", currentData);
@@ -447,7 +467,7 @@ function renderDashboard() {
         `).join("");
     }
 
-    if (!localStorage.getItem("watchedProPet_2026")) showVideoGate();
+    if (!safeStorage('get', 'watchedProPet_2026')) showVideoGate();
 }
 
 function animarJornada() {
@@ -522,7 +542,7 @@ function showVideoGate() {
 }
 
 function closeVideoGate() {
-    localStorage.setItem("watchedProPet_2026", "true");
+    safeStorage('set', 'watchedProPet_2026', "true");
     document.getElementById("video-gate").style.display = "none";
     document.getElementById("video-iframe").src = "";
 }
@@ -753,7 +773,7 @@ async function sendQuizLogToBackend(isCorrect, quizPergunta) {
     const pontos = isCorrect ? 1 : 0;
     
     // Lógica de e-mail prioritário: localStorage da Circle
-    const circleUserEmail = localStorage.getItem("pet_user_email");
+    const circleUserEmail = safeStorage('get', 'pet_user_email');
     const email = circleUserEmail ? circleUserEmail : (currentData.email || "");
 
     try {
