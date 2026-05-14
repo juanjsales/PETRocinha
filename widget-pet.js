@@ -365,6 +365,12 @@
 
     // 8. START
     injectAnimationStyles();
+
+    // Define que o widget começa minimizado por padrão se não houver preferência salva
+    if (safeStorage('get', 'petMinimized') == null) {
+        safeStorage('set', 'petMinimized', 'true');
+    }
+
     const cEmail = safeStorage('get', 'pet_user_email');
     const cS = safeStorage('get', 'userSaldo');
     
