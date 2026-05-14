@@ -115,7 +115,7 @@
             elmnt.style.right = "25px"; 
         }
 
-        const handle = elmnt.querySelector('.drag-handle') || elmnt;
+        const handle = elmnt.querySelector('.pet-drag-handle') || elmnt;
         handle.onmousedown = dragMouseDown;
         handle.ontouchstart = dragMouseDown;
 
@@ -250,7 +250,7 @@
         }
 
         if (isMinimized) {
-            widget.innerHTML = `<div class="minimized-icon" id="pet-btn-maximize">🐾</div>`;
+            widget.innerHTML = `<div class="pet-minimized-icon" id="pet-btn-maximize">🐾</div>`;
         } else {
             const getBadgeImg = (b) => {
                 if (!b) return "https://raw.githubusercontent.com/juanjsales/PETRocinha/main/Aprendiz.webp";
@@ -264,27 +264,27 @@
             const badge = getBadgeImg(data?.badge);
 
             const contentAluna = `
-                <img src="${badge}" class="widget-badge" ondragstart="return false">
-                <div class="widget-info">
-                    <span class="widget-label">Saldo</span>
-                    <span class="widget-value" id="pet-val">${valorAnterior} Arrasas</span>
+                <img src="${badge}" class="pet-widget-badge" ondragstart="return false">
+                <div class="pet-widget-info">
+                    <span class="pet-widget-label">Saldo</span>
+                    <span class="pet-widget-value" id="pet-val">${valorAnterior} Arrasas</span>
                 </div>
             `;
 
             const contentVisitante = `
-                <div class="widget-badge" style="display: flex; align-items: center; justify-content: center; font-size: 24px; background: rgba(0,0,0,0.05); border-radius: 50%;">👋</div>
-                <div class="widget-info" style="display: flex; flex-direction: column; justify-content: center; width: 100%;">
-                    <span class="widget-value widget-alert-text" style="font-size: 10px; font-weight: bold; white-space: normal; line-height: 1.2; text-align: left; color: var(--pet-text-main, #333);">Cadastre-se ou<br>Faça Login</span>
+                <div class="pet-widget-badge" style="display: flex; align-items: center; justify-content: center; font-size: 24px; background: rgba(0,0,0,0.05); border-radius: 50%;">👋</div>
+                <div class="pet-widget-info" style="display: flex; flex-direction: column; justify-content: center; width: 100%;">
+                    <span class="pet-widget-value pet-widget-alert-text" style="font-size: 10px; font-weight: bold; white-space: normal; line-height: 1.2; text-align: left; color: var(--pet-text-main, #333);">Cadastre-se ou<br>Faça Login</span>
                 </div>
             `;
 
             widget.innerHTML = `
-                <div class="widget-container">
-                    <div class="drag-handle">⠿</div>
-                    <div class="widget-main-content" id="pet-main-content">
+                <div class="pet-widget-container">
+                    <div class="pet-drag-handle">⠿</div>
+                    <div class="pet-widget-main-content" id="pet-main-content">
                         ${isAluna ? contentAluna : contentVisitante}
                     </div>
-                    <button class="btn-minimize" id="pet-btn-minimize">✕</button>
+                    <button class="pet-btn-minimize" id="pet-btn-minimize">✕</button>
                 </div>
             `;
             

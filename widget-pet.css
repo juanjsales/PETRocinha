@@ -1,4 +1,3 @@
-
     #pet-floating-widget {
         position: fixed !important;
         z-index: 2147483647 !important;
@@ -11,7 +10,7 @@
     }
 
     /* Estrutura do Widget (Modo Aberto) */
-    .widget-container {
+    .pet-widget-container {
         display: flex !important;
         align-items: center !important;
         background: rgba(255, 255, 255, 0.95) !important;
@@ -24,7 +23,7 @@
     }
 
     /* Área de Arraste (Alça) */
-    .drag-handle {
+    .pet-drag-handle {
         cursor: grab !important;
         padding: 0 8px 0 10px !important;
         color: #94a3b8 !important;
@@ -34,10 +33,10 @@
         border-right: 1px solid #e2e8f0;
         margin-right: 4px;
     }
-    .drag-handle:active { cursor: grabbing !important; }
+    .pet-drag-handle:active { cursor: grabbing !important; }
 
     /* Conteúdo Clicável (Leva ao Painel) */
-    .widget-main-content {
+    .pet-widget-main-content {
         display: flex !important;
         align-items: center !important;
         gap: 12px !important;
@@ -45,19 +44,19 @@
         padding-right: 10px;
     }
 
-    .widget-badge {
+    .pet-widget-badge {
         width: 44px !important;
         height: 44px !important;
         border-radius: 50% !important;
         pointer-events: none; /* Evita que a imagem atrapalhe o clique */
     }
 
-    .widget-info {
+    .pet-widget-info {
         display: flex !important;
         flex-direction: column !important;
     }
 
-    .widget-label {
+    .pet-widget-label {
         font-size: 9px !important;
         color: #94a3b8 !important;
         text-transform: uppercase !important;
@@ -65,7 +64,7 @@
         line-height: 1 !important;
     }
 
-    .widget-value {
+    .pet-widget-value {
         font-size: 18px !important;
         color: #6366f1 !important;
         font-weight: 800 !important;
@@ -73,7 +72,7 @@
     }
 
     /* Botão Minimizar (X) */
-    .btn-minimize {
+    .pet-btn-minimize {
         width: 24px !important;
         height: 24px !important;
         background: #f1f5f9 !important;
@@ -88,10 +87,10 @@
         margin-right: 6px !important;
         transition: background 0.2s;
     }
-    .btn-minimize:hover { background: #e2e8f0 !important; }
+    .pet-btn-minimize:hover { background: #e2e8f0 !important; }
 
     /* Estado Minimizado (Patinha flutuante) */
-    .minimized-icon {
+    .pet-minimized-icon {
         width: 50px !important;
         height: 50px !important;
         background: #6366f1 !important;
@@ -105,7 +104,7 @@
         font-size: 22px !important;
         transition: transform 0.3s;
     }
-    .minimized-icon:hover { transform: scale(1.1); }
+    .pet-minimized-icon:hover { transform: scale(1.1); }
 
     /* Notificação de Ganhos (Pop-up) */
     .pet-notificacao {
@@ -121,38 +120,38 @@
         font-weight: bold !important;
         white-space: nowrap !important;
         box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
-        animation: slideUp 0.4s ease-out;
+        animation: pet-slideUp 0.4s ease-out;
         z-index: 2147483646;
     }
 
-    @keyframes slideUp {
+    @keyframes pet-slideUp {
         from { opacity: 0; transform: translate(-50%, 20px); }
         to { opacity: 1; transform: translate(-50%, 0); }
     }
 
     /* Spinner de Carregamento */
-    .spinner {
+    .pet-spinner {
         width: 24px;
         height: 24px;
         border: 3px solid #f3f3f3;
         border-top: 3px solid #6366f1;
         border-radius: 50%;
-        animation: spin 1s linear infinite;
+        animation: pet-spin 1s linear infinite;
         margin: 10px;
     }
 
-    @keyframes spin {
+    @keyframes pet-spin {
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
     }
 
-@keyframes gentle-bounce {
+@keyframes pet-gentle-bounce {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-3px); }
 }
 
-.widget-alert-text {
-    animation: gentle-bounce 2s ease-in-out infinite;
+.pet-widget-alert-text {
+    animation: pet-gentle-bounce 2s ease-in-out infinite;
 }
 
-    .hidden { display: none !important; }
+    .pet-hidden { display: none !important; }
