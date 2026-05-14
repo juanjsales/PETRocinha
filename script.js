@@ -363,7 +363,17 @@ function renderDashboard() {
     
     const badgeDisplay = document.getElementById("user-badge-display");
     const badgeImg = document.querySelector(".badge-img");
-    const badgeData = configMapa.find(c => c.id === currentData.badge) || configMapa[0];
+    const getBadgeData = (b) => {
+        if (!b) return configMapa[0];
+        const s = b.toLowerCase();
+        if (s.includes("mulher")) return configMapa[1];
+        if (s.includes("fera")) return configMapa[2];
+        if (s.includes("profissional")) return configMapa[3];
+        if (s.includes("embaixadora")) return configMapa[4];
+        return configMapa[0];
+    };
+    const badgeData = getBadgeData(currentData.badge);
+    currentData.badge = badgeData.id;
 
     // Render Aviso Formulário (Verifica se ela não tem badge registrada)
     const avisoFormulario = document.getElementById("aviso-formulario");

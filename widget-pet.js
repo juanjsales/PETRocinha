@@ -252,14 +252,16 @@
         if (isMinimized) {
             widget.innerHTML = `<div class="minimized-icon" id="pet-btn-maximize">🐾</div>`;
         } else {
-            const imgs = {
-                "Aprendiz Curiosa 🐾": "https://raw.githubusercontent.com/juanjsales/PETRocinha/main/Aprendiz.webp",
-                "Mulher de Propósito ✨": "https://raw.githubusercontent.com/juanjsales/PETRocinha/main/Mulher.webp",
-                "Fera da Técnica 🎓": "https://raw.githubusercontent.com/juanjsales/PETRocinha/main/Fera.webp",
-                "Profissional que Arrasa 💼": "https://raw.githubusercontent.com/juanjsales/PETRocinha/main/Prof.webp",
-                "Embaixadora Pet Rocinha 👑": "https://raw.githubusercontent.com/juanjsales/PETRocinha/main/Embaixadora.webp"
+            const getBadgeImg = (b) => {
+                if (!b) return "https://raw.githubusercontent.com/juanjsales/PETRocinha/main/Aprendiz.webp";
+                const s = b.toLowerCase();
+                if (s.includes("mulher")) return "https://raw.githubusercontent.com/juanjsales/PETRocinha/main/Mulher.webp";
+                if (s.includes("fera")) return "https://raw.githubusercontent.com/juanjsales/PETRocinha/main/Fera.webp";
+                if (s.includes("profissional")) return "https://raw.githubusercontent.com/juanjsales/PETRocinha/main/Prof.webp";
+                if (s.includes("embaixadora")) return "https://raw.githubusercontent.com/juanjsales/PETRocinha/main/Embaixadora.webp";
+                return "https://raw.githubusercontent.com/juanjsales/PETRocinha/main/Aprendiz.webp";
             };
-            const badge = imgs[data?.badge] || imgs["Aprendiz Curiosa 🐾"];
+            const badge = getBadgeImg(data?.badge);
 
             const contentAluna = `
                 <img src="${badge}" class="widget-badge" ondragstart="return false">
