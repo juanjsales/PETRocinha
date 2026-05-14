@@ -123,7 +123,7 @@ function processarDadosAluno(rawData, identificador) {
         foto: rawData.foto || "",
         arrasas: parseInt(rawData.arrasas) || 0,
         xp_total: parseInt(rawData.xp_total) || 0,
-        badge: rawData.badge || "Aprendiz Curiosa 🐾",
+        badge: rawData.badge || " ",
         proximoEvento: rawData.proximoEvento || "Consulte a Circle",
         ranking: (rawData.ranking || []).map(r => ({
             nome: r.nome || "Aluna", 
@@ -364,6 +364,13 @@ function renderDashboard() {
     const badgeDisplay = document.getElementById("user-badge-display");
     const badgeImg = document.querySelector(".badge-img");
     const badgeData = configMapa.find(c => c.id === currentData.badge) || configMapa[0];
+
+    // Render Aviso Formulário (Verifica se ela não tem badge registrada)
+    const avisoFormulario = document.getElementById("aviso-formulario");
+    const semBadge = !currentData.badge || currentData.badge.trim() === "";
+    if (avisoFormulario) {
+        avisoFormulario.style.display = semBadge ? "block" : "none";
+    }
 
     // Render Dica IA - AGORA USA DICAS_IA_LOCAL
     const dicaTexto = document.getElementById("dica-ia-texto");

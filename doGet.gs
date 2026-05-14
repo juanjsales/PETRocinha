@@ -100,7 +100,7 @@ function doGet(e) {
       return Utils.responderCustom({
         encontrado: true,
         arrasas: perfil.arrasas,
-        badge: perfil.badge || "Aprendiz Curiosa 🐾",
+        badge: perfil.badge || " ",
         festejar: (perfil.arrasas > ultimoSaldo)
       }, callback);
     }
