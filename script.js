@@ -875,8 +875,12 @@ async function sendQuizLogToBackend(isCorrect, quizPergunta) {
                 document.getElementById("quiz-result").style.display = "block";
             }
 
-            // Atualização silenciosa dos dados
-            refreshDadosSilencioso(cpf);
+            // Aguarda 10 segundos antes de puxar os dados do banco novamente.
+            // Isso dá tempo ao Google Sheets para recalcular as fórmulas de SOMA no banco
+            // com a nova pontuação, evitando que o saldo antigo seja puxado e reverta o widget.
+            setTimeout(() => {
+                refreshDadosSilencioso(cpf);
+            }, 10000);
         }
     } catch (error) {
         console.error("Erro na comunicação com o backend para registrar log do quiz:", error);
