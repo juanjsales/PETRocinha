@@ -44,6 +44,14 @@
               0% { transform: translate(-50%, 0) scale(1); opacity: 1; }
               100% { transform: translate(-50%, -50px) scale(1.5); opacity: 0; }
             }
+            @keyframes pet-widget-enter {
+              0% { transform: scale(0) translateY(30px); opacity: 0; }
+              60% { transform: scale(1.15) translateY(-10px); opacity: 1; }
+              100% { transform: scale(1) translateY(0); opacity: 1; }
+            }
+            .pet-widget-first-show {
+              animation: pet-widget-enter 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            }
         `;
         document.head.appendChild(style);
     }
@@ -229,6 +237,26 @@
         }
     }
 
+    // 4.2 SOM DE ENTRADA (POP LEVE)
+    function playPopSound() {
+        try {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (AudioContext) {
+                const ctx = new AudioContext();
+                if (ctx.state === 'suspended') ctx.resume();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain); gain.connect(ctx.destination);
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, ctx.currentTime); // Tom inicial
+                osc.frequency.exponentialRampToValueAtTime(300, ctx.currentTime + 0.15); // Queda rápida simulando bolha/pop
+                gain.gain.setValueAtTime(0.05, ctx.currentTime); // Volume bem suave (5%)
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15); // Fade out
+                osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.15);
+            }
+        } catch(e) {}
+    }
+
     // 5. RENDERIZAÇÃO
     function renderizar(data) {
         let widget = document.getElementById('pet-floating-widget');
@@ -264,8 +292,17 @@
         if (!widget) {
             widget = document.createElement('div');
             widget.id = 'pet-floating-widget';
+            widget.classList.add('pet-widget-first-show');
             document.body.appendChild(widget);
             setupDraggable(widget);
+            
+            // Toca o som suave de aparição
+            playPopSound();
+
+            // Remove a classe de animação após o fim (evita bugs no arraste)
+            setTimeout(() => {
+                if (widget) widget.classList.remove('pet-widget-first-show');
+            }, 800);
         }
         
         widget.style.display = 'flex'; // Garante visibilidade
