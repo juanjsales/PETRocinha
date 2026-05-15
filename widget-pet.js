@@ -240,7 +240,11 @@
 
         if (isAluna && !data.isCache) {
             safeStorage('set', 'userSaldo', valorNovo);
-            if(data.badge) safeStorage('set', 'userBadge', data.badge);
+            if(data.badge && String(data.badge).trim() !== "") {
+                safeStorage('set', 'userBadge', data.badge);
+            } else {
+                safeStorage('remove', 'userBadge');
+            }
             if(data.socioeconomico !== undefined) {
                 const isSocioValido = data.socioeconomico === true || data.socioeconomico === 'true' || data.socioeconomico === 'Sim' || data.socioeconomico === 1;
                 safeStorage('set', 'userSocioeconomico', isSocioValido ? 'true' : 'false');
@@ -248,9 +252,11 @@
         }
 
         const hasSocioeconomico = isAluna && safeStorage('get', 'userSocioeconomico') === 'true';
+        const currentBadge = safeStorage('get', 'userBadge');
+        const hasBadge = isAluna && currentBadge && String(currentBadge).trim() !== "";
 
-        // Interrompe e esconde o widget caso não tenha a tag de socioeconômico do log
-        if (!hasSocioeconomico) {
+        // Interrompe e esconde o widget caso não tenha a tag de socioeconômico OU falte a badge
+        if (!hasSocioeconomico || !hasBadge) {
             if (widget) widget.style.display = 'none';
             return;
         }
