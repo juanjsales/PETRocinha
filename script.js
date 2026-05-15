@@ -488,6 +488,8 @@ function renderDashboard() {
                 </div>
             </li>
         `).join("");
+    } else if (rankingList) {
+        rankingList.innerHTML = `<li class="list-item" style="justify-content:center; padding: 16px; color: var(--pet-text-sub);"><small>Nenhuma aluna classificada ainda.</small></li>`;
     }
 
     // Extrato

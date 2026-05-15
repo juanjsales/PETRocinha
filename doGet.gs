@@ -187,8 +187,16 @@ class Database {
   getRanking() {
     const r = this.getSheetData("Ranking");
     if (!r || r.length <= 1) return [];
-    // CORREÇÃO: Índices das colunas de ranking
-    return r.slice(1).sort((a,b) => b[CONFIG.COLUNAS_RANKING.XP] - a[CONFIG.COLUNAS_RANKING.XP]).slice(0,10).map(x => ({ nome: x[CONFIG.COLUNAS_RANKING.NOME], badge: x[CONFIG.COLUNAS_RANKING.BADGE], xp: x[CONFIG.COLUNAS_RANKING.XP] }));
+    
+    return r.slice(1)
+      .filter(x => x[CONFIG.COLUNAS_RANKING.NOME] && String(x[CONFIG.COLUNAS_RANKING.NOME]).trim() !== "")
+      .map(x => ({ 
+        nome: String(x[CONFIG.COLUNAS_RANKING.NOME] || "Aluna").trim(), 
+        badge: String(x[CONFIG.COLUNAS_RANKING.BADGE] || " "), 
+        xp: parseInt(x[CONFIG.COLUNAS_RANKING.XP]) || 0 
+      }))
+      .sort((a, b) => b.xp - a.xp)
+      .slice(0, 10);
   }
 
   getConfigs(tipo) {
