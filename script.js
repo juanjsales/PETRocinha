@@ -574,12 +574,14 @@ function renderChart() {
 function showVideoGate() {
     document.getElementById("video-gate").style.display = "flex";
     document.getElementById("video-iframe").src = "https://drive.google.com/file/d/19NY5n9xfR2nNUqEhS2sfvacc6UhMS9l_/preview?autoplay=1";
+    document.body.style.overflow = "hidden"; // Trava a rolagem da página de fundo
 }
 
 function closeVideoGate() {
     safeStorage('set', 'watchedProPet_2026', "true");
     document.getElementById("video-gate").style.display = "none";
     document.getElementById("video-iframe").src = "";
+    document.body.style.overflow = ""; // Libera a rolagem da página de fundo novamente
 }
 
 function solicitarResgate() {
