@@ -13,9 +13,9 @@
 </head>
 <body>
 
-    <div id="modal-recompensas" class="modal-overlay" onclick="fecharModalRecompensas()">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <span class="close-modal" onclick="fecharModalRecompensas()" role="button" aria-label="Fechar modal de premiações">&times;</span>
+    <div id="modal-recompensas" class="modal-overlay">
+        <div class="modal-content">
+            <span id="btn-fechar-modal-x" class="close-modal" role="button" aria-label="Fechar modal de premiações">&times;</span>
             <div style="text-align: center; margin-bottom: 30px;">
                 <span style="font-size: 50px;">🎁</span>
                 <h2 style="font-family: 'Syne', sans-serif; color: var(--pet-indigo); margin-top: 10px; font-size: 28px;">Premiações de Elite</h2>
@@ -24,7 +24,7 @@
             <div id="modal-recompensas-conteudo">
                 <!-- Conteúdo injetado via JS -->
             </div>
-            <button onclick="fecharModalRecompensas()" class="btn-glow" style="margin-top: 10px; background: var(--pet-indigo);">Entendido, Vou Arrasar! 🚀</button>
+            <button id="btn-fechar-modal" class="btn-glow" style="margin-top: 10px; background: var(--pet-indigo);">Entendido, Vou Arrasar! 🚀</button>
         </div>
     </div>
     <main id="painel-pet-exclusivo">
@@ -34,7 +34,7 @@
         <div class="video-box-small">
             <iframe id="video-iframe" src="" allow="autoplay"></iframe>
         </div>
-        <button id="btn-video-continue" onclick="closeVideoGate()" class="btn-glow" style="max-width: 300px">VOU ARRASAR!</button>
+        <button id="btn-video-continue" class="btn-glow" style="max-width: 300px">VOU ARRASAR!</button>
     </div>
 
     <header class="lp-header">
@@ -60,7 +60,7 @@
                     <input type="text" id="cpf-input" class="glass-input" placeholder="000.000.000-00" maxlength="14" inputmode="numeric">
                 </div>
                 
-                <button id="btn-entrar" onclick="verificarCPF()" class="btn-glow">Entrar e Arrasar</button>
+                <button id="btn-entrar" class="btn-glow">Entrar e Arrasar</button>
                 
                 <p style="text-align: center; font-size: 14px; margin-top: 20px;">
                     Ainda não é aluna? <a href="https://comunidade.aprenderecuidar.com.br/sign_up" target="_blank" style="color: var(--pet-purple); font-weight: 800;" aria-label="Cadastrar-se no site">Cadastre-se agora →</a>
@@ -99,19 +99,19 @@
                 </div>
 
                 <nav class="tabs" role="tablist">
-                    <button id="tab-btn-saldo" class="tab-btn active" onclick="switchTab('tab-saldo', this)" role="tab" aria-controls="tab-saldo" aria-selected="true" aria-label="Aba de Saldo">💰 Saldo</button>
-                    <button class="tab-btn" onclick="switchTab('tab-jornada', this)" role="tab" aria-controls="tab-jornada" aria-selected="false" aria-label="Aba de Jornada 3A">🚀 Jornada 3A</button>
+                    <button id="tab-btn-saldo" class="tab-btn active" data-tab-target="tab-saldo" role="tab" aria-controls="tab-saldo" aria-selected="true" aria-label="Aba de Saldo">💰 Saldo</button>
+                    <button class="tab-btn" data-tab-target="tab-jornada" role="tab" aria-controls="tab-jornada" aria-selected="false" aria-label="Aba de Jornada 3A">🚀 Jornada 3A</button>
 
-                    <button class="tab-btn" onclick="switchTab('tab-ranking', this)" role="tab" aria-controls="tab-ranking" aria-selected="false" aria-label="Aba de Ranking">🏆 Ranking</button>
-                    <button class="tab-btn" onclick="switchTab('tab-quiz', this)" role="tab" aria-controls="tab-quiz" aria-selected="false" aria-label="Aba de Quiz">🧠 Quiz</button>
-                    <button class="tab-btn" onclick="switchTab('tab-manual', this)" role="tab" aria-controls="tab-manual" aria-selected="false" aria-label="Aba de Manual">📖 Manual</button>
-                    <button class="tab-btn" onclick="switchTab('tab-extrato', this)" role="tab" aria-controls="tab-extrato" aria-selected="false" aria-label="Aba de Extrato">📜 Extrato</button>
+                    <button class="tab-btn" data-tab-target="tab-ranking" role="tab" aria-controls="tab-ranking" aria-selected="false" aria-label="Aba de Ranking">🏆 Ranking</button>
+                    <button class="tab-btn" data-tab-target="tab-quiz" role="tab" aria-controls="tab-quiz" aria-selected="false" aria-label="Aba de Quiz">🧠 Quiz</button>
+                    <button class="tab-btn" data-tab-target="tab-manual" role="tab" aria-controls="tab-manual" aria-selected="false" aria-label="Aba de Manual">📖 Manual</button>
+                    <button class="tab-btn" data-tab-target="tab-extrato" role="tab" aria-controls="tab-extrato" aria-selected="false" aria-label="Aba de Extrato">📜 Extrato</button>
                 </nav>
 
                 
         <div id="tab-saldo" class="tab-content" role="tabpanel" aria-labelledby="tab-btn-saldo">
                     <div class="info-box" style="background: linear-gradient(to bottom, #ffffff, #f8fafc);">
-                        <div class="cedula-container" onclick="this.querySelector('.cedula').classList.toggle('virada')" title="Clique para virar" role="button" aria-label="Cédula Institucional, clique para virar">
+                        <div id="cedula-card" class="cedula-container" title="Clique para virar" role="button" aria-label="Cédula Institucional, clique para virar">
                             <div class="cedula">
                                 <div class="face frente">
                                     <div class="holograma"></div>
@@ -150,7 +150,7 @@
                             </small>
                         </div>
 
-                        <button id="btn-resgate" onclick="solicitarResgate()" class="btn-glow btn-pulse" style="display: none; background: var(--pet-green); margin-top: 10px;">
+                        <button id="btn-resgate" class="btn-glow btn-pulse" style="display: none; background: var(--pet-green); margin-top: 10px;">
                             💸 Resgatar R$ 100,00 Agora
                         </button>
                     </div>
@@ -215,7 +215,7 @@
                     <ol id="ranking-list"></ol>
                      <div class="info-box" style="background: #f5f3ff; border: 1px solid var(--pet-purple); text-align: center; margin-bottom: 20px; display: flex;
     justify-content: center;">
-                        <button onclick="abrirModalRecompensas()" class="btn-glow" style="width: auto;">Ver as Premiações 🎁</button>
+                        <button id="btn-ver-premiacoes" class="btn-glow" style="width: auto;">Ver as Premiações 🎁</button>
                     </div>
                 </div>
 
@@ -257,7 +257,7 @@
                                 <h4 style="margin: 0; color: var(--pet-indigo); font-size: 15px;">🔔 Notificações WhatsApp</h4>
                                 <p style="margin: 2px 0 0; font-size: 12px; color: var(--pet-text-sub);">Receber avisos de saldo e eventos.</p>
                             </div>
-                            <button id="btn-toggle-notif" onclick="toggleNotificacoes()" style="padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 800; transition: var(--transition); background: var(--pet-green); color: white;">
+                            <button id="btn-toggle-notif" style="padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 800; transition: var(--transition); background: var(--pet-green); color: white;">
                                 ATIVADAS
                             </button>
                         </div>
@@ -267,7 +267,7 @@
                     <ul id="extrato-lista" style="max-height: 300px; overflow-y: auto; padding-right: 5px;"></ul>
                 </div>
 
-                <button onclick="location.reload()" class="sair-btn">Sair do Painel com Segurança</button>
+                <button id="btn-sair-painel" class="sair-btn">Sair do Painel com Segurança</button>
             </div>
 
             <footer style="margin-top: 40px; text-align: center; border-top: 1px solid #f1f5f9; padding-top: 20px;">

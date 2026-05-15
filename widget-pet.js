@@ -26,10 +26,11 @@
         }
     }
 
-    // --- INJETAR ESTILOS DE ANIMAÇÃO ---
-    function injectAnimationStyles() {
+    // --- INJETAR ESTILOS DO WIDGET (CSS + ANIMAÇÕES) ---
+    function injectWidgetStyles() {
         const style = document.createElement('style');
         style.innerHTML = `
+            /* --- Animações Base --- */
             @keyframes pet-tada {
               from { transform: scale3d(1, 1, 1); }
               10%, 20% { transform: scale3d(0.9, 0.9, 0.9) rotate3d(0, 0, 1, -3deg); }
@@ -52,6 +53,181 @@
             .pet-widget-first-show {
               animation: pet-widget-enter 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
             }
+
+            /* --- Estilos do Widget (antigo widget-pet.css) --- */
+            #pet-floating-widget {
+                position: fixed !important;
+                z-index: 2147483647 !important;
+                touch-action: none; /* Melhora performance mobile */
+                user-select: none;
+                display: flex;
+                flex-direction: column;
+                align-items: flex-end;
+                gap: 8px;
+            }
+
+            /* Estrutura do Widget (Modo Aberto) */
+            .pet-widget-container {
+                display: flex !important;
+                align-items: center !important;
+                background: rgba(255, 255, 255, 0.95) !important;
+                backdrop-filter: blur(10px);
+                border-radius: 50px !important;
+                padding: 6px !important;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.2) !important;
+                border: 2px solid #6366f1 !important;
+                transition: transform 0.2s ease;
+            }
+
+            /* Área de Arraste (Alça) */
+            .pet-drag-handle {
+                cursor: grab !important;
+                padding: 0 8px 0 10px !important;
+                color: #94a3b8 !important;
+                font-size: 16px !important;
+                display: flex;
+                align-items: center;
+                border-right: 1px solid #e2e8f0;
+                margin-right: 4px;
+            }
+            .pet-drag-handle:active { cursor: grabbing !important; }
+
+            /* Conteúdo Clicável (Leva ao Painel) */
+            .pet-widget-main-content {
+                display: flex !important;
+                align-items: center !important;
+                gap: 12px !important;
+                cursor: pointer !important;
+                padding-right: 10px;
+            }
+
+            .pet-widget-badge {
+                width: 44px !important;
+                height: 44px !important;
+                border-radius: 50% !important;
+                pointer-events: none; /* Evita que a imagem atrapalhe o clique */
+            }
+
+            .pet-widget-info {
+                display: flex !important;
+                flex-direction: column !important;
+            }
+
+            .pet-widget-label {
+                font-size: 9px !important;
+                color: #94a3b8 !important;
+                text-transform: uppercase !important;
+                font-weight: 800 !important;
+                line-height: 1 !important;
+            }
+
+            .pet-widget-value {
+                font-size: 18px !important;
+                color: #6366f1 !important;
+                font-weight: 800 !important;
+                line-height: 1.2 !important;
+            }
+
+            /* Botão Minimizar (X) */
+            .pet-btn-minimize {
+                width: 24px !important;
+                height: 24px !important;
+                background: #f1f5f9 !important;
+                border: none !important;
+                border-radius: 50% !important;
+                color: #64748b !important;
+                font-size: 12px !important;
+                cursor: pointer !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                margin-right: 6px !important;
+                transition: background 0.2s;
+            }
+            .pet-btn-minimize:hover { background: #e2e8f0 !important; }
+
+            /* Estado Minimizado (Patinha flutuante) */
+            .pet-minimized-icon {
+                width: 50px !important;
+                height: 50px !important;
+                background: #6366f1 !important;
+                border-radius: 50% !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                cursor: pointer !important;
+                box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4) !important;
+                color: white !important;
+                font-size: 22px !important;
+                transition: transform 0.3s;
+            }
+            .pet-minimized-icon:hover { transform: scale(1.1); }
+
+            /* Notificação de Ganhos (Pop-up) */
+            .pet-notificacao {
+                position: absolute;
+                bottom: 70px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: #22c55e !important;
+                color: white !important;
+                padding: 6px 14px !important;
+                border-radius: 20px !important;
+                font-size: 12px !important;
+                font-weight: bold !important;
+                white-space: nowrap !important;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+                animation: pet-slideUp 0.4s ease-out;
+                z-index: 2147483646;
+            }
+
+            @keyframes pet-slideUp {
+                from { opacity: 0; transform: translate(-50%, 20px); }
+                to { opacity: 1; transform: translate(-50%, 0); }
+            }
+
+            @keyframes pet-float-up-dynamic {
+                0% { transform: translate(-50%, 0) scale(0.5); opacity: 0; }
+                20% { transform: translate(-50%, -25px) scale(1.2); opacity: 1; }
+                80% { transform: translate(-50%, -45px) scale(1); opacity: 1; }
+                100% { transform: translate(-50%, -60px) scale(0.8); opacity: 0; }
+            }
+
+            @keyframes pet-glow-pulse {
+                0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.6); border-color: #22c55e; }
+                50% { box-shadow: 0 0 25px 10px rgba(34, 197, 94, 0); border-color: #4ade80; }
+                100% { box-shadow: 0 10px 30px rgba(0,0,0,0.2); border-color: #6366f1; }
+            }
+            .pet-celebration-glow {
+                animation: pet-glow-pulse 1.2s ease-out;
+            }
+
+            /* Spinner de Carregamento */
+            .pet-spinner {
+                width: 24px;
+                height: 24px;
+                border: 3px solid #f3f3f3;
+                border-top: 3px solid #6366f1;
+                border-radius: 50%;
+                animation: pet-spin 1s linear infinite;
+                margin: 10px;
+            }
+
+            @keyframes pet-spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+
+            @keyframes pet-gentle-bounce {
+                0%, 100% { transform: translateY(0); }
+                50% { transform: translateY(-3px); }
+            }
+
+            .pet-widget-alert-text {
+                animation: pet-gentle-bounce 2s ease-in-out infinite;
+            }
+
+            .pet-hidden { display: none !important; }
         `;
         document.head.appendChild(style);
     }
@@ -492,7 +668,7 @@
     });
 
     // 8. START
-    injectAnimationStyles();
+    injectWidgetStyles();
 
     // Define que o widget começa minimizado por padrão se não houver preferência salva
     if (safeStorage('get', 'petMinimized') == null) {
