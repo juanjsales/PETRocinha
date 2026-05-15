@@ -164,7 +164,7 @@
         renderizar({ 
             encontrado: true, 
             arrasas: safeStorage('get', 'userSaldo') || 0, 
-            badge: safeStorage('get', 'userBadge') || "Aprendiz Curiosa 🐾", 
+            badge: safeStorage('get', 'userBadge') || "", 
             isCache: true 
         });
     }
@@ -268,18 +268,20 @@
             widget.innerHTML = `<div class="pet-minimized-icon" id="pet-btn-maximize">🐾</div>`;
         } else {
             const getBadgeImg = (b) => {
-                if (!b) return "https://raw.githubusercontent.com/juanjsales/PETRocinha/main/Aprendiz.webp";
-                const s = b.toLowerCase();
+                if (!b || String(b).trim() === "") return "";
+                const s = String(b).toLowerCase();
                 if (s.includes("mulher")) return "https://raw.githubusercontent.com/juanjsales/PETRocinha/main/Mulher.webp";
                 if (s.includes("fera")) return "https://raw.githubusercontent.com/juanjsales/PETRocinha/main/Fera.webp";
                 if (s.includes("profissional")) return "https://raw.githubusercontent.com/juanjsales/PETRocinha/main/Prof.webp";
                 if (s.includes("embaixadora")) return "https://raw.githubusercontent.com/juanjsales/PETRocinha/main/Embaixadora.webp";
-                return "https://raw.githubusercontent.com/juanjsales/PETRocinha/main/Aprendiz.webp";
+                if (s.includes("aprendiz")) return "https://raw.githubusercontent.com/juanjsales/PETRocinha/main/Aprendiz.webp";
+                return "";
             };
             const badge = getBadgeImg(data?.badge);
+            const badgeHtml = badge ? `<img src="${badge}" class="pet-widget-badge" ondragstart="return false">` : `<div class="pet-widget-badge" style="display: flex; align-items: center; justify-content: center; font-size: 24px; background: rgba(0,0,0,0.05); border-radius: 50%;">🐾</div>`;
 
             const contentAluna = `
-                <img src="${badge}" class="pet-widget-badge" ondragstart="return false">
+                ${badgeHtml}
                 <div class="pet-widget-info">
                     <span class="pet-widget-label">Saldo</span>
                     <span class="pet-widget-value" id="pet-val">${valorAnterior} Arrasas</span>

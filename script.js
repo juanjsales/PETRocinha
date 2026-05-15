@@ -366,16 +366,20 @@ function renderDashboard() {
     const badgeDisplay = document.getElementById("user-badge-display");
     const badgeImg = document.querySelector(".badge-img");
     const getBadgeData = (b) => {
-        if (!b) return configMapa[0];
-        const s = b.toLowerCase();
+        if (!b || String(b).trim() === "") return null;
+        const s = String(b).toLowerCase();
+        if (s.includes("aprendiz")) return configMapa[0];
         if (s.includes("mulher")) return configMapa[1];
         if (s.includes("fera")) return configMapa[2];
         if (s.includes("profissional")) return configMapa[3];
         if (s.includes("embaixadora")) return configMapa[4];
-        return configMapa[0];
+        return null;
     };
     const badgeData = getBadgeData(currentData.badge);
-    currentData.badge = badgeData.id;
+    
+    if (badgeData) {
+        currentData.badge = badgeData.id;
+    }
 
     // Render Aviso Formulário (Verifica se ela não tem badge registrada)
     const avisoFormulario = document.getElementById("aviso-formulario");
@@ -394,7 +398,7 @@ function renderDashboard() {
         "Profissional que Arrasa 💼": "Dica: Busque feedbacks e aprimore seu atendimento para aumentar sua renda.",
         "Embaixadora Pet Rocinha 👑": "Dica: Incentive e apoie outras alunas na comunidade!"
     };
-    const dicaIA = DICAS_IA_LOCAL[currentData.badge] || "Dica: Mantenha a constância e o foco técnico.";
+    const dicaIA = badgeData ? (DICAS_IA_LOCAL[currentData.badge] || "Dica: Mantenha a constância e o foco técnico.") : "Dica: Preencha o formulário socioeconômico para ganhar sua primeira badge!";
     
     // Novo: Exibir informações extras se existirem
     let infoExtra = "";
@@ -419,12 +423,22 @@ function renderDashboard() {
     }
 
     if (badgeDisplay) {
-        const bText = badgeDisplay.querySelector(".badge-text");
-        if (bText) bText.innerText = badgeData.id;
+        if (badgeData) {
+            badgeDisplay.style.display = "inline-flex";
+            const bText = badgeDisplay.querySelector(".badge-text");
+            if (bText) bText.innerText = badgeData.id;
+        } else {
+            badgeDisplay.style.display = "none";
+        }
     }
     if (badgeImg) {
-        badgeImg.src = badgeData.img;
-        badgeImg.alt = badgeData.id;
+        if (badgeData) {
+            badgeImg.style.display = "block";
+            badgeImg.src = badgeData.img;
+            badgeImg.alt = badgeData.id;
+        } else {
+            badgeImg.style.display = "none";
+        }
     }
     
     const pEvento = document.getElementById("proximo-evento-txt");
@@ -448,9 +462,9 @@ function renderDashboard() {
 
     // Jornada 3A
     window.currentLevelIndex = configMapa.findIndex(l => l.id === currentData.badge);
-    if (window.currentLevelIndex < 0) window.currentLevelIndex = 0;
     
-    const currentStage = configMapa[window.currentLevelIndex].stage;
+    const activeLevel = window.currentLevelIndex < 0 ? 0 : window.currentLevelIndex;
+    const currentStage = configMapa[activeLevel].stage;
     document.querySelectorAll(".stage-card").forEach(c => c.classList.remove("active"));
     const stageCardElem = document.getElementById("card-" + currentStage);
     if (stageCardElem) stageCardElem.classList.add("active");
@@ -496,8 +510,9 @@ function renderDashboard() {
 function animarJornada() {
     const line = document.getElementById("horiz-line-active");
     const total = configMapa.length - 1;
-    const progress = (window.currentLevelIndex / total) * 100;
-    line.style.width = window.currentLevelIndex === 0 ? "0px" : `calc(${progress}% - 50px)`;
+    const activeLevel = window.currentLevelIndex < 0 ? 0 : window.currentLevelIndex;
+    const progress = (activeLevel / total) * 100;
+    line.style.width = window.currentLevelIndex <= 0 ? "0px" : `calc(${progress}% - 50px)`;
 }
 
 let chartRenderedDataHash = null;
