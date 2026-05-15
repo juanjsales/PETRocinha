@@ -156,7 +156,7 @@ function processarDadosAluno(rawData, identificador) {
         nome: rawData.nome || "Aluna",
         email: rawData.email || "",
         foto: rawData.foto || "",
-        arrasas: parseInt(rawData.arrasas) || 0,
+        arrasas: Math.min(300, parseInt(rawData.arrasas) || 0), // Trava teto do projeto em 300 A$
         xp_total: parseInt(rawData.xp_total) || 0,
         badge: rawData.badge || " ",
         proximoEvento: rawData.proximoEvento || "Consulte a Circle",
@@ -884,7 +884,7 @@ async function sendQuizLogToBackend(isCorrect, quizPergunta) {
                 document.getElementById("quiz-result").style.display = "block";
                 
                 if (currentData) {
-                    currentData.arrasas = (currentData.arrasas || 0) + 1;
+                    currentData.arrasas = Math.min(300, (currentData.arrasas || 0) + 1); // Aplica a trava ao ganhar pontos
                     document.getElementById("user-arrasas").innerText = currentData.arrasas;
                     
                     const percent = Math.min(100, currentData.arrasas);
