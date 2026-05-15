@@ -441,9 +441,6 @@ function renderDashboard() {
         }
     }
     
-    const pEvento = document.getElementById("proximo-evento-txt");
-    if (pEvento) pEvento.innerText = currentData.proximoEvento;
-    
 
     // Progresso
     const percent = Math.min(100, currentData.arrasas);
