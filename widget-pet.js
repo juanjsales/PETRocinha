@@ -232,12 +232,6 @@
     // 5. RENDERIZAÇÃO
     function renderizar(data) {
         let widget = document.getElementById('pet-floating-widget');
-        if (!widget) {
-            widget = document.createElement('div');
-            widget.id = 'pet-floating-widget';
-            document.body.appendChild(widget);
-            setupDraggable(widget);
-        }
 
         const isMinimized = safeStorage('get', 'petMinimized') === 'true';
         const isAluna = data && data.encontrado;
@@ -247,7 +241,28 @@
         if (isAluna && !data.isCache) {
             safeStorage('set', 'userSaldo', valorNovo);
             if(data.badge) safeStorage('set', 'userBadge', data.badge);
+            if(data.socioeconomico !== undefined) {
+                const isSocioValido = data.socioeconomico === true || data.socioeconomico === 'true' || data.socioeconomico === 'Sim' || data.socioeconomico === 1;
+                safeStorage('set', 'userSocioeconomico', isSocioValido ? 'true' : 'false');
+            }
         }
+
+        const hasSocioeconomico = isAluna && safeStorage('get', 'userSocioeconomico') === 'true';
+
+        // Interrompe e esconde o widget caso não tenha a tag de socioeconômico do log
+        if (!hasSocioeconomico) {
+            if (widget) widget.style.display = 'none';
+            return;
+        }
+
+        if (!widget) {
+            widget = document.createElement('div');
+            widget.id = 'pet-floating-widget';
+            document.body.appendChild(widget);
+            setupDraggable(widget);
+        }
+        
+        widget.style.display = 'flex'; // Garante visibilidade
 
         if (isMinimized) {
             widget.innerHTML = `<div class="pet-minimized-icon" id="pet-btn-maximize">🐾</div>`;
@@ -357,6 +372,7 @@
             safeStorage('remove', 'pet_user_email');
             safeStorage('remove', 'userSaldo');
             safeStorage('remove', 'userBadge');
+            safeStorage('remove', 'userSocioeconomico');
             safeStorage('remove', 'pet_login_source');
             
             renderizar({ encontrado: false, arrasas: 0, badge: null, isCache: true });
@@ -391,6 +407,7 @@
             safeStorage('remove', 'pet_user_email');
             safeStorage('remove', 'userSaldo');
             safeStorage('remove', 'userBadge');
+            safeStorage('remove', 'userSocioeconomico');
             safeStorage('remove', 'pet_login_source');
             renderizar({ encontrado: false, arrasas: 0, badge: null, isCache: false });
         }
@@ -398,8 +415,7 @@
 
     // 7. LISTENER PARA VERCEL (O que você precisa para o Dashboard!)
     window.addEventListener('message', (event) => {
-        // Descomente e ative a linha abaixo quando estiver em produção para evitar que outros sites roubem o e-mail:
-        // if (event.origin !== TRUSTED_ORIGIN && event.origin !== "http://localhost:3000") return;
+        if (event.origin !== TRUSTED_ORIGIN && event.origin !== "http://localhost:3000") return;
 
         if (event.data === 'REQUEST_EMAIL') {
             const email = getEmail();
@@ -440,6 +456,12 @@
     setTimeout(iniciarWidget, 1500);
     
     // Otimização: Apenas faz o polling no servidor se a aba do navegador estiver visível e ativa
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+            iniciarWidget();
+        }
+    });
+
     setInterval(() => {
         if (document.visibilityState === 'visible') {
             iniciarWidget();

@@ -101,6 +101,7 @@ function doGet(e) {
         encontrado: true,
         arrasas: perfil.arrasas,
         badge: perfil.badge || " ",
+        socioeconomico: service.verificarSocioeconomico(perfil.cpf, perfil.email),
         festejar: (perfil.arrasas > ultimoSaldo)
       }, callback);
     }
@@ -117,6 +118,7 @@ function doGet(e) {
     const dashboardData = {
       ...perfil,
       jaRespondeuQuiz: service.verificarQuizHoje(perfil.cpf),
+      socioeconomico: service.verificarSocioeconomico(perfil.cpf, perfil.email),
       quizDiario: quizDiario,
       historico: historico,
       ranking: ranking,
@@ -161,10 +163,25 @@ class Database {
   getHistorico(cpf, email) {
     const logs = this.getSheetData("Log");
     if (!logs || logs.length === 0) return [];
-    // CORREÇÃO: Índices das colunas de log conforme CONFIG
-    return logs.filter(r => (r && String(r[CONFIG.COLUNAS_LOG.CPF]).replace(/\D/g,"") === cpf) || (r && String(r[CONFIG.COLUNAS_LOG.EMAIL]).toLowerCase() === email.toLowerCase()))
-               .reverse().slice(0, 15)
-               .map(r => ({ data: Utils.formatarData(r[CONFIG.COLUNAS_LOG.DATA]), tipo: r[CONFIG.COLUNAS_LOG.TIPO], pontos: r[CONFIG.COLUNAS_LOG.PONTOS], descricao: r[CONFIG.COLUNAS_LOG.DESCRICAO] }));
+    
+    const historico = [];
+    const targetCpf = cpf ? String(cpf).replace(/\D/g, "") : "";
+    const targetEmail = email ? String(email).toLowerCase() : "";
+
+    // Itera de trás para frente para pegar os 15 mais recentes com máxima performance
+    for (let i = logs.length - 1; i >= 0; i--) {
+      const r = logs[i];
+      if (!r) continue;
+      
+      const rowCpf = String(r[CONFIG.COLUNAS_LOG.CPF] || "").replace(/\D/g, "");
+      const rowEmail = String(r[CONFIG.COLUNAS_LOG.EMAIL] || "").toLowerCase();
+
+      if ((targetCpf && rowCpf === targetCpf) || (targetEmail && rowEmail === targetEmail)) {
+        historico.push({ data: Utils.formatarData(r[CONFIG.COLUNAS_LOG.DATA]), tipo: r[CONFIG.COLUNAS_LOG.TIPO], pontos: r[CONFIG.COLUNAS_LOG.PONTOS], descricao: r[CONFIG.COLUNAS_LOG.DESCRICAO] });
+        if (historico.length >= 15) break;
+      }
+    }
+    return historico;
   }
 
   getRanking() {
@@ -275,6 +292,25 @@ class AlunaService {
         const cpfLinha = String(r[CONFIG.COLUNAS_LOG.CPF]).replace(/\D/g,"");
         return cpfLinha === cpf && r[CONFIG.COLUNAS_LOG.TIPO] === "quiz_diario" && dataLog === hoje;
       } catch(e) { return false; }
+    });
+  }
+
+  verificarSocioeconomico(cpf, email) {
+    const logs = this.db.getSheetData("Log");
+    if (!logs) return false;
+    
+    const targetCpf = cpf ? String(cpf).replace(/\D/g,"") : "";
+    const targetEmail = email ? String(email).toLowerCase().trim() : "";
+
+    return logs.some(r => {
+      if (!r) return false;
+      const tipo = String(r[CONFIG.COLUNAS_LOG.TIPO] || "").toLowerCase().trim();
+      if (tipo !== "socioeconomico") return false;
+      
+      const cpfLinha = String(r[CONFIG.COLUNAS_LOG.CPF] || "").replace(/\D/g,"");
+      const emailLinha = String(r[CONFIG.COLUNAS_LOG.EMAIL] || "").toLowerCase().trim();
+      
+      return (targetCpf && cpfLinha === targetCpf) || (targetEmail && emailLinha === targetEmail);
     });
   }
 }

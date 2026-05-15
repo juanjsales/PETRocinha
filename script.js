@@ -6,6 +6,9 @@ window.toggleNotificacoes = toggleNotificacoes;
 window.switchTab = switchTab;
 window.closeVideoGate = closeVideoGate;
 
+// ATENÇÃO: COLOQUE AQUI O SEU LINK DO APPS SCRIPT
+const urlApp = "https://script.google.com/macros/s/AKfycbyCtBQ_wVDEpyKybzHgo9eFswc6tczQuFs53VLzg3t9HuoFbLOVVY_zrVScPxIwG2b0/exec";
+
 // --- SISTEMA DE ARMAZENAMENTO SEGURO ---
 const memoryStorage = {};
 function safeStorage(action, key, value) {
@@ -108,7 +111,8 @@ function notificarWidget() {
                 encontrado: true,
                 email: currentData.email,
                 arrasas: currentData.arrasas,
-                badge: currentData.badge
+                badge: currentData.badge,
+                socioeconomico: currentData.socioeconomico
             }
         }, '*'); // Envia para a janela pai (Circle)
     }
@@ -138,7 +142,8 @@ function processarDadosAluno(rawData, identificador) {
             acao: h.acao || "Atividade", 
             pontos: parseInt(h.pontos) || 0 
         })),
-        cpf: rawData.cpf || identificador
+        cpf: rawData.cpf || identificador,
+        socioeconomico: rawData.socioeconomico
     };
 }
 
@@ -224,9 +229,6 @@ async function jsonpRequest(params) {
         document.body.appendChild(script);
     });
 }
-
-// ATENÇÃO: COLOQUE AQUI O SEU LINK DO APPS SCRIPT
-const urlApp = "https://script.google.com/macros/s/AKfycbyCtBQ_wVDEpyKybzHgo9eFswc6tczQuFs53VLzg3t9HuoFbLOVVY_zrVScPxIwG2b0/exec";
 
 const configMapa = [
     { id: "Aprendiz Curiosa 🐾", nome: "1. Aprendiz Curiosa 🐾", stage: "acreditar", icon: "🐾", img: "https://raw.githubusercontent.com/juanjsales/PETRocinha/main/Aprendiz.webp", desc: "Primeiros passos no curso." },
@@ -495,7 +497,7 @@ function animarJornada() {
     const line = document.getElementById("horiz-line-active");
     const total = configMapa.length - 1;
     const progress = (window.currentLevelIndex / total) * 100;
-    line.style.width = `calc(${progress}% - 50px)`;
+    line.style.width = window.currentLevelIndex === 0 ? "0px" : `calc(${progress}% - 50px)`;
 }
 
 let chartRenderedDataHash = null;
