@@ -199,22 +199,30 @@
                 if (ctx.state === 'suspended') {
                     ctx.resume(); // Tenta destravar o áudio caso as políticas de Autoplay do navegador o bloqueiem
                 }
-                const osc = ctx.createOscillator();
+                // Cria duas frequências rápidas para simular um som de "moeda/mágica"
+                const osc1 = ctx.createOscillator();
                 const gain = ctx.createGain();
-                osc.connect(gain); gain.connect(ctx.destination);
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(880, ctx.currentTime); // Frequência inicial
-                osc.frequency.exponentialRampToValueAtTime(1760, ctx.currentTime + 0.1); // Agudo final
+                osc1.connect(gain); gain.connect(ctx.destination);
+                osc1.type = 'triangle'; // Timbre mais "gamer"
+                
+                // Nota 1
+                osc1.frequency.setValueAtTime(987.77, ctx.currentTime); // B5
+                // Nota 2 (salto rápido)
+                osc1.frequency.setValueAtTime(1318.51, ctx.currentTime + 0.08); // E6
+                
                 gain.gain.setValueAtTime(0.1, ctx.currentTime); // Volume inicial baixo
-                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5); // Fade out
-                osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.5);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4); // Fade out
+                
+                osc1.start(ctx.currentTime); 
+                osc1.stop(ctx.currentTime + 0.4);
             }
         } catch(e) {}
 
         // 2. Texto Flutuante (+X)
         const floatText = document.createElement('div');
         floatText.innerText = '+' + amount;
-        floatText.style.cssText = 'position:absolute; top:-10px; left:50%; transform:translateX(-50%); color:#22c55e; font-weight:900; font-size:26px; text-shadow:0 3px 6px rgba(0,0,0,0.3); pointer-events:none; z-index:2147483647; animation:pet-float-up 1.5s ease-out forwards;';
+        // Usando a nova física realista
+        floatText.style.cssText = 'position:absolute; top:-10px; left:50%; color:#22c55e; font-weight:900; font-size:28px; text-shadow: 0 2px 10px rgba(34,197,94,0.5), 0 3px 6px rgba(0,0,0,0.3); pointer-events:none; z-index:2147483647; animation: pet-float-up-dynamic 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;';
         widget.appendChild(floatText);
         setTimeout(() => { if (floatText.parentNode) floatText.parentNode.removeChild(floatText); }, 1500);
 
@@ -222,14 +230,15 @@
         const colors = ['#f8a5c2', '#6366f1', '#22c55e', '#FFD700', '#ff2a7a'];
         for (let i = 0; i < 20; i++) {
             const conf = document.createElement('div');
-            const size = Math.random() > 0.5 ? '8px' : '6px';
-            const isCircle = Math.random() > 0.5 ? '50%' : '2px';
+            const isLarge = Math.random() > 0.5;
+            const size = isLarge ? '8px' : '5px';
+            const isCircle = Math.random() > 0.4 ? '50%' : '2px';
             conf.style.cssText = `position:absolute; width:${size}; height:${size}; background-color:${colors[Math.floor(Math.random() * colors.length)]}; top:30px; left:50%; border-radius:${isCircle}; pointer-events:none; z-index:2147483646;`;
             
             const angle = Math.random() * Math.PI * 2;
-            const velocity = 30 + Math.random() * 50;
+            const velocity = 40 + Math.random() * 60;
             const tx = Math.cos(angle) * velocity;
-            const ty = Math.sin(angle) * velocity - 40; 
+            const ty = Math.sin(angle) * velocity - 50; 
             
             conf.animate([{ transform: 'translate(-50%, 0) scale(1) rotate(0deg)', opacity: 1 }, { transform: `translate(calc(-50% + ${tx}px), ${ty}px) scale(0.5) rotate(${Math.random() * 360}deg)`, opacity: 0 }], { duration: 800 + Math.random() * 400, easing: 'cubic-bezier(.37,0,.23,1)', fill: 'forwards' });
             widget.appendChild(conf);
@@ -356,10 +365,12 @@
                     // ✨ Animação de celebração ao ganhar pontos!
                     if (valorNovo > valorAnterior && !isMinimized) {
                         widget.classList.add('pet-celebrate');
+                        widget.classList.add('pet-celebration-glow'); // Adiciona o pulso verde
                         const pontosGanhos = valorNovo - valorAnterior;
                         showCelebration(widget, pontosGanhos);
                         setTimeout(() => {
                             widget.classList.remove('pet-celebrate');
+                            widget.classList.remove('pet-celebration-glow');
                         }, 1000); // Duração da animação em ms
                     }
 
