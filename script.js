@@ -42,6 +42,37 @@ const DADOS_QUIZ_LOCAL = [
 ];
 
 document.addEventListener('DOMContentLoaded', async () => {
+    // --- CONFIGURAÇÃO DOS EVENT LISTENERS ---
+    
+    // 1. Abas (Navegação)
+    document.querySelectorAll('.tab-btn').forEach(button => {
+        button.addEventListener('click', (event) => {
+            const targetId = event.currentTarget.getAttribute('data-tab-target');
+            switchTab(targetId, event.currentTarget);
+        });
+    });
+
+    // 2. Botões Principais
+    document.getElementById('btn-entrar')?.addEventListener('click', verificarCPF);
+    document.getElementById('btn-resgate')?.addEventListener('click', solicitarResgate);
+    document.getElementById('btn-video-continue')?.addEventListener('click', closeVideoGate);
+    document.getElementById('btn-ver-premiacoes')?.addEventListener('click', abrirModalRecompensas);
+    document.getElementById('btn-toggle-notif')?.addEventListener('click', toggleNotificacoes);
+    document.getElementById('btn-sair-painel')?.addEventListener('click', () => location.reload());
+
+    // 3. Lógica do Modal de Premiações
+    const modalOverlay = document.getElementById('modal-recompensas');
+    modalOverlay?.addEventListener('click', fecharModalRecompensas);
+    modalOverlay?.querySelector('.modal-content')?.addEventListener('click', (e) => e.stopPropagation());
+    
+    document.getElementById('btn-fechar-modal')?.addEventListener('click', fecharModalRecompensas);
+    document.getElementById('btn-fechar-modal-x')?.addEventListener('click', fecharModalRecompensas);
+
+    // 4. Virar a Cédula 3D
+    document.getElementById('cedula-card')?.addEventListener('click', (event) => {
+        event.currentTarget.querySelector('.cedula').classList.toggle('virada');
+    });
+
     const urlParams = new URLSearchParams(window.location.search);
     const emailDaUrl = urlParams.get('email');
     const cacheVercel = safeStorage('get', 'pet_perfil_ativo');
