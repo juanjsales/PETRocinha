@@ -170,7 +170,7 @@ function processarDadosAluno(rawData, identificador) {
         quizDiario: rawData.quizDiario || null,
         historico: (rawData.historico || []).map(h => ({
             data: h.data || "--/--", 
-            acao: h.acao || "Atividade", 
+            acao: h.acao || h.atividade || h.coluna9 || h[8] || "", // Mapeia a coluna 9 do log automaticamente
             pontos: parseInt(h.pontos) || 0 
         })),
         cpf: rawData.cpf || identificador,
