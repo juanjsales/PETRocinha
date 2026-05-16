@@ -40,7 +40,7 @@ let mockBackendData = {
     nome: "Profissão Pet",
     email: "profissaopet@aprenderecuidar.com.br",
     cpf: "00000000000",
-    foto: "https://via.placeholder.com/100?text=SANDBOX",
+    foto: "https://ui-avatars.com/api/?name=Sandbox&background=6366f1&color=fff&size=100",
     arrasas: 0,
     xp_total: 0,
     badge: "Aprendiz Curiosa 🐾",
@@ -463,7 +463,7 @@ function renderDashboard() {
     const userNomeElem = document.getElementById("user-nome");
     if (userNomeElem) userNomeElem.innerText = currentData.nome;
     const userImgElem = document.getElementById("user-img");
-    if (userImgElem) userImgElem.src = currentData.foto || "https://via.placeholder.com/100?text=PET";
+    if (userImgElem) userImgElem.src = currentData.foto || "https://ui-avatars.com/api/?name=Aluna&background=6366f1&color=fff&size=100";
     
     const userArrasasElem = document.getElementById("user-arrasas");
     if (userArrasasElem) {
