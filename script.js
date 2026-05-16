@@ -37,8 +37,8 @@ let quizData = null;
 const isSandboxMode = window.location.search.includes('sandbox');
 let mockBackendData = {
     encontrado: true,
-    nome: "Aluna teste",
-    email: "teste@profissaopet.com.br",
+    nome: "Profissão Pet",
+    email: "profissaopet@aprenderecuidar.com.br",
     cpf: "00000000000",
     foto: "https://via.placeholder.com/100?text=SANDBOX",
     arrasas: 0,

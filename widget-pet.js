@@ -612,6 +612,24 @@
         }
 
         var email = getEmail();
+
+        // --- INÍCIO: MODO SANDBOX NO WIDGET ---
+        const isSandbox = window.location.search.includes('sandbox') || email === "teste@sandbox.com";
+        if (isSandbox) {
+            console.log("🛠️ [WIDGET] Modo Sandbox ativado. Ignorando backend real.");
+            email = "profissaopet@aprenderecuidar.com.br";
+            safeStorage('set', 'pet_user_email', email);
+            window.receberDadosPet({
+                encontrado: true,
+                email: email,
+                arrasas: safeStorage('get', 'userSaldo') || 0,
+                badge: safeStorage('get', 'userBadge') || "Aprendiz Curiosa 🐾",
+                socioeconomico: true
+            });
+            return;
+        }
+        // --- FIM: MODO SANDBOX NO WIDGET ---
+
         if (!email) {
             renderizar({ encontrado: false, arrasas: 0, badge: null, isCache: true });
             return;
@@ -647,7 +665,8 @@
 
     // 7. LISTENER PARA VERCEL (O que você precisa para o Dashboard!)
     window.addEventListener('message', (event) => {
-        if (event.origin !== TRUSTED_ORIGIN && event.origin !== "http://localhost:3000") return;
+        const isSandbox = window.location.search.includes('sandbox');
+        if (!isSandbox && event.origin !== TRUSTED_ORIGIN && event.origin !== "http://localhost:3000") return;
 
         if (event.data === 'REQUEST_EMAIL') {
             const email = getEmail();
