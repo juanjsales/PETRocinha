@@ -33,6 +33,70 @@ let currentData = {};
 let chartInstance = null;
 let quizData = null;
 
+// --- INÍCIO: CONFIGURAÇÃO DO MODO SANDBOX (TESTES) ---
+const isSandboxMode = window.location.search.includes('sandbox');
+let mockBackendData = {
+    encontrado: true,
+    nome: "Aluna teste",
+    email: "teste@profissaopet.com.br",
+    cpf: "00000000000",
+    foto: "https://via.placeholder.com/100?text=SANDBOX",
+    arrasas: 0,
+    xp_total: 0,
+    badge: "Aprendiz Curiosa 🐾",
+    socioeconomico: true,
+    jaRespondeuQuiz: false,
+    historico: []
+};
+
+function injectSandboxPanel() {
+    const panel = document.createElement('div');
+    panel.style.cssText = "position:fixed; bottom:20px; left:20px; background:rgba(15,12,55,0.95); color:white; padding:15px; border-radius:12px; z-index:99999; display:flex; flex-direction:column; gap:10px; border: 2px solid #f8a5c2; box-shadow: 0 10px 30px rgba(0,0,0,0.6); backdrop-filter: blur(5px); font-family: sans-serif; max-width: 200px;";
+    panel.innerHTML = `
+        <h4 style="margin:0; text-align:center; color:#f8a5c2; font-size:16px;">🛠️ Painel Sandbox</h4>
+        <p style="margin:0; font-size:11px; text-align:center; color:#ccc;">Altera os dados sem afetar o Sheets</p>
+        <div style="display:flex; gap:10px;">
+            <button id="test-add-10" style="flex:1; background:#22c55e; color:white; border:none; padding:8px; border-radius:6px; cursor:pointer; font-weight:bold;">+ 10 A$</button>
+            <button id="test-sub-10" style="flex:1; background:#ef4444; color:white; border:none; padding:8px; border-radius:6px; cursor:pointer; font-weight:bold;">- 10 A$</button>
+        </div>
+        <select id="test-badge-select" style="padding:8px; border-radius:6px; color:#333; font-weight:bold; width:100%;">
+            <option value="Aprendiz Curiosa 🐾">1. Aprendiz</option>
+            <option value="Mulher de Propósito ✨">2. Mulher</option>
+            <option value="Fera da Técnica 🎓">3. Fera</option>
+            <option value="Profissional que Arrasa 💼">4. Profissional</option>
+            <option value="Embaixadora Pet Rocinha 👑">5. Embaixadora</option>
+        </select>
+        <button id="test-quiz" style="background:#6366f1; color:white; border:none; padding:8px; border-radius:6px; cursor:pointer; font-weight:bold;">Resetar Quiz</button>
+        <button id="test-confetti" style="background:#f59e0b; color:white; border:none; padding:8px; border-radius:6px; cursor:pointer; font-weight:bold;">Testar Confetes</button>
+        <button id="test-modal" style="background:#db2777; color:white; border:none; padding:8px; border-radius:6px; cursor:pointer; font-weight:bold;">Abrir Modal</button>
+    `;
+    document.body.appendChild(panel);
+
+    document.getElementById("test-add-10").onclick = () => {
+        mockBackendData.arrasas += 10;
+        mockBackendData.xp_total += 10;
+        mockBackendData.historico.unshift({ data: new Date().toLocaleDateString('pt-BR'), acao: "Bônus Sandbox", pontos: 10 });
+        refreshDadosSilencioso("00000000000");
+    };
+    document.getElementById("test-sub-10").onclick = () => {
+        mockBackendData.arrasas = Math.max(0, mockBackendData.arrasas - 10);
+        mockBackendData.historico.unshift({ data: new Date().toLocaleDateString('pt-BR'), acao: "Penalidade Sandbox", pontos: -10 });
+        refreshDadosSilencioso("00000000000");
+    };
+    document.getElementById("test-badge-select").onchange = (e) => {
+        mockBackendData.badge = e.target.value;
+        refreshDadosSilencioso("00000000000");
+    };
+    document.getElementById("test-quiz").onclick = () => {
+        mockBackendData.jaRespondeuQuiz = false;
+        refreshDadosSilencioso("00000000000");
+        alert("Quiz resetado! Você pode responder novamente na aba 'Quiz'.");
+    };
+    document.getElementById("test-confetti").onclick = () => { if (typeof confetti !== "undefined") confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } }); };
+    document.getElementById("test-modal").onclick = abrirModalRecompensas;
+}
+// --- FIM: CONFIGURAÇÃO DO MODO SANDBOX ---
+
 const DADOS_QUIZ_LOCAL = [
     {
         pergunta: "Qual a importância do manejo correto do pet?",
@@ -76,6 +140,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     const urlParams = new URLSearchParams(window.location.search);
     const emailDaUrl = urlParams.get('email');
     const cacheVercel = safeStorage('get', 'pet_perfil_ativo');
+
+    // --- INÍCIO: INTERCEPTADOR DO MODO SANDBOX ---
+    if (isSandboxMode) {
+        console.log("🛠️ INICIANDO MODO SANDBOX...");
+        injectSandboxPanel();
+        buscarESalvarLocal("teste@sandbox.com"); // Auto-login fake
+        return; // Interrompe o fluxo normal
+    }
+    // --- FIM: INTERCEPTADOR DO MODO SANDBOX ---
 
     // 1. Tenta receber a "carona" da Circle via URL primeiro
     if (emailDaUrl && emailDaUrl !== "{{user.email}}") {
@@ -230,6 +303,25 @@ async function refreshDadosSilencioso(identificador) {
 }
 
 async function jsonpRequest(params) {
+    // Intercepta e simula as requisições para o App Script se estiver no modo Sandbox
+    if (isSandboxMode) {
+        console.log("🛠️ [SANDBOX] Mock Request:", params);
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                if (params.action === "updateNotif") return resolve({ sucesso: true });
+                if (params.action === "logAcertoQuiz") {
+                    mockBackendData.arrasas += params.pontos;
+                    mockBackendData.xp_total += params.pontos;
+                    mockBackendData.historico.unshift({ data: new Date().toLocaleDateString('pt-BR'), acao: "Quiz Diário - " + params.status, pontos: params.pontos });
+                    mockBackendData.jaRespondeuQuiz = true;
+                    return resolve({ encontrado: true, sucesso: true });
+                }
+                // Retorna o perfil completo da aluna mockada
+                return resolve(JSON.parse(JSON.stringify(mockBackendData)));
+            }, 300); // delay falso para simular carregamento
+        });
+    }
+
     return new Promise((resolve, reject) => {
         const callbackName = "jsonp_callback_" + Math.round(100000 * Math.random());
         const timeout = setTimeout(() => {
