@@ -617,7 +617,7 @@
         const isSandbox = window.location.search.includes('sandbox') || email === "teste@sandbox.com";
         if (isSandbox) {
             console.log("🛠️ [WIDGET] Modo Sandbox ativado. Ignorando backend real.");
-            email = "profissaopet@aprenderecuidar.com.br";
+            email = "teste@sandbox.com";
             safeStorage('set', 'pet_user_email', email);
             window.receberDadosPet({
                 encontrado: true,

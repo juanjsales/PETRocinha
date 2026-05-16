@@ -38,7 +38,7 @@ const isSandboxMode = window.location.search.includes('sandbox');
 let mockBackendData = {
     encontrado: true,
     nome: "Profissão Pet",
-    email: "profissaopet@aprenderecuidar.com.br",
+    email: "teste@sandbox.com",
     cpf: "00000000000",
     foto: "pet (1).png",
     arrasas: 0,
@@ -479,6 +479,11 @@ function renderDashboard() {
         if (!isNaN(valorAnterior) && valorAnterior !== currentData.arrasas) {
             userArrasasElem.style.transform = "scale(1.2)";
             userArrasasElem.style.color = "var(--pet-green)";
+            
+            // 🎉 Lança os confetes automaticamente na tela quando o saldo aumenta
+            if (currentData.arrasas > valorAnterior && typeof confetti !== "undefined") {
+                confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+            }
             setTimeout(() => {
                 userArrasasElem.style.transform = "scale(1)";
                 userArrasasElem.style.color = "var(--pet-indigo)";
@@ -977,13 +982,6 @@ async function sendQuizLogToBackend(isCorrect, quizPergunta) {
                 
                 if (currentData) {
                     currentData.arrasas = (currentData.arrasas || 0) + 1; // Saldo cresce livremente
-                    document.getElementById("user-arrasas").innerText = currentData.arrasas;
-                    
-                    const percent = Math.min(100, currentData.arrasas);
-                    document.getElementById("meta-txt").innerText = currentData.arrasas;
-                    document.querySelector(".progress-bar").setAttribute("aria-valuenow", percent);
-                    document.getElementById("bar-fill").style.width = percent + "%";
-                    if (currentData.arrasas >= 100) document.getElementById("btn-resgate").style.display = "flex";
                     notificarWidget(); // Dispara a animação no widget na hora do acerto!
                     
                     // Adiciona uma linha ao Log (Console) e também ao Extrato (Histórico visual)
