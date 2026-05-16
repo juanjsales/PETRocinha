@@ -156,7 +156,7 @@ function processarDadosAluno(rawData, identificador) {
         nome: rawData.nome || "Aluna",
         email: rawData.email || "",
         foto: rawData.foto || "",
-        arrasas: Math.min(300, parseInt(rawData.arrasas) || 0), // Trava teto do projeto em 300 A$
+        arrasas: parseInt(rawData.arrasas) || 0, // Saldo atual (diminui ao resgatar)
         xp_total: parseInt(rawData.xp_total) || 0,
         badge: rawData.badge || " ",
         proximoEvento: rawData.proximoEvento || "Consulte a Circle",
@@ -476,7 +476,7 @@ function renderDashboard() {
     // Progresso
     const percent = Math.min(100, currentData.arrasas);
     const metaTxt = document.getElementById("meta-txt");
-    if (metaTxt) metaTxt.innerText = percent;
+    if (metaTxt) metaTxt.innerText = currentData.arrasas;
     
     const progBar = document.querySelector(".progress-bar");
     if (progBar) progBar.setAttribute("aria-valuenow", percent);
@@ -884,11 +884,11 @@ async function sendQuizLogToBackend(isCorrect, quizPergunta) {
                 document.getElementById("quiz-result").style.display = "block";
                 
                 if (currentData) {
-                    currentData.arrasas = Math.min(300, (currentData.arrasas || 0) + 1); // Aplica a trava ao ganhar pontos
+                    currentData.arrasas = (currentData.arrasas || 0) + 1; // Saldo cresce livremente
                     document.getElementById("user-arrasas").innerText = currentData.arrasas;
                     
                     const percent = Math.min(100, currentData.arrasas);
-                    document.getElementById("meta-txt").innerText = percent;
+                    document.getElementById("meta-txt").innerText = currentData.arrasas;
                     document.querySelector(".progress-bar").setAttribute("aria-valuenow", percent);
                     document.getElementById("bar-fill").style.width = percent + "%";
                     if (currentData.arrasas >= 100) document.getElementById("btn-resgate").style.display = "flex";

@@ -448,7 +448,7 @@
 
         const isMinimized = safeStorage('get', 'petMinimized') === 'true';
         const isAluna = data && data.encontrado;
-        const valorNovo = isAluna ? Math.min(300, parseInt(data.arrasas || 0)) : 0; // Trava do widget
+        const valorNovo = isAluna ? parseInt(data.arrasas || 0) : 0; // Saldo livre (backend controla o resgate)
         const valorAnterior = parseInt(safeStorage('get', 'userSaldo') || 0);
 
         if (isAluna && !data.isCache) {
