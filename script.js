@@ -40,7 +40,7 @@ let mockBackendData = {
     nome: "Profissão Pet",
     email: "profissaopet@aprenderecuidar.com.br",
     cpf: "00000000000",
-    foto: "https://ui-avatars.com/api/?name=Sandbox&background=6366f1&color=fff&size=100",
+    foto: "https://ui-avatars.com/api/?name=PP&background=6366f1&color=fff&size=100",
     arrasas: 0,
     xp_total: 0,
     badge: "Aprendiz Curiosa 🐾",
