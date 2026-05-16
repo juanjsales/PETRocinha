@@ -698,7 +698,7 @@ function renderChart() {
 
 function showVideoGate() {
     document.getElementById("video-gate").style.display = "flex";
-    document.getElementById("video-iframe").src = "https://drive.google.com/file/d/19NY5n9xfR2nNUqEhS2sfvacc6UhMS9l_/preview?autoplay=1";
+    document.getElementById("video-iframe").src = "https://www.youtube.com/embed/Rr6I78-sLvw?autoplay=1&rel=0&modestbranding=1";
     document.body.style.overflow = "hidden"; // Trava a rolagem da página de fundo
 }
 
