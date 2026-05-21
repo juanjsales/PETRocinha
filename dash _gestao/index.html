@@ -1,306 +1,769 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel de Impacto Gerencial | Profissão Pet</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <style>
-        :root {
-            --primary: #003366;
-            --secondary: #e91e63;
-            --accent: #ffcc00;
-            --success: #28a745;
-            --bg: #f4f6f9;
-            --card-bg: #ffffff;
-            --text: #2d3748;
-            --text-muted: #718096;
-            --border: #e2e8f0;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel de Impacto | Profissão Pet Rocinha</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+  <style>
+    :root {
+      --navy:   #003366;
+      --pink:   #e91e63;
+      --gold:   #e8b800;
+      --green:  #16a34a;
+      --purple: #7c3aed;
+      --blue:   #0ea5e9;
+      --orange: #f97316;
 
-        body {
-            background-color: var(--bg);
-            color: var(--text);
-            padding: 24px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
+      --bg:      #f0f2f7;
+      --surface: #ffffff;
+      --surface2: #f8f9fc;
+      --border:  #e2e8f0;
+      --text:    #1a202c;
+      --muted:   #64748b;
+      --font:    'Plus Jakarta Sans', sans-serif;
+    }
 
-        /* Header e Controles */
-        .dashboard-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; }
 
-        .title-area h1 { font-size: 1.8rem; color: var(--primary); font-weight: 800; }
-        .title-area p { color: var(--text-muted); font-size: 0.9rem; }
+    /* ── Layout ── */
+    .app { display: flex; min-height: 100vh; }
 
-        .btn-print {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 10px;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(0, 51, 102, 0.2);
-        }
+    .sidebar {
+      width: 240px; flex-shrink: 0; background: var(--navy);
+      display: flex; flex-direction: column;
+      position: fixed; top: 0; left: 0; height: 100vh; z-index: 100;
+      padding: 28px 0;
+    }
+    .sidebar-brand {
+      padding: 0 20px 28px; border-bottom: 1px solid rgba(255,255,255,0.1);
+      margin-bottom: 20px;
+    }
+    .sidebar-brand .ong-name {
+      font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px;
+      color: rgba(255,255,255,0.5); margin-bottom: 6px;
+    }
+    .sidebar-brand .project-name {
+      font-size: 16px; font-weight: 700; color: #fff; line-height: 1.3;
+    }
+    .sidebar-brand .faperj-badge {
+      display: inline-block; margin-top: 8px; font-size: 10px; font-weight: 600;
+      background: var(--gold); color: #1a0a00; padding: 2px 10px; border-radius: 20px;
+    }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 20px; color: rgba(255,255,255,0.6);
+      font-size: 13px; font-weight: 500; cursor: pointer;
+      border-left: 3px solid transparent; transition: all 0.2s;
+      text-decoration: none;
+    }
+    .nav-item:hover { color: #fff; background: rgba(255,255,255,0.06); }
+    .nav-item.active {
+      color: #fff; background: rgba(255,255,255,0.1);
+      border-left-color: var(--gold);
+    }
+    .nav-item i { width: 18px; text-align: center; font-size: 15px; }
+    .nav-section { padding: 12px 20px 6px; font-size: 10px; text-transform: uppercase;
+      letter-spacing: 1.5px; color: rgba(255,255,255,0.3); margin-top: 10px; }
+    .sidebar-footer {
+      margin-top: auto; padding: 16px 20px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    .sidebar-footer p { font-size: 11px; color: rgba(255,255,255,0.35); line-height: 1.6; }
 
-        .btn-print:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0, 51, 102, 0.3); }
+    .main { margin-left: 240px; padding: 32px; min-height: 100vh; }
 
-        /* Cards de Métricas Principais */
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
+    .topbar {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      margin-bottom: 32px; flex-wrap: wrap; gap: 16px;
+    }
+    .page-title { font-size: 22px; font-weight: 700; color: var(--navy); }
+    .page-sub { font-size: 13px; color: var(--muted); margin-top: 4px; }
 
-        .card {
-            background: var(--card-bg);
-            padding: 24px;
-            border-radius: 16px;
-            box-shadow: 0 4px 18px rgba(0,0,0,0.03);
-            border: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 20px; border-radius: 10px; font-family: var(--font);
+      font-size: 13px; font-weight: 600; cursor: pointer; border: none;
+      transition: all 0.2s;
+    }
+    .btn-primary { background: var(--navy); color: #fff; }
+    .btn-primary:hover { background: #00254d; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,51,102,0.25); }
+    .btn-outline { background: transparent; color: var(--navy); border: 1.5px solid var(--navy); }
+    .btn-outline:hover { background: var(--navy); color: #fff; }
 
-        .card-info h3 { font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
-        .card-info .value { font-size: 1.8rem; font-weight: 700; color: var(--primary); margin-top: 5px; }
-        .card-icon { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; }
-        
-        .icon-1 { background: rgba(0, 51, 102, 0.1); color: var(--primary); }
-        .icon-2 { background: rgba(233, 30, 99, 0.1); color: var(--secondary); }
-        .icon-3 { background: rgba(40, 167, 69, 0.1); color: var(--success); }
-        .icon-4 { background: rgba(255, 204, 0, 0.15); color: #d4a300; }
+    /* ── Panels ── */
+    .panel { display: none; }
+    .panel.active { display: block; }
 
-        /* Barra de Filtros */
-        .filter-bar {
-            background: var(--card-bg);
-            padding: 18px 24px;
-            border-radius: 14px;
-            border: 1px solid var(--border);
-            margin-bottom: 25px;
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
+    /* ── Metric cards ── */
+    .metrics-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 24px; }
+    .mcard {
+      background: var(--surface); border-radius: 14px;
+      border: 1px solid var(--border); padding: 20px;
+      display: flex; align-items: center; gap: 16px;
+      transition: box-shadow 0.2s;
+    }
+    .mcard:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
+    .mcard-icon {
+      width: 48px; height: 48px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; flex-shrink: 0;
+    }
+    .mcard-body { flex: 1; min-width: 0; }
+    .mcard-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;
+      color: var(--muted); font-weight: 600; margin-bottom: 4px; }
+    .mcard-val { font-size: 24px; font-weight: 700; line-height: 1; }
+    .mcard-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
 
-        .filter-bar label { font-size: 0.85rem; font-weight: 600; color: var(--text); }
-        
-        .filter-select {
-            padding: 10px 16px;
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            background-color: var(--bg);
-            color: var(--text);
-            font-size: 0.9rem;
-            min-width: 180px;
-            outline: none;
-            cursor: pointer;
-        }
+    /* ── Chart cards ── */
+    .chart-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 20px;
+    }
+    .chart-header { margin-bottom: 4px; }
+    .chart-title { font-size: 14px; font-weight: 600; color: var(--text); }
+    .chart-sub { font-size: 12px; color: var(--muted); margin-bottom: 14px; }
+    .chart-legend { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+    .leg-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--muted); }
+    .leg-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
 
-        /* Tabela Gerencial */
-        .table-container {
-            background: var(--card-bg);
-            border-radius: 16px;
-            border: 1px solid var(--border);
-            box-shadow: 0 4px 18px rgba(0,0,0,0.03);
-            overflow-x: auto;
-        }
+    .charts-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    .charts-3col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
 
-        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem; }
-        th { background-color: #fafbfe; padding: 16px 20px; color: var(--text-muted); font-weight: 600; border-bottom: 1px solid var(--border); }
-        td { padding: 16px 20px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: middle; }
-        tr:hover { background-color: #fcfdfe; }
+    /* ── Progress bar ── */
+    .progress-list { display: flex; flex-direction: column; gap: 14px; }
+    .progress-item {}
+    .progress-top { display: flex; justify-content: space-between;
+      font-size: 12px; color: var(--text); margin-bottom: 6px; }
+    .progress-pct { font-weight: 600; }
+    .progress-track { height: 7px; background: #f1f5f9; border-radius: 10px; overflow: hidden; }
+    .progress-fill { height: 100%; border-radius: 10px; transition: width 0.8s ease; }
 
-        /* Badges customizadas baseadas no seu fluxo */
-        .badge {
-            padding: 6px 12px;
-            border-radius: 50px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-        }
-        .b-curiosa { background-color: #e2f0fd; color: #0066cc; }
-        .b-proposito { background-color: #e6fffa; color: #00a389; }
-        .b-tecnica { background-color: #fffaf0; color: #dd6b20; }
-        .b-embaixadora { background-color: #fff5f5; color: #e53e3e; }
+    /* ── Table ── */
+    .table-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; overflow: hidden; margin-bottom: 24px;
+    }
+    .table-header {
+      padding: 16px 20px; border-bottom: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
+    }
+    .filter-sel {
+      font-family: var(--font); font-size: 12px; font-weight: 500;
+      border: 1.5px solid var(--border); border-radius: 8px;
+      padding: 7px 12px; background: var(--bg); color: var(--text);
+      outline: none; cursor: pointer;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th {
+      padding: 12px 16px; color: var(--muted); font-weight: 600; font-size: 11px;
+      text-transform: uppercase; letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--border); background: var(--surface2);
+      text-align: left; white-space: nowrap;
+    }
+    td { padding: 13px 16px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #fafbfc; }
+    .avatar {
+      width: 32px; height: 32px; border-radius: 50%; background: #e8effa;
+      color: var(--navy); display: inline-flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700; margin-right: 8px; flex-shrink: 0;
+    }
+    .name-cell { display: flex; align-items: center; }
 
-        /* Responsividade */
-        @media (max-width: 768px) {
-            .dashboard-header { flex-direction: column; align-items: flex-start; }
-            .btn-print { width: 100%; justify-content: center; }
-            .filter-bar { flex-direction: column; align-items: stretch; }
-            .filter-select { width: 100%; }
-        }
+    /* ── Pills / badges ── */
+    .pill {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
+    }
+    .b-curiosa   { background: #e8f0fe; color: #1a56db; }
+    .b-proposito { background: #d1fae5; color: #065f46; }
+    .b-tecnica   { background: #fef3c7; color: #92400e; }
+    .b-embaixadora { background: #fce7f3; color: #9d174d; }
 
-        /* 🖨️ CONFIGURAÇÃO EXCLUSIVA DE IMPRESSÃO (PRINT CSS) */
-        @media print {
-            body { background: white; padding: 0; color: black; }
-            .btn-print, .filter-bar { display: none !important; }
-            .card { box-shadow: none; border: 1px solid #ccc; }
-            .table-container { box-shadow: none; border: none; }
-            th { background: #eee !important; color: black; }
-            .dashboard-header { margin-bottom: 15px; }
-        }
-    </style>
+    .status-ok { color: var(--green); font-size: 12px; font-weight: 500; }
+    .status-pend { color: var(--muted); font-size: 12px; }
+
+    /* ── Socio cards ── */
+    .socio-metrics { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-bottom: 24px; }
+
+    /* ── Loading / empty ── */
+    .empty-state { text-align: center; padding: 48px; color: var(--muted); }
+    .empty-state i { font-size: 28px; margin-bottom: 12px; display: block; }
+    .spinner { display: inline-block; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Divider ── */
+    .divider { height: 1px; background: var(--border); margin: 24px 0; }
+
+    /* ── Responsive ── */
+    @media (max-width: 1100px) {
+      .metrics-grid { grid-template-columns: repeat(2,1fr); }
+      .charts-3col { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 860px) {
+      .sidebar { width: 60px; overflow: hidden; }
+      .sidebar-brand, .nav-section, .sidebar-footer, .nav-item span { display: none; }
+      .nav-item { justify-content: center; padding: 14px; }
+      .main { margin-left: 60px; padding: 20px; }
+      .charts-2col, .charts-3col { grid-template-columns: 1fr; }
+      .metrics-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 600px) {
+      .metrics-grid { grid-template-columns: 1fr; }
+    }
+
+    @media print {
+      .sidebar { display: none; }
+      .main { margin-left: 0; padding: 20px; }
+      .btn, .filter-sel { display: none; }
+      .panel { display: block !important; }
+      .mcard:hover { box-shadow: none; }
+      body { background: white; }
+      .chart-card, .table-card, .mcard { break-inside: avoid; }
+    }
+  </style>
 </head>
 <body>
 
-    <header class="dashboard-header">
-        <div class="title-area">
-            <h1><i class="fa-solid fa-chart-pie"></i> Painel de Impacto Social</h1>
-            <p>Métricas em tempo real • Projeto Profissão Pet Rocinha</p>
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="ong-name">Instituto Impacto Criativo</div>
+      <div class="project-name">Profissão Pet<br>Rocinha</div>
+      <span class="faperj-badge">FAPERJ 2026</span>
+    </div>
+
+    <div class="nav-section">Painel</div>
+    <a class="nav-item active" data-panel="visao-geral" onclick="switchPanel('visao-geral', this)">
+      <i class="fa-solid fa-chart-pie"></i> <span>Visão Geral</span>
+    </a>
+    <a class="nav-item" data-panel="socioeconomico" onclick="switchPanel('socioeconomico', this)">
+      <i class="fa-solid fa-users"></i> <span>Socioeconômico</span>
+    </a>
+    <a class="nav-item" data-panel="alunas" onclick="switchPanel('alunas', this)">
+      <i class="fa-solid fa-table-list"></i> <span>Alunas</span>
+    </a>
+
+    <div class="sidebar-footer">
+      <p>Dados carregados via<br>Google Apps Script JSONP.<br>Atualização automática ao abrir.</p>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main">
+
+    <!-- ══ VISÃO GERAL ══ -->
+    <div class="panel active" id="panel-visao-geral">
+      <div class="topbar">
+        <div>
+          <div class="page-title">Visão Geral</div>
+          <div class="page-sub">Métricas consolidadas em tempo real · Base Unificada</div>
         </div>
-        <button class="btn-print" onclick="window.print()">
-            <i class="fa-solid fa-print"></i> Gerar Relatório (PDF / Impressão)
+        <button class="btn btn-primary" onclick="window.print()">
+          <i class="fa-solid fa-print"></i> Exportar relatório
         </button>
-    </header>
+      </div>
 
-    <section class="metrics-grid">
-        <div class="card">
-            <div class="card-info">
-                <h3>Total Alunas</h3>
-                <div class="value" id="count-total">0</div>
-            </div>
-            <div class="card-icon icon-1"><i class="fa-solid fa-users"></i></div>
+      <div class="metrics-grid">
+        <div class="mcard">
+          <div class="mcard-icon" style="background:#e8effa; color:var(--navy)"><i class="fa-solid fa-users"></i></div>
+          <div class="mcard-body">
+            <div class="mcard-label">Total de alunas</div>
+            <div class="mcard-val" id="m-total" style="color:var(--navy)">—</div>
+            <div class="mcard-sub">participantes ativas</div>
+          </div>
         </div>
-        <div class="card">
-            <div class="card-info">
-                <h3>Moeda Social Circulante</h3>
-                <div class="value" id="count-arrasas">0 AS</div>
-            </div>
-            <div class="card-icon icon-2"><i class="fa-solid fa-coins"></i></div>
+        <div class="mcard">
+          <div class="mcard-icon" style="background:#fce7f3; color:var(--pink)"><i class="fa-solid fa-coins"></i></div>
+          <div class="mcard-body">
+            <div class="mcard-label">Banco de Arrasas</div>
+            <div class="mcard-val" id="m-arrasas" style="color:var(--pink)">—</div>
+            <div class="mcard-sub">AS acumulados</div>
+          </div>
         </div>
-        <div class="card">
-            <div class="card-info">
-                <h3>Formadas (Curso)</h3>
-                <div class="value" id="count-formadas">0</div>
-            </div>
-            <div class="card-icon icon-3"><i class="fa-solid fa-graduation-cap"></i></div>
+        <div class="mcard">
+          <div class="mcard-icon" style="background:#d1fae5; color:var(--green)"><i class="fa-solid fa-circle-check"></i></div>
+          <div class="mcard-body">
+            <div class="mcard-label">Socioeconômico OK</div>
+            <div class="mcard-val" id="m-socio" style="color:var(--green)">—</div>
+            <div class="mcard-sub" id="m-socio-pct">formulários concluídos</div>
+          </div>
         </div>
-        <div class="card">
-            <div class="card-info">
-                <h3>Embaixadoras</h3>
-                <div class="value" id="count-embaixadoras">0</div>
-            </div>
-            <div class="card-icon icon-4"><i class="fa-solid fa-crown"></i></div>
+        <div class="mcard">
+          <div class="mcard-icon" style="background:#fef9c3; color:#a16207"><i class="fa-solid fa-star"></i></div>
+          <div class="mcard-body">
+            <div class="mcard-label">XP Total</div>
+            <div class="mcard-val" id="m-xp" style="color:#a16207">—</div>
+            <div class="mcard-sub">experiência acumulada</div>
+          </div>
         </div>
-    </section>
+      </div>
 
-    <section class="filter-bar">
-        <i class="fa-solid fa-filter" style="color: var(--text-muted)"></i>
-        <label for="filter-bairro">Filtrar por Região/Bairro:</label>
-        <select id="filter-bairro" class="filter-select" onchange="filtrarDados()">
-            <option value="todos">Todos os locais</option>
-            <option value="Rocinha (Via Ápia)">Rocinha (Via Ápia)</option>
-            <option value="Rocinha (Valão)">Rocinha (Valão)</option>
-            <option value="Manguinhos">Manguinhos</option>
-        </select>
+      <div class="charts-2col">
+        <div class="chart-card">
+          <div class="chart-title">Distribuição por medalha</div>
+          <div class="chart-sub">Progresso de engajamento das alunas</div>
+          <div class="chart-legend" id="legend-badge"></div>
+          <div style="position:relative;height:220px">
+            <canvas id="chartBadge" role="img" aria-label="Gráfico de pizza com distribuição por medalha">Carregando...</canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Top 5 — Banco de Arrasas</div>
+          <div class="chart-sub">Alunas com maior saldo acumulado</div>
+          <div style="position:relative;height:250px">
+            <canvas id="chartTop5" role="img" aria-label="Ranking top 5 por Arrasas">Carregando...</canvas>
+          </div>
+        </div>
+      </div>
 
-        <label for="filter-badge">Filtrar por Medalha:</label>
-        <select id="filter-badge" class="filter-select" onchange="filtrarDados()">
-            <option value="todas">Todas as Medalhas</option>
-            <option value="Aprendiz Curiosa">Aprendiz Curiosa</option>
-            <option value="Mulher de Propósito">Mulher de Propósito</option>
-            <option value="Fera da Técnica">Fera da Técnica</option>
-            <option value="Embaixadora Pet">Embaixadora Pet</option>
-        </select>
-    </section>
+      <div class="chart-card" style="margin-bottom:16px">
+        <div class="chart-title">Funil de progressão — % de alunas por medalha</div>
+        <div class="chart-sub">Evolução no programa Profissão Pet</div>
+        <div class="progress-list" id="progress-badges" style="margin-top:14px"></div>
+      </div>
+    </div>
 
-    <section class="table-container">
-        <table id="alunas-table">
-            <thead>
-                <tr>
-                    <th>Nome da Aluna</th>
-                    <th>Localidade</th>
-                    <th>Renda Familiar</th>
-                    <th>Saldo Arrasas</th>
-                    <th>Medalha Atual</th>
-                </tr>
-            </thead>
-            <tbody id="table-body">
-                </tbody>
+    <!-- ══ SOCIOECONÔMICO ══ -->
+    <div class="panel" id="panel-socioeconomico">
+      <div class="topbar">
+        <div>
+          <div class="page-title">Perfil Socioeconômico</div>
+          <div class="page-sub">Dados coletados via formulário de entrada · Aba Socioeconomico</div>
+        </div>
+        <button class="btn btn-primary" onclick="window.print()">
+          <i class="fa-solid fa-print"></i> Exportar relatório
+        </button>
+      </div>
+
+      <div class="socio-metrics">
+        <div class="mcard">
+          <div class="mcard-icon" style="background:#ede9fe; color:var(--purple)"><i class="fa-solid fa-child"></i></div>
+          <div class="mcard-body">
+            <div class="mcard-label">Com filhos</div>
+            <div class="mcard-val" id="s-filhos" style="color:var(--purple)">—</div>
+            <div class="mcard-sub">possuem dependentes</div>
+          </div>
+        </div>
+        <div class="mcard">
+          <div class="mcard-icon" style="background:#e0f2fe; color:var(--blue)"><i class="fa-solid fa-briefcase"></i></div>
+          <div class="mcard-body">
+            <div class="mcard-label">Com emprego</div>
+            <div class="mcard-val" id="s-trabalho" style="color:var(--blue)">—</div>
+            <div class="mcard-sub">formal ou informal</div>
+          </div>
+        </div>
+        <div class="mcard">
+          <div class="mcard-icon" style="background:#fff7ed; color:var(--orange)"><i class="fa-solid fa-hand-holding-heart"></i></div>
+          <div class="mcard-body">
+            <div class="mcard-label">Renda até R$ 1.413</div>
+            <div class="mcard-val" id="s-baixa-renda" style="color:var(--orange)">—</div>
+            <div class="mcard-sub">perfil de baixa renda</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="charts-2col">
+        <div class="chart-card">
+          <div class="chart-title">Raça / Cor</div>
+          <div class="chart-sub">Autodeclaração das participantes</div>
+          <div class="chart-legend" id="legend-raca"></div>
+          <div style="position:relative;height:210px">
+            <canvas id="chartRaca" role="img" aria-label="Distribuição por raça/cor">Carregando...</canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Gênero</div>
+          <div class="chart-sub">Identidade de gênero declarada</div>
+          <div class="chart-legend" id="legend-genero"></div>
+          <div style="position:relative;height:210px">
+            <canvas id="chartGenero" role="img" aria-label="Distribuição por gênero">Carregando...</canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="charts-2col">
+        <div class="chart-card">
+          <div class="chart-title">Escolaridade</div>
+          <div class="chart-sub">Nível de instrução declarado</div>
+          <div id="escola-wrap" style="position:relative;height:240px">
+            <canvas id="chartEscola" role="img" aria-label="Distribuição por escolaridade">Carregando...</canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Faixa de renda familiar</div>
+          <div class="chart-sub">Rendimento declarado no formulário</div>
+          <div id="renda-wrap" style="position:relative;height:240px">
+            <canvas id="chartRenda" role="img" aria-label="Distribuição por renda">Carregando...</canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="charts-2col">
+        <div class="chart-card">
+          <div class="chart-title">Estado civil</div>
+          <div class="chart-sub">Situação familiar declarada</div>
+          <div class="chart-legend" id="legend-civil"></div>
+          <div style="position:relative;height:190px">
+            <canvas id="chartCivil" role="img" aria-label="Estado civil">Carregando...</canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Vínculo empregatício</div>
+          <div class="chart-sub">Situação atual de emprego</div>
+          <div class="chart-legend" id="legend-emprego"></div>
+          <div style="position:relative;height:190px">
+            <canvas id="chartEmprego" role="img" aria-label="Vínculo empregatício">Carregando...</canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-card" style="margin-bottom:16px">
+        <div class="chart-title">Pessoas por domicílio</div>
+        <div class="chart-sub">Quantidade de pessoas na mesma residência</div>
+        <div id="pessoas-wrap" style="position:relative;height:200px">
+          <canvas id="chartPessoas" role="img" aria-label="Pessoas por domicílio">Carregando...</canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ ALUNAS ══ -->
+    <div class="panel" id="panel-alunas">
+      <div class="topbar">
+        <div>
+          <div class="page-title">Lista de Alunas</div>
+          <div class="page-sub">Todas as participantes ativas na base unificada</div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <select class="filter-sel" id="filter-badge-sel" onchange="renderTabela()">
+            <option value="">Todas as medalhas</option>
+            <option>Aprendiz Curiosa 🐾</option>
+            <option>Mulher de Propósito ✨</option>
+            <option>Fera da Técnica  🎓</option>
+            <option>Profissional que Arrasa 💼</option>
+            <option>Embaixadora Pet Rocinha 👑</option>
+          </select>
+          <select class="filter-sel" id="filter-socio-sel" onchange="renderTabela()">
+            <option value="">Todos os status</option>
+            <option value="ok">Socioecon. OK</option>
+            <option value="pend">Socioecon. Pendente</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>E-mail</th>
+              <th>Medalha</th>
+              <th>Arrasas</th>
+              <th>XP</th>
+              <th>Socioecon.</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-alunas">
+            <tr>
+              <td colspan="6">
+                <div class="empty-state">
+                  <i class="fa-solid fa-spinner spinner"></i>
+                  Carregando dados da planilha...
+                </div>
+              </td>
+            </tr>
+          </tbody>
         </table>
-    </section>
+      </div>
+    </div>
 
-    <script>
-        // Simulando a estrutura de dados que vem do seu Google Sheets
-        const dadosAlunas = [
-            { nome: "Maria Silva", localidade: "Rocinha (Via Ápia)", renda: "Menos de 1 Salário", arrasas: 20, badge: "Aprendiz Curiosa", badgeClass: "b-curiosa", icone: "🐾" },
-            { nome: "Aline Souza", localidade: "Rocinha (Valão)", renda: "De 1 a 2 Salários", arrasas: 40, badge: "Mulher de Propósito", badgeClass: "b-proposito", icone: "✨" },
-            { nome: "Beatriz Santos", localidade: "Manguinhos", renda: "Menos de 1 Salário", arrasas: 120, badge: "Fera da Técnica", badgeClass: "b-tecnica", icone: "🎓" },
-            { nome: "Camila Oliveira", localidade: "Rocinha (Via Ápia)", renda: "Menos de 1 Salário", arrasas: 250, badge: "Embaixadora Pet", badgeClass: "b-embaixadora", icone: "👑" },
-            { nome: "Juliana Costa", localidade: "Rocinha (Valão)", renda: "Não declarada", arrasas: 20, badge: "Aprendiz Curiosa", badgeClass: "b-curiosa", icone: "🐾" }
-        ];
+  </main>
+</div>
 
-        // Função para carregar dados e calcular métricas agregadas
-        function renderizarDashboard(lista) {
-            const tbody = document.getElementById("table-body");
-            tbody.innerHTML = "";
+<script>
+  // ── CONFIG ─────────────────────────────────────────────────────────────
+  const API_BASE = "https://script.google.com/macros/s/AKfycbz4RQ0OnhomLbHwe1WIpQygtA3obEKbVrVJznOczGETLRLDI3gSLWn8U21I1JCHdo2Z/exec";
 
-            let totalArrasas = 0;
-            let formadas = 0;
-            let embaixadoras = 0;
+  const BADGE_LABELS = ['Aprendiz Curiosa 🐾','Mulher de Propósito ✨','Fera da Técnica  🎓a','Profissional que Arrasa 💼','Embaixadora Pet Rocinha 👑'];
+  const BADGE_COLORS = ['#378add','#1d9e75','#ef9f27','#d4537e'];
+  const BADGE_CLASS  = ['b-curiosa','b-proposito','b-tecnica','b-embaixadora'];
+  const PIE_PALETTE  = ['#378add','#1d9e75','#ef9f27','#d4537e','#8b5cf6','#f97316','#0ea5e9','#a3a3a3'];
 
-            lista.forEach(aluna => {
-                totalArrasas += aluna.arrasas;
-                if(aluna.badge === "Fera da Técnica") formadas++;
-                if(aluna.badge === "Embaixadora Pet") embaixadoras++;
+  let MEMBROS = [];
+  let SOCIO   = [];
+  let socioChartsReady = false;
 
-                let row = `<tr>
-                    <td><strong>${aluna.nome}</strong></td>
-                    <td>${aluna.localidade}</td>
-                    <td><span style="color:var(--text-muted)">${aluna.renda}</span></td>
-                    <td><strong>${aluna.arrasas} AS</strong></td>
-                    <td><span class="badge ${aluna.badgeClass}">${aluna.icone} ${aluna.badge}</span></td>
-                </tr>`;
-                tbody.innerHTML += row;
-            });
+  // ── Navigation ─────────────────────────────────────────────────────────
+  function switchPanel(id, el) {
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    if (el) el.classList.add('active');
+    document.getElementById('panel-' + id).classList.add('active');
+    if (id === 'socioeconomico' && SOCIO.length && !socioChartsReady) {
+      initSocioCharts();
+      socioChartsReady = true;
+    }
+  }
 
-            // Atualiza os cards lá em cima
-            document.getElementById("count-total").innerText = lista.length;
-            document.getElementById("count-arrasas").innerText = totalArrasas;
-            document.getElementById("count-formadas").innerText = formadas;
-            document.getElementById("count-embaixadoras").innerText = embaixadoras;
+  // ── Helpers ─────────────────────────────────────────────────────────────
+  function countBy(arr, fn) {
+    return arr.reduce((a, v) => {
+      const k = fn(v) || 'Não informado';
+      a[k] = (a[k] || 0) + 1;
+      return a;
+    }, {});
+  }
+  function initials(name) {
+    const parts = name.trim().split(' ');
+    return (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
+  }
+  function makeLegend(elId, labels, colors) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    el.innerHTML = labels.map((l, i) =>
+      `<span class="leg-item"><span class="leg-dot" style="background:${colors[i]}"></span>${l}</span>`
+    ).join('');
+  }
+
+  // ── Charts ──────────────────────────────────────────────────────────────
+  function donutChart(id, labels, data, colors) {
+    const ctx = document.getElementById(id);
+    if (!ctx) return;
+    const total = data.reduce((a, b) => a + b, 0);
+    new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels,
+        datasets: [{ data, backgroundColor: colors, borderWidth: 3, borderColor: '#ffffff', hoverOffset: 4 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, cutout: '62%',
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: c => ` ${c.label}: ${c.raw} (${Math.round(c.raw / total * 100)}%)`
+            }
+          }
         }
+      }
+    });
+  }
 
-        // Sistema de filtro combinado (Bairro + Medalha)
-        function filtrarDados() {
-            const bairroSel = document.getElementById("filter-bairro").value;
-            const badgeSel = document.getElementById("filter-badge").value;
-
-            const dadosFiltrados = dadosAlunas.filter(aluna => {
-                const bateBairro = (bairroSel === "todos" || aluna.localidade === bairroSel);
-                const bateBadge = (badgeSel === "todas" || aluna.badge === badgeSel);
-                return bateBairro && bateBadge;
-            });
-
-            renderizarDashboard(dadosFiltrados);
+  function hBarChart(id, labels, data, color) {
+    const ctx = document.getElementById(id);
+    if (!ctx) return;
+    const wrap = ctx.parentElement;
+    wrap.style.height = Math.max(labels.length * 40 + 60, 160) + 'px';
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{ data, backgroundColor: color, borderRadius: 4, borderSkipped: false }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { font: { size: 11 } }, beginAtZero: true },
+          y: { grid: { display: false }, ticks: { font: { size: 11 } } }
         }
+      }
+    });
+  }
 
-        // Executa ao carregar a tela pela primeira vez
-        window.onload = () => {
-            renderizarDashboard(dadosAlunas);
-        };
-    </script>
+  function barChart(id, labels, data, color) {
+    const ctx = document.getElementById(id);
+    if (!ctx) return;
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{ data, backgroundColor: color, borderRadius: 5, borderSkipped: false }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { display: false }, ticks: { font: { size: 11 }, maxRotation: 30 } },
+          y: { grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { font: { size: 11 } }, beginAtZero: true }
+        }
+      }
+    });
+  }
+
+  // ── Visão Geral charts ──────────────────────────────────────────────────
+  function initGeraisCharts(membros) {
+    const badgeCounts = countBy(membros, m => m.badge);
+    const bData = BADGE_LABELS.map(l => badgeCounts[l] || 0);
+    donutChart('chartBadge', BADGE_LABELS, bData, BADGE_COLORS);
+    makeLegend('legend-badge',
+      BADGE_LABELS.map((l, i) => `${l} (${bData[i]})`),
+      BADGE_COLORS
+    );
+
+    const top5 = [...membros].sort((a, b) => b.arrasas - a.arrasas).slice(0, 5);
+    barChart(
+      'chartTop5',
+      top5.map(m => m.nome.split(' ')[0]),
+      top5.map(m => m.arrasas),
+      '#003366'
+    );
+
+    const total = membros.length;
+    const prog = document.getElementById('progress-badges');
+    prog.innerHTML = BADGE_LABELS.map((l, i) => {
+      const pct = total ? Math.round((bData[i] / total) * 100) : 0;
+      return `<div class="progress-item">
+        <div class="progress-top">
+          <span>${l}</span>
+          <span class="progress-pct">${bData[i]} alunas · ${pct}%</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" style="width:${pct}%;background:${BADGE_COLORS[i]}"></div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // ── Socio charts ────────────────────────────────────────────────────────
+  function initSocioCharts() {
+    const s = SOCIO;
+
+    const raca = countBy(s, r => r.raca);
+    const racaL = Object.keys(raca), racaD = Object.values(raca);
+    donutChart('chartRaca', racaL, racaD, PIE_PALETTE.slice(0, racaL.length));
+    makeLegend('legend-raca', racaL.map((l, i) => `${l} (${racaD[i]})`), PIE_PALETTE.slice(0, racaL.length));
+
+    const gen = countBy(s, r => r.genero);
+    const genL = Object.keys(gen), genD = Object.values(gen);
+    donutChart('chartGenero', genL, genD, PIE_PALETTE.slice(0, genL.length));
+    makeLegend('legend-genero', genL.map((l, i) => `${l} (${genD[i]})`), PIE_PALETTE.slice(0, genL.length));
+
+    const escl = countBy(s, r => r.escolaridade);
+    hBarChart('chartEscola', Object.keys(escl), Object.values(escl), '#185fa5');
+
+    const renda = countBy(s, r => r.ganhos);
+    hBarChart('chartRenda', Object.keys(renda), Object.values(renda), '#0f6e56');
+
+    const civil = countBy(s, r => r.estadoCivil);
+    const civL = Object.keys(civil), civD = Object.values(civil);
+    donutChart('chartCivil', civL, civD, PIE_PALETTE.slice(0, civL.length));
+    makeLegend('legend-civil', civL.map((l, i) => `${l} (${civD[i]})`), PIE_PALETTE.slice(0, civL.length));
+
+    const emprego = countBy(s, r => {
+      if (!r.trabalhando) return 'Sem vínculo';
+      return r.ocupacao || 'Com vínculo';
+    });
+    const empL = Object.keys(emprego), empD = Object.values(emprego);
+    donutChart('chartEmprego', empL, empD, PIE_PALETTE.slice(0, empL.length));
+    makeLegend('legend-emprego', empL.map((l, i) => `${l} (${empD[i]})`), PIE_PALETTE.slice(0, empL.length));
+
+    const pessoas = countBy(s, r => r.pessoasDomicilio ? String(r.pessoasDomicilio) + ' pessoas' : null);
+    const pesL = Object.keys(pessoas).sort();
+    barChart('chartPessoas', pesL, pesL.map(k => pessoas[k]), '#7c3aed');
+
+    const comFilhos = s.filter(r => r.filhos === 'Sim').length;
+    const comTrabalho = s.filter(r => r.trabalhando).length;
+    const baixaRenda = s.filter(r => r.ganhos && (r.ganhos.includes('500') || r.ganhos.includes('1.413') || r.ganhos.includes('1413'))).length;
+    const pf = s.length ? ` (${Math.round(comFilhos / s.length * 100)}%)` : '';
+    const pt = s.length ? ` (${Math.round(comTrabalho / s.length * 100)}%)` : '';
+    const pb = s.length ? ` (${Math.round(baixaRenda / s.length * 100)}%)` : '';
+
+    document.getElementById('s-filhos').textContent = comFilhos + pf;
+    document.getElementById('s-trabalho').textContent = comTrabalho + pt;
+    document.getElementById('s-baixa-renda').textContent = baixaRenda + pb;
+  }
+
+  // ── Table ───────────────────────────────────────────────────────────────
+  function renderTabela() {
+    const filtBadge = document.getElementById('filter-badge-sel').value;
+    const filtSocio = document.getElementById('filter-socio-sel').value;
+    let lista = [...MEMBROS];
+    if (filtBadge) lista = lista.filter(m => m.badge === filtBadge);
+    if (filtSocio === 'ok') lista = lista.filter(m => m.socioeconomico);
+    if (filtSocio === 'pend') lista = lista.filter(m => !m.socioeconomico);
+
+    const tbody = document.getElementById('tbody-alunas');
+    if (!lista.length) {
+      tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><i class="fa-solid fa-magnifying-glass"></i>Nenhuma aluna encontrada.</div></td></tr>`;
+      return;
+    }
+    tbody.innerHTML = lista.map(m => {
+      const badgeIdx = BADGE_LABELS.indexOf(m.badge);
+      const bClass = badgeIdx >= 0 ? BADGE_CLASS[badgeIdx] : 'b-curiosa';
+      return `<tr>
+        <td>
+          <div class="name-cell">
+            <span class="avatar">${initials(m.nome)}</span>
+            <strong>${m.nome}</strong>
+          </div>
+        </td>
+        <td style="color:var(--muted);font-size:12px">${m.email}</td>
+        <td><span class="pill ${bClass}">${m.badge}</span></td>
+        <td><strong>${m.arrasas.toLocaleString('pt-BR')} AS</strong></td>
+        <td>${m.xp.toLocaleString('pt-BR')} XP</td>
+        <td>
+          ${m.socioeconomico
+            ? `<span class="status-ok"><i class="fa-solid fa-circle-check"></i> Concluído</span>`
+            : `<span class="status-pend"><i class="fa-regular fa-clock"></i> Pendente</span>`
+          }
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  // ── Data loading ────────────────────────────────────────────────────────
+  function processarDadosBI(dados) {
+    if (!dados || dados.erro) {
+      document.getElementById('tbody-alunas').innerHTML = `<tr><td colspan="6"><div class="empty-state"><i class="fa-solid fa-triangle-exclamation"></i>Erro ao carregar membros: ${dados && dados.erro ? dados.erro : 'Verifique o script.'}</div></td></tr>`;
+      return;
+    }
+    MEMBROS = dados;
+
+    let totalAS = 0, totalXP = 0, socioOk = 0;
+    dados.forEach(m => { totalAS += m.arrasas; totalXP += m.xp; if (m.socioeconomico) socioOk++; });
+    const pct = dados.length ? Math.round(socioOk / dados.length * 100) : 0;
+
+    document.getElementById('m-total').textContent = dados.length;
+    document.getElementById('m-arrasas').textContent = totalAS.toLocaleString('pt-BR') + ' AS';
+    document.getElementById('m-socio').textContent = socioOk;
+    document.getElementById('m-socio-pct').textContent = `${pct}% concluíram o formulário`;
+    document.getElementById('m-xp').textContent = totalXP.toLocaleString('pt-BR') + ' XP';
+
+    initGeraisCharts(dados);
+    renderTabela();
+  }
+
+  function processarSocioBI(dados) {
+    if (!dados || dados.erro) return;
+    SOCIO = dados;
+    // Se a aba socio já estiver ativa, renderiza imediatamente
+    if (document.getElementById('panel-socioeconomico').classList.contains('active')) {
+      initSocioCharts();
+      socioChartsReady = true;
+    }
+  }
+
+  function carregar() {
+    const s1 = document.createElement('script');
+    s1.src = `${API_BASE}?callback=processarDadosBI&endpoint=membros`;
+    document.body.appendChild(s1);
+
+    const s2 = document.createElement('script');
+    s2.src = `${API_BASE}?callback=processarSocioBI&endpoint=socioeconomico`;
+    document.body.appendChild(s2);
+  }
+
+  window.addEventListener('load', carregar);
+</script>
 </body>
 </html>
