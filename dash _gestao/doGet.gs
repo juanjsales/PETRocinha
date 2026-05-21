@@ -13,11 +13,19 @@ const CONFIG = {
   // Aba community_members — índices baseados em 0 (coluna A = 0)
   MEMBROS: {
     ABA:     "community_members",
+    ID:      0,   // A
     NOME:    1,   // B
     EMAIL:   2,   // C
+    IMG_URL: 3,   // D
+    CRIADO_EM: 4, // E
+    ULTIMA_VISITA: 5, // F
+    TAGS:    6,   // G
     CPF:     7,   // H — ajuste se diferente
+    WPP:     8,   // I
+    NASC:    9,   // J — Data de Nascimento
     ARRASAS: 10,  // K
     BADGE:   11,  // L
+    ALERTAS: 12,  // M
     XP:      13,  // N
   },
 
@@ -38,6 +46,15 @@ const CONFIG = {
     TRABALHANDO:   11,  // L
     GANHOS:        12,  // M
     PESSOAS_DOM:   13,  // N  — "Pessoas que moram na mesma casa"
+    ORG_FIN:       14,  // O
+    RENDA_EXTRA:   15,  // P
+    RENDA_EXTRA_OQ:16,  // Q
+    GASTOS:        17,  // R
+    INTERESSE:     18,  // S
+    HORARIO:       19,  // T
+    INDICACAO:     20,  // U
+    MOTIVACAO:     21,  // V
+    SITUACAO_PROF: 25,  // Z
   },
 
   // Aba Log — para checar quem fez o socioeconômico via log
@@ -75,45 +92,33 @@ function getDadosMembros() {
   const ss = SpreadsheetApp.openById(CONFIG.SS_ID);
   const sheetMembros = ss.getSheetByName(CONFIG.MEMBROS.ABA);
   if (!sheetMembros) return { erro: "Aba '" + CONFIG.MEMBROS.ABA + "' não encontrada." };
-
-  const sheetLog = ss.getSheetByName(CONFIG.LOG.ABA);
-  const dataLog  = sheetLog ? sheetLog.getDataRange().getValues() : [];
-
-  // Pré-processa o Log em um Set para busca O(1)
-  const socioSet = new Set();
-  dataLog.forEach(r => {
-    const tipo = String(r[CONFIG.LOG.TIPO] || "").toLowerCase().trim();
-    if (tipo !== "socioeconomico") return;
-    const cpf   = limparCpf(r[CONFIG.LOG.CPF]);
-    const email = String(r[CONFIG.LOG.EMAIL] || "").toLowerCase().trim();
-    if (cpf)   socioSet.add("cpf:" + cpf);
-    if (email) socioSet.add("email:" + email);
-  });
-
+ 
   const dataMembros = sheetMembros.getDataRange().getValues();
   const lista = [];
-
+ 
   for (let i = 1; i < dataMembros.length; i++) {
     const linha = dataMembros[i];
     const nome  = String(linha[CONFIG.MEMBROS.NOME] || "").trim();
     if (!nome) continue;
-
-    const cpf   = limparCpf(linha[CONFIG.MEMBROS.CPF]);
-    const email = String(linha[CONFIG.MEMBROS.EMAIL] || "").toLowerCase().trim();
-    const possuiSocio =
-      (cpf   && socioSet.has("cpf:" + cpf)) ||
-      (email && socioSet.has("email:" + email));
-
+ 
     lista.push({
+      id:            String(linha[CONFIG.MEMBROS.ID] || "").trim(),
       nome:          nome,
-      email:         email,
+      email:         String(linha[CONFIG.MEMBROS.EMAIL] || "").toLowerCase().trim(),
+      imgUrl:        String(linha[CONFIG.MEMBROS.IMG_URL] || "").trim(),
+      criadoEm:      linha[CONFIG.MEMBROS.CRIADO_EM] instanceof Date ? linha[CONFIG.MEMBROS.CRIADO_EM].toISOString() : null,
+      ultimaVisita:  linha[CONFIG.MEMBROS.ULTIMA_VISITA] instanceof Date ? linha[CONFIG.MEMBROS.ULTIMA_VISITA].toISOString() : null,
+      tags:          String(linha[CONFIG.MEMBROS.TAGS] || "").trim(),
+      cpf:           limparCpf(linha[CONFIG.MEMBROS.CPF]),
+      wpp:           String(linha[CONFIG.MEMBROS.WPP] || "").trim(),
+      nascimento:    linha[CONFIG.MEMBROS.NASC] instanceof Date ? linha[CONFIG.MEMBROS.NASC].toISOString() : null,
       arrasas:       Number(linha[CONFIG.MEMBROS.ARRASAS]) || 0,
       badge:         String(linha[CONFIG.MEMBROS.BADGE]  || " ").trim(),
+      alertas:       String(linha[CONFIG.MEMBROS.ALERTAS] || "").trim(),
       xp:            Number(linha[CONFIG.MEMBROS.XP])     || 0,
-      socioeconomico: possuiSocio
     });
   }
-
+ 
   return lista;
 }
 
@@ -135,6 +140,7 @@ function getDadosSocio() {
 
     lista.push({
       cpf:            limparCpf(r[CONFIG.SOCIO.CPF]),
+      nis:            normalizar(r[CONFIG.SOCIO.NIS]),
       genero:         normalizar(r[CONFIG.SOCIO.GENERO]),
       raca:           normalizar(r[CONFIG.SOCIO.RACA]),
       orientacao:     normalizar(r[CONFIG.SOCIO.ORIENTACAO]),
@@ -145,7 +151,16 @@ function getDadosSocio() {
       ocupacao:       normalizar(r[CONFIG.SOCIO.OCUPACAO]),
       trabalhando:    temValor(r[CONFIG.SOCIO.TRABALHANDO]),
       ganhos:         normalizar(r[CONFIG.SOCIO.GANHOS]),
-      pessoasDomicilio: Number(r[CONFIG.SOCIO.PESSOAS_DOM]) || null
+      pessoasDomicilio: Number(r[CONFIG.SOCIO.PESSOAS_DOM]) || null,
+      orgFinanceira:  normalizar(r[CONFIG.SOCIO.ORG_FIN]),
+      rendaExtra:     normalizar(r[CONFIG.SOCIO.RENDA_EXTRA]),
+      rendaExtraOque: normalizar(r[CONFIG.SOCIO.RENDA_EXTRA_OQ]),
+      maioresGastos:  normalizar(r[CONFIG.SOCIO.GASTOS]),
+      interesse:      normalizar(r[CONFIG.SOCIO.INTERESSE]),
+      horario:        normalizar(r[CONFIG.SOCIO.HORARIO]),
+      indicacao:      normalizar(r[CONFIG.SOCIO.INDICACAO]),
+      motivacao:      normalizar(r[CONFIG.SOCIO.MOTIVACAO]),
+      situacaoProf:   normalizar(r[CONFIG.SOCIO.SITUACAO_PROF]),
     });
   }
 
