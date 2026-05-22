@@ -8,304 +8,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
-  <style>
-    :root {
-      --navy:   #003366;
-      --pink:   #e91e63;
-      --gold:   #e8b800;
-      --green:  #16a34a;
-      --purple: #7c3aed;
-      --blue:   #0ea5e9;
-      --orange: #f97316;
-
-      --bg:      #f0f2f7;
-      --surface: #ffffff;
-      --surface2: #f8f9fc;
-      --border:  #e2e8f0;
-      --text:    #1a202c;
-      --text-light: #4a5568;
-      --muted:   #64748b;
-      --font:    'Plus Jakarta Sans', sans-serif;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; }
-
-    /* ── Layout ── */
-    .app { display: flex; min-height: 100vh; }
-
-    .sidebar {
-      width: 240px; flex-shrink: 0; background: var(--navy);
-      display: flex; flex-direction: column;
-      transition: width 0.3s ease;
-      position: fixed; top: 0; left: 0; height: 100vh; z-index: 100;
-      padding: 28px 0;
-    }
-    .sidebar-brand {
-      padding: 0 20px 28px; border-bottom: 1px solid rgba(255,255,255,0.1);
-      margin-bottom: 20px;
-    }
-    .sidebar-brand .brand-logo {
-      height: 32px;
-      margin-right: 10px;
-    }
-    .sidebar-brand .ong-name {
-      font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px;
-      color: rgba(255,255,255,0.5); margin-bottom: 6px;
-      display: flex; align-items: center;
-    }
-    .sidebar-brand .project-name {
-      font-size: 16px; font-weight: 700; color: #fff; line-height: 1.3;
-      display: flex; align-items: center;
-    }
-    .sidebar-brand .faperj-badge {
-      display: inline-block; margin-top: 8px; font-size: 10px; font-weight: 600;
-      background: var(--gold); color: #1a0a00; padding: 2px 10px; border-radius: 20px;
-    }
-    .nav-item {
-      display: flex; align-items: center; gap: 10px;
-      padding: 12px 20px; color: rgba(255,255,255,0.6);
-      font-size: 13px; font-weight: 500; cursor: pointer;
-      border-left: 3px solid transparent; transition: all 0.2s;
-      text-decoration: none;
-    }
-    .nav-item:hover { color: #fff; background: rgba(255,255,255,0.06); }
-    .nav-item.active {
-      color: #fff; background: rgba(255,255,255,0.1);
-      border-left-color: var(--gold);
-    }
-    .nav-item i { width: 18px; text-align: center; font-size: 15px; }
-    .nav-section { padding: 12px 20px 6px; font-size: 10px; text-transform: uppercase;
-      letter-spacing: 1.5px; color: rgba(255,255,255,0.3); margin-top: 10px; }
-    .sidebar-footer {
-      margin-top: auto; padding: 16px 20px;
-      border-top: 1px solid rgba(255,255,255,0.1);
-      white-space: nowrap;
-    }
-    .sidebar-footer p { font-size: 11px; color: rgba(255,255,255,0.35); line-height: 1.6; }
-
-    .main { margin-left: 240px; padding: 32px; min-height: 100vh; }
-
-    .topbar {
-      display: flex; justify-content: space-between; align-items: flex-start;
-      margin-bottom: 32px; flex-wrap: wrap; gap: 16px;
-    }
-    .topbar-left { flex: 1; min-width: 0; }
-    .menu-toggle {
-      display: none;
-      background: none; border: none; font-size: 20px; color: var(--navy);
-      cursor: pointer; padding: 4px;
-    }
-    .topbar-actions {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      align-items: center;
-    }
-    .page-title { font-size: 22px; font-weight: 700; color: var(--navy); }
-    .page-sub { font-size: 13px; color: var(--muted); margin-top: 4px; }
-
-    .btn {
-      display: inline-flex; align-items: center; gap: 8px;
-      padding: 10px 20px; border-radius: 10px; font-family: var(--font);
-      font-size: 13px; font-weight: 600; cursor: pointer; border: none;
-      transition: all 0.2s;
-    }
-    .btn-primary { background: var(--navy); color: #fff; }
-    .btn-primary:hover { background: #00254d; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,51,102,0.25); }
-    .btn-outline { background: transparent; color: var(--navy); border: 1.5px solid var(--navy); }
-    .btn-outline:hover { background: var(--navy); color: #fff; }
-
-    /* ── Panels ── */
-    .panel { display: none; }
-    .panel.active { display: block; }
-
-    /* ── Metric cards ── */
-    .metrics-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 24px; }
-    .mcard {
-      background: var(--surface); border-radius: 14px;
-      border: 1px solid var(--border); padding: 20px;
-      display: flex; align-items: center; gap: 16px;
-      transition: box-shadow 0.2s;
-    }
-    .mcard:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
-    .mcard-icon {
-      width: 48px; height: 48px; border-radius: 12px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 18px; flex-shrink: 0;
-    }
-    .mcard-body { flex: 1; min-width: 0; }
-    .mcard-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;
-      color: var(--muted); font-weight: 600; margin-bottom: 4px; }
-    .mcard-val { font-size: 24px; font-weight: 700; line-height: 1; }
-    .mcard-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
-
-    /* ── Chart cards ── */
-    .chart-card {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 14px; padding: 20px;
-    }
-    .chart-header { margin-bottom: 4px; }
-    .chart-title { font-size: 14px; font-weight: 600; color: var(--text); }
-    .chart-sub { font-size: 12px; color: var(--muted); margin-bottom: 14px; }
-    .chart-legend { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
-    .leg-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--muted); }
-    .leg-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
-
-    .charts-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
-    .charts-3col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
-
-    /* ── Progress bar ── */
-    .progress-list { display: flex; flex-direction: column; gap: 14px; }
-    .progress-item {}
-    .progress-top { display: flex; justify-content: space-between;
-      font-size: 12px; color: var(--text); margin-bottom: 6px; }
-    .progress-pct { font-weight: 600; }
-    .progress-track { height: 7px; background: #f1f5f9; border-radius: 10px; overflow: hidden; }
-    .progress-fill { height: 100%; border-radius: 10px; transition: width 0.8s ease; }
-
-    /* ── Table ── */
-    .table-card {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 14px; overflow: hidden; margin-bottom: 24px;
-    }
-    .table-header {
-      padding: 16px 20px; border-bottom: 1px solid var(--border);
-      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
-    }
-    .filter-sel {
-      font-family: var(--font); font-size: 12px; font-weight: 500;
-      border: 1.5px solid var(--border); border-radius: 8px;
-      padding: 7px 12px; background: var(--bg); color: var(--text);
-      outline: none; cursor: pointer;
-    }
-    table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    th {
-      padding: 12px 16px; color: var(--muted); font-weight: 600; font-size: 11px;
-      text-transform: uppercase; letter-spacing: 0.5px;
-      border-bottom: 1px solid var(--border); background: var(--surface2);
-      text-align: left; white-space: nowrap;
-    }
-    td { padding: 13px 16px; border-bottom: 1px solid var(--border); vertical-align: middle; }
-    tr:last-child td { border-bottom: none; }
-    tr:hover td { background: #fafbfc; }
-    .avatar {
-      width: 32px; height: 32px; border-radius: 50%; background: #e8effa;
-      color: var(--navy); display: inline-flex; align-items: center; justify-content: center;
-      font-size: 12px; font-weight: 700; margin-right: 8px; flex-shrink: 0;
-    }
-    .name-cell { display: flex; align-items: center; }
-
-    /* ── Pills / badges ── */
-    .pill {
-      display: inline-flex; align-items: center; gap: 4px;
-      padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
-    }
-    .b-curiosa   { background: #e8f0fe; color: #1a56db; }
-    .b-proposito { background: #d1fae5; color: #065f46; }
-    .b-tecnica   { background: #fef3c7; color: #92400e; }
-    .b-embaixadora { background: #fce7f3; color: #9d174d; }
-    .b-rainha { background: #ede9fe; color: #5b21b6; }
-
-    /* ── Modal ── */
-    .modal-backdrop {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.5); z-index: 200;
-      display: none; align-items: center; justify-content: center;
-    }
-    .modal-content {
-      background: var(--surface); border-radius: 16px;
-      width: 90%; max-width: 500px; max-height: 90vh;
-      overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-    }
-    .modal-header {
-      padding: 16px 24px; border-bottom: 1px solid var(--border);
-      display: flex; justify-content: space-between; align-items: center;
-    }
-    .modal-title { font-size: 16px; font-weight: 600; color: var(--navy); }
-    .modal-close {
-      background: none; border: none; font-size: 20px; cursor: pointer;
-      color: var(--muted); transition: color 0.2s;
-    }
-    .modal-close:hover { color: var(--text); }
-    .modal-body { padding: 24px; }
-    .detail-grid {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
-    }
-    .detail-item {
-      background: var(--surface2); padding: 12px; border-radius: 8px;
-      border: 1px solid var(--border);
-    }
-    .detail-label {
-      font-size: 10px; font-weight: 600; color: var(--muted);
-      text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;
-    }
-    .detail-value { font-size: 14px; font-weight: 500; color: var(--text-light); }
-    .modal-body .divider { margin: 20px 0; }
-    .modal-body h4 { font-size: 13px; color: var(--navy); margin-bottom: 12px; }
-
-    .modal-profile-header {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      margin-bottom: 20px;
-    }
-    .modal-profile-img {
-      width: 64px; height: 64px;
-      border-radius: 50%;
-      object-fit: cover;
-    }
-
-    .status-ok { color: var(--green); font-size: 12px; font-weight: 500; }
-    .status-pend { color: var(--muted); font-size: 12px; }
-
-    /* ── Socio cards ── */
-    .socio-metrics { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-bottom: 24px; }
-
-    /* ── Loading / empty ── */
-    .empty-state { text-align: center; padding: 48px; color: var(--muted); }
-    .empty-state i { font-size: 28px; margin-bottom: 12px; display: block; }
-    .spinner { display: inline-block; animation: spin 1s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* ── Divider ── */
-    .divider { height: 1px; background: var(--border); margin: 24px 0; }
-
-    /* ── Responsive ── */
-    @media (max-width: 1100px) {
-      .metrics-grid { grid-template-columns: repeat(2,1fr); }
-      .charts-3col { grid-template-columns: 1fr 1fr; }
-    }
-    @media (max-width: 860px) {
-      .sidebar { width: 0; padding: 28px 0; }
-      .sidebar.expanded { width: 240px; }
-      .sidebar-brand, .nav-section, .sidebar-footer, .nav-item span { display: none; }
-      .sidebar.expanded .sidebar-brand, .sidebar.expanded .nav-section,
-      .sidebar.expanded .sidebar-footer, .sidebar.expanded .nav-item span { display: block; }
-      .nav-item { justify-content: center; padding: 14px; }
-      .sidebar.expanded .nav-item { justify-content: flex-start; }
-      .main { margin-left: 0; padding: 20px; }
-      .charts-2col, .charts-3col { grid-template-columns: 1fr; }
-      .metrics-grid { grid-template-columns: 1fr 1fr; }
-      .menu-toggle { display: block; }
-      .topbar { align-items: center; }
-    }
-    @media (max-width: 600px) {
-      .metrics-grid { grid-template-columns: 1fr; }
-      .topbar { flex-direction: column; align-items: flex-start; }
-    }
-
-    @media print {
-      .sidebar { display: none; }
-      .main { margin-left: 0; padding: 20px; }
-      .btn, .filter-sel { display: none; }
-      .panel { display: block !important; }
-      .mcard:hover { box-shadow: none; }
-      body { background: white; }
-      .chart-card, .table-card, .mcard { break-inside: avoid; }
-    }
-  </style>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
@@ -324,7 +27,7 @@
         <span>Profissão Pet<br>Rocinha</span>
       </div>
       <span class="faperj-badge" style="margin-left: 42px;">FAPERJ 2026</span>
-    </div>
+    </div> 
 
     <div class="nav-section">Painel</div>
     <a class="nav-item active" data-panel="visao-geral" onclick="switchPanel('visao-geral', this)">
@@ -336,14 +39,39 @@
     <a class="nav-item" data-panel="alunas" onclick="switchPanel('alunas', this)">
       <i class="fa-solid fa-table-list"></i> <span>Alunas</span>
     </a>
-
+    <a class="nav-item" data-panel="ods" onclick="switchPanel('ods', this)">
+      <i class="fa-solid fa-bullseye"></i> <span>ODS</span>
+    </a>
+    <a class="nav-item" data-panel="sroi" onclick="switchPanel('sroi', this)">
+      <i class="fa-solid fa-hand-holding-dollar"></i> <span>sROI</span>
+    </a>
+    <div class="nav-section">Admin</div>
+    <a class="nav-item" data-panel="config" onclick="switchPanel('config', this)">
+      <i class="fa-solid fa-gear"></i> <span>Configurações</span>
+    </a>
     <div class="sidebar-footer">
-      <p>Dados carregados via<br>Google Apps Script JSONP.<br>Atualização automática ao abrir.</p>
+          <div class="sponsors-section">
+      <p class="sponsors-title">Oferecimento</p>
+      <div class="sponsors-logos">
+          <img src="https://github.com/juanjsales/PETRocinha/blob/main/patrocinadores/faperj.png?raw=true" alt="Logo FAPERJ">
+          <img src="https://github.com/juanjsales/PETRocinha/blob/main/patrocinadores/iic.png?raw=true" alt="Logo Instituto Impacto Criativo">
+          <img src="https://github.com/juanjsales/PETRocinha/blob/main/patrocinadores/pista.png?raw=true" alt="Logo Pista">
+          <img src="https://github.com/juanjsales/PETRocinha/blob/main/patrocinadores/pp3.png?raw=true" alt="Logo PP3">
+          <img src="https://github.com/juanjsales/PETRocinha/blob/main/patrocinadores/umpmrs.png?raw=true" alt="Logo Um Por Um">
+      </div>
+    </div>
     </div>
   </aside>
 
   <!-- MAIN CONTENT -->
   <main class="main">
+
+    <div id="loading-overlay">
+      <div class="spinner-container">
+        <i class="fa-solid fa-spinner fa-spin"></i>
+        <p>Carregando dados...</p>
+      </div>
+    </div>
 
     <!-- ══ VISÃO GERAL ══ -->
     <div class="panel active" id="panel-visao-geral">
@@ -354,6 +82,9 @@
           <div class="page-sub">Métricas consolidadas em tempo real · Base Unificada</div>
         </div>
         <div class="topbar-actions">
+          <button class="btn btn-outline" onclick="reloadData()">
+            <i class="fa-solid fa-rotate-right"></i> Recarregar
+          </button>
           <button class="btn btn-primary" onclick="showPdfOptionsModal()">
             <i class="fa-solid fa-print"></i> Exportar relatório
           </button>
@@ -365,7 +96,9 @@
           <div class="mcard-icon" style="background:#e8effa; color:var(--navy)"><i class="fa-solid fa-users"></i></div>
           <div class="mcard-body">
             <div class="mcard-label">Total de alunas</div>
-            <div class="mcard-val" id="m-total" style="color:var(--navy)">—</div>
+            <div class="mcard-val-wrap">
+              <div class="mcard-val" id="m-total" style="color:var(--navy)">—</div>
+            </div>
             <div class="mcard-sub">participantes ativas</div>
           </div>
         </div>
@@ -373,7 +106,9 @@
           <div class="mcard-icon" style="background:#fce7f3; color:var(--pink)"><i class="fa-solid fa-coins"></i></div>
           <div class="mcard-body">
             <div class="mcard-label">Banco de Arrasas</div>
-            <div class="mcard-val" id="m-arrasas" style="color:var(--pink)">—</div>
+            <div class="mcard-val-wrap">
+              <div class="mcard-val" id="m-arrasas" style="color:var(--pink)">—</div>
+            </div>
             <div class="mcard-sub">AS acumulados</div>
           </div>
         </div>
@@ -381,7 +116,9 @@
           <div class="mcard-icon" style="background:#d1fae5; color:var(--green)"><i class="fa-solid fa-circle-check"></i></div>
           <div class="mcard-body">
             <div class="mcard-label">Socioeconômico OK</div>
-            <div class="mcard-val" id="m-socio" style="color:var(--green)">—</div>
+            <div class="mcard-val-wrap">
+              <div class="mcard-val" id="m-socio" style="color:var(--green)">—</div>
+            </div>
             <div class="mcard-sub" id="m-socio-pct">formulários concluídos</div>
           </div>
         </div>
@@ -389,24 +126,42 @@
           <div class="mcard-icon" style="background:#fef9c3; color:#a16207"><i class="fa-solid fa-star"></i></div>
           <div class="mcard-body">
             <div class="mcard-label">XP Total</div>
-            <div class="mcard-val" id="m-xp" style="color:#a16207">—</div>
+            <div class="mcard-val-wrap">
+              <div class="mcard-val" id="m-xp" style="color:#a16207">—</div>
+            </div>
             <div class="mcard-sub">experiência acumulada</div>
+          </div>
+        </div>
+        <div class="mcard">
+          <div class="mcard-icon" style="background:#eef2ff; color:#4338ca"><i class="fa-solid fa-book-open-reader"></i></div>
+          <div class="mcard-body">
+            <div class="mcard-label">Total de Horas de Conteúdo</div>
+            <div class="mcard-val-wrap">
+              <div class="mcard-val" id="m-horas-curso" style="color:#4338ca">—</div>
+            </div>
+            <div class="mcard-sub">soma de todos os cursos ofertados</div>
           </div>
         </div>
       </div>
 
       <div class="charts-2col">
         <div class="chart-card">
-          <div class="chart-title">Distribuição por medalha</div>
-          <div class="chart-sub">Progresso de engajamento das alunas</div>
+          <div class="chart-title">
+            Distribuição por Medalha
+            <i class="fa-solid fa-circle-info info-icon" data-tooltip="Este gráfico mostra a proporção de alunas em cada nível de engajamento, representado pelas medalhas do programa."></i>
+          </div>
+          <div class="chart-sub">Progresso de engajamento das alunas na gamificação</div>
           <div class="chart-legend" id="legend-badge"></div>
           <div style="position:relative;height:220px">
             <canvas id="chartBadge" role="img" aria-label="Gráfico de pizza com distribuição por medalha">Carregando...</canvas>
           </div>
         </div>
         <div class="chart-card">
-          <div class="chart-title">Top 5 — Banco de Arrasas</div>
-          <div class="chart-sub">Alunas com maior saldo acumulado</div>
+          <div class="chart-title">
+            Top 5 — Banco de Arrasas
+            <i class="fa-solid fa-circle-info info-icon" data-tooltip="Ranking das 5 alunas que mais acumularam 'Arrasas' (AS), a moeda social do projeto, através de atividades e engajamento."></i>
+          </div>
+          <div class="chart-sub">Alunas com o maior saldo acumulado de 'Arrasas'</div>
           <div style="position:relative;height:250px">
             <canvas id="chartTop5" role="img" aria-label="Ranking top 5 por Arrasas">Carregando...</canvas>
           </div>
@@ -414,9 +169,23 @@
       </div>
 
       <div class="chart-card" style="margin-bottom:16px">
-        <div class="chart-title">Funil de progressão — % de alunas por medalha</div>
-        <div class="chart-sub">Evolução no programa Profissão Pet</div>
+        <div class="chart-title">
+          Funil de Progressão — % de Alunas por Medalha
+          <i class="fa-solid fa-circle-info info-icon" data-tooltip="Percentual de alunas que alcançaram cada nível de medalha, mostrando a evolução da turma no programa de gamificação."></i>
+        </div>
+        <div class="chart-sub">Evolução da turma no programa Profissão Pet</div>
         <div class="progress-list" id="progress-badges" style="margin-top:14px"></div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-title">
+          Média de Horas Concluídas por Fase Pedagógica
+          <i class="fa-solid fa-circle-info info-icon" data-tooltip="Média de horas que cada aluna dedicou às atividades de cada fase da jornada (Acreditar, Aprender, Agir), com base nos registros de conclusão."></i>
+        </div>
+        <div class="chart-sub">Engajamento médio da turma em cada etapa da jornada</div>
+        <div style="position:relative;height:250px">
+          <canvas id="chartAvgHorasFase" role="img" aria-label="Gráfico de média de horas por fase pedagógica">Carregando...</canvas>
+        </div>
       </div>
     </div>
 
@@ -429,6 +198,9 @@
           <div class="page-sub">Dados coletados via formulário de entrada · Aba Socioeconomico</div>
         </div>
         <div class="topbar-actions">
+          <button class="btn btn-outline" onclick="reloadData()">
+            <i class="fa-solid fa-rotate-right"></i> Recarregar
+          </button>
           <button class="btn btn-primary" onclick="showPdfOptionsModal()">
             <i class="fa-solid fa-print"></i> Exportar relatório
           </button>
@@ -464,16 +236,22 @@
 
       <div class="charts-2col">
         <div class="chart-card">
-          <div class="chart-title">Raça / Cor</div>
-          <div class="chart-sub">Autodeclaração das participantes</div>
+          <div class="chart-title">
+            Raça / Cor
+            <i class="fa-solid fa-circle-info info-icon" data-tooltip="Distribuição das participantes conforme autodeclaração de raça ou cor, com base no formulário socioeconômico."></i>
+          </div>
+          <div class="chart-sub">Autodeclaração das participantes do projeto</div>
           <div class="chart-legend" id="legend-raca"></div>
           <div style="position:relative;height:210px">
             <canvas id="chartRaca" role="img" aria-label="Distribuição por raça/cor">Carregando...</canvas>
           </div>
         </div>
         <div class="chart-card">
-          <div class="chart-title">Gênero</div>
-          <div class="chart-sub">Identidade de gênero declarada</div>
+          <div class="chart-title">
+            Gênero
+            <i class="fa-solid fa-circle-info info-icon" data-tooltip="Distribuição das participantes por identidade de gênero autodeclarada."></i>
+          </div>
+          <div class="chart-sub">Identidade de gênero autodeclarada</div>
           <div class="chart-legend" id="legend-genero"></div>
           <div style="position:relative;height:210px">
             <canvas id="chartGenero" role="img" aria-label="Distribuição por gênero">Carregando...</canvas>
@@ -483,15 +261,21 @@
 
       <div class="charts-2col">
         <div class="chart-card">
-          <div class="chart-title">Escolaridade</div>
-          <div class="chart-sub">Nível de instrução declarado</div>
+          <div class="chart-title">
+            Escolaridade
+            <i class="fa-solid fa-circle-info info-icon" data-tooltip="Nível de instrução formal mais alto alcançado pelas participantes, conforme autodeclarado."></i>
+          </div>
+          <div class="chart-sub">Nível de instrução formal declarado</div>
           <div id="escola-wrap" style="position:relative;height:240px">
             <canvas id="chartEscola" role="img" aria-label="Distribuição por escolaridade">Carregando...</canvas>
           </div>
         </div>
         <div class="chart-card">
-          <div class="chart-title">Faixa de renda familiar</div>
-          <div class="chart-sub">Rendimento declarado no formulário</div>
+          <div class="chart-title">
+            Faixa de renda familiar
+            <i class="fa-solid fa-circle-info info-icon" data-tooltip="Distribuição da renda familiar mensal consolidada das participantes, conforme autodeclarado no formulário de inscrição."></i>
+          </div>
+          <div class="chart-sub">Rendimento mensal declarado</div>
           <div id="renda-wrap" style="position:relative;height:240px">
             <canvas id="chartRenda" role="img" aria-label="Distribuição por renda">Carregando...</canvas>
           </div>
@@ -500,16 +284,22 @@
 
       <div class="charts-2col">
         <div class="chart-card">
-          <div class="chart-title">Estado civil</div>
-          <div class="chart-sub">Situação familiar declarada</div>
+          <div class="chart-title">
+            Estado Civil
+            <i class="fa-solid fa-circle-info info-icon" data-tooltip="Distribuição das participantes por estado civil autodeclarado."></i>
+          </div>
+          <div class="chart-sub">Situação conjugal declarada</div>
           <div class="chart-legend" id="legend-civil"></div>
           <div style="position:relative;height:190px">
             <canvas id="chartCivil" role="img" aria-label="Estado civil">Carregando...</canvas>
           </div>
         </div>
         <div class="chart-card">
-          <div class="chart-title">Vínculo empregatício</div>
-          <div class="chart-sub">Situação atual de emprego</div>
+          <div class="chart-title">
+            Vínculo Empregatício
+            <i class="fa-solid fa-circle-info info-icon" data-tooltip="Mostra se as participantes possuíam algum vínculo de trabalho (formal ou informal) no momento da inscrição."></i>
+          </div>
+          <div class="chart-sub">Situação de emprego no momento da inscrição</div>
           <div class="chart-legend" id="legend-emprego"></div>
           <div style="position:relative;height:190px">
             <canvas id="chartEmprego" role="img" aria-label="Vínculo empregatício">Carregando...</canvas>
@@ -518,8 +308,11 @@
       </div>
 
       <div class="chart-card" style="margin-bottom:16px">
-        <div class="chart-title">Pessoas por domicílio</div>
-        <div class="chart-sub">Quantidade de pessoas na mesma residência</div>
+        <div class="chart-title">
+          Pessoas por domicílio
+          <i class="fa-solid fa-circle-info info-icon" data-tooltip="Número de pessoas que residem no mesmo domicílio que a participante."></i>
+        </div>
+        <div class="chart-sub">Número de moradores na mesma residência</div>
         <div id="pessoas-wrap" style="position:relative;height:200px">
           <canvas id="chartPessoas" role="img" aria-label="Pessoas por domicílio">Carregando...</canvas>
         </div>
@@ -527,16 +320,22 @@
 
       <div class="charts-2col">
         <div class="chart-card">
-          <div class="chart-title">Orientação Sexual</div>
-          <div class="chart-sub">Autodeclaração das participantes</div>
+          <div class="chart-title">
+            Orientação Sexual
+            <i class="fa-solid fa-circle-info info-icon" data-tooltip="Distribuição das participantes por orientação sexual autodeclarada."></i>
+          </div>
+          <div class="chart-sub">Autodeclaração de orientação sexual</div>
           <div class="chart-legend" id="legend-orientacao"></div>
           <div style="position:relative;height:190px">
             <canvas id="chartOrientacao" role="img" aria-label="Distribuição por orientação sexual">Carregando...</canvas>
           </div>
         </div>
         <div class="chart-card">
-          <div class="chart-title">Faixa Etária</div>
-          <div class="chart-sub">Idade das alunas com perfil preenchido</div>
+          <div class="chart-title">
+            Faixa Etária
+            <i class="fa-solid fa-circle-info info-icon" data-tooltip="Distribuição de idade das alunas, calculada a partir da data de nascimento fornecida no formulário."></i>
+          </div>
+          <div class="chart-sub">Distribuição de idade das alunas</div>
           <div id="idade-wrap" style="position:relative;height:220px">
             <canvas id="chartIdade" role="img" aria-label="Distribuição por faixa etária">Carregando...</canvas>
           </div>
@@ -565,9 +364,12 @@
           </select>
           <select class="filter-sel" id="filter-socio-sel" onchange="renderTabela()">
             <option value="">Todos os status</option>
+            <option value="formadas">Apenas Formadas</option>
             <option value="ok">Socioecon. OK</option>
             <option value="pend">Socioecon. Pendente</option>
           </select>
+          <button class="btn btn-outline" onclick="reloadData()"><i class="fa-solid fa-rotate-right"></i> Recarregar</button>
+          <button class="btn btn-primary" onclick="showPdfOptionsModal()"><i class="fa-solid fa-print"></i> Exportar</button>
         </div>
       </div>
 
@@ -578,6 +380,7 @@
               <th>Nome</th>
               <th>E-mail</th>
               <th>Medalha</th>
+              <th>Horas Concluídas</th>
               <th>Arrasas</th>
               <th>XP</th>
               <th>Socioecon.</th>
@@ -585,11 +388,227 @@
           </thead>
           <tbody id="tbody-alunas">
             <tr>
+              <td colspan="7">
+                <!-- Conteúdo será preenchido pelo JavaScript -->
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══ ODS ══ -->
+    <div class="panel" id="panel-ods">
+      <div class="topbar">
+        <div class="topbar-left">
+          <button class="menu-toggle" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
+          <div class="page-title">Objetivos de Desenvolvimento Sustentável (ODS)</div>
+          <div class="page-sub">Análise de alinhamento com os ODS da ONU</div>
+        </div>
+        <div class="topbar-actions">
+          <button class="btn btn-outline" onclick="reloadData()">
+            <i class="fa-solid fa-rotate-right"></i> Recarregar
+          </button>
+          <button class="btn btn-primary" onclick="showPdfOptionsModal()">
+            <i class="fa-solid fa-print"></i> Exportar relatório
+          </button>
+        </div>
+      </div>
+      <div class="metrics-grid">
+        <div class="mcard">
+          <div class="mcard-icon" style="background:#fbeaea; color:#e5243b"><i class="fa-solid fa-piggy-bank"></i></div>
+          <div class="mcard-body">
+            <div class="mcard-label">ODS 1: Erradicação da Pobreza</div>
+            <div class="mcard-val" id="ods-1-val" style="color:#e5243b">—</div>
+            <div class="mcard-sub">Alunas com renda familiar de até 1 S.M.</div>
+          </div>
+        </div>
+        <div class="mcard">
+          <div class="mcard-icon" style="background:#fff8e9; color:#c59b2e"><i class="fa-solid fa-graduation-cap"></i></div>
+          <div class="mcard-body">
+            <div class="mcard-label">ODS 4: Educação de Qualidade</div>
+            <div class="mcard-val" id="ods-4-val" style="color:#c59b2e">—</div>
+            <div class="mcard-sub">Alunas recebendo capacitação profissional.</div>
+          </div>
+        </div>
+        <div class="mcard">
+          <div class="mcard-icon" style="background:#fef0ed; color:#ef402b"><i class="fa-solid fa-venus"></i></div>
+          <div class="mcard-body">
+            <div class="mcard-label">ODS 5: Igualdade de Gênero</div>
+            <div class="mcard-val" id="ods-5-val" style="color:#ef402b">—</div>
+            <div class="mcard-sub">Alunas que são mães (dupla jornada).</div>
+          </div>
+        </div>
+        <div class="mcard">
+          <div class="mcard-icon" style="background:#fdebf0; color:#a21942"><i class="fa-solid fa-briefcase"></i></div>
+          <div class="mcard-body">
+            <div class="mcard-label">ODS 8: Trabalho Decente</div>
+            <div class="mcard-val" id="ods-8-val" style="color:#a21942">—</div>
+            <div class="mcard-sub">Alunas que buscam inserção no mercado.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-card" style="margin-top: 24px;">
+        <div class="chart-title">
+          Cobertura dos ODS na População do Projeto
+          <i class="fa-solid fa-circle-info info-icon" data-tooltip="Percentual de alunas do projeto que são diretamente impactadas por cada um dos Objetivos de Desenvolvimento Sustentável prioritários."></i>
+        </div>
+          <div class="chart-sub">Percentual do total de alunas impactadas por cada objetivo</div>
+        <div id="ods-cobertura-wrap" style="position:relative;height:200px">
+          <canvas id="chartOdsCobertura" role="img" aria-label="Gráfico de barras da cobertura dos ODS">Carregando...</canvas>
+        </div>
+      </div>
+
+
+    </div>
+
+    <!-- ══ sROI ══ -->
+    <div class="panel" id="panel-sroi">
+      <div class="topbar">
+        <div class="topbar-left">
+          <button class="menu-toggle" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
+          <div class="page-title">Retorno Social sobre Investimento (sROI)</div>
+          <div class="page-sub">Cálculo do valor social gerado pelo projeto</div>
+        </div>
+        <div class="topbar-actions">
+          <button class="btn btn-outline" onclick="reloadData()"> 
+            <i class="fa-solid fa-rotate-right"></i> Recarregar
+          </button>
+          <button class="btn btn-primary" onclick="showPdfOptionsModal()">
+            <i class="fa-solid fa-print"></i> Exportar relatório
+          </button>
+        </div>
+      </div>
+      <div class="metrics-grid" style="grid-template-columns: 1fr 1fr;">
+        <div class="mcard">
+          <div class="mcard-icon" style="background:#dcfce7; color:#166534"><i class="fa-solid fa-arrow-trend-up"></i></div>
+          <div class="mcard-body">
+            <div class="mcard-label">Potencial de Renda Mensal Gerada</div>
+            <div class="mcard-val-wrap">
+              <div class="mcard-val" id="sroi-renda-potencial" style="color:#166534">R$ 0,00</div>
+            </div>
+            <div class="mcard-sub" id="sroi-renda-sub">Considerando 1 S.M. para alunas sem vínculo empregatício.</div>
+          </div>
+        </div>
+        <div class="mcard">
+          <div class="mcard-icon" style="background:#eef2ff; color:#4338ca"><i class="fa-solid fa-seedling"></i></div>
+          <div class="mcard-body">
+            <div class="mcard-label">
+              Valor Social da Educação (Proxy)
+              <i class="fa-solid fa-circle-info info-icon" data-tooltip="Valor social simbólico gerado pela capacitação. Calculado como: (Total de Horas de Cursos) x (Nº de Alunas) x (Valor/Hora). Fonte para Valor/Hora: Custo médio de programas de capacitação profissional. Pronatec/MEC."></i>
+            </div>
+            <div class="mcard-val" id="sroi-valor-educacao" style="color:#4338ca">R$ 0,00</div>
+          </div>
+        </div>
+        <div class="mcard">
+          <div class="mcard-icon" style="background:#dcfce7; color:#166534"><i class="fa-solid fa-chart-line"></i></div>
+          <div class="mcard-body">
+            <div class="mcard-label">
+              SROI Total (Retorno Social)
+              <i class="fa-solid fa-circle-info info-icon" data-tooltip="Para cada R$1 investido, o projeto gera R$7,22 em valor social e econômico combinado. Fonte: Estudo SROI, Krivochein & Boff (UFF)."></i>
+            </div>
+            <div class="mcard-val" style="color:#166534">1 : 7.22</div>
+          </div>
+        </div>
+        <div class="mcard">
+          <div class="mcard-icon" style="background:#dcfce7; color:#166534"><i class="fa-solid fa-sack-dollar"></i></div>
+          <div class="mcard-body">
+            <div class="mcard-label">
+              SROI de Renda (Retorno Financeiro)
+              <i class="fa-solid fa-circle-info info-icon" data-tooltip="Para cada R$1 investido, o projeto gera R$5,16 em retorno financeiro direto para participantes e equipe. Fonte: Estudo SROI, Krivochein & Boff (UFF)."></i>
+            </div>
+            <div class="mcard-val" style="color:#166534">1 : 5.16</div>
+          </div>
+        </div>
+      </div>
+      <div class="charts-2col">
+        <div class="chart-card">
+          <div class="chart-title">
+            Situação Profissional (Pré-curso)
+            <i class="fa-solid fa-circle-info info-icon" data-tooltip="Perfil profissional das alunas no momento da inscrição, mostrando a base para o cálculo do impacto na geração de renda."></i>
+          </div>
+          <div class="chart-sub">Base para análise do impacto econômico</div>
+          <div class="chart-legend" id="legend-sroi-situacao"></div>
+          <div style="position:relative;height:220px">
+            <canvas id="chartSroiSituacao" role="img" aria-label="Gráfico da situação profissional pré-curso">Carregando...</canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">
+            Potencial de Renda vs. Renda Atual
+            <i class="fa-solid fa-circle-info info-icon" data-tooltip="Comparativo entre a renda familiar declarada e o potencial de ganho de um salário mínimo, segmentado por faixa de renda."></i>
+          </div>
+          <div class="chart-sub">Impacto econômico potencial por faixa de renda</div>
+          <div style="position:relative;height:250px">
+            <canvas id="chartSroiPotencial" role="img" aria-label="Gráfico de potencial de renda vs renda atual">Carregando...</canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ CONFIG ══ -->
+    <div class="panel" id="panel-config">
+      <div class="topbar">
+        <div class="topbar-left">
+          <button class="menu-toggle" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
+          <div class="page-title">Configurações de Atividades</div>
+          <div class="page-sub">Lista de todos os cursos, aulas e atividades pontuáveis do projeto.</div>
+        </div>
+        <div class="topbar-actions">
+          <select class="filter-sel" id="filter-config-tipo" onchange="renderConfigTabela()">
+            <option value="">Todos os Tipos</option>
+          </select>
+          <button class="btn btn-outline" onclick="reloadData()">
+            <i class="fa-solid fa-rotate-right"></i> Recarregar
+          </button>
+          <button class="btn btn-primary" onclick="saveConfigChanges()" title="Salvar alterações na planilha">
+            <i class="fa-solid fa-save"></i> Salvar Alterações
+          </button>
+        </div>
+      </div>
+
+      <div class="charts-2col" style="margin-bottom: 24px;">
+        <div class="chart-card">
+          <div class="chart-title">
+            Distribuição de Tipos de Atividade
+            <i class="fa-solid fa-circle-info info-icon" data-tooltip="Contagem de cada tipo de item cadastrado na aba de configurações, mostrando a composição do programa entre cursos, aulas e outras atividades."></i>
+          </div>
+          <div class="chart-sub">Composição do catálogo de atividades</div>
+          <div class="chart-legend" id="legend-config-tipo"></div>
+          <div style="position:relative;height:220px">
+            <canvas id="chartConfigTipo" role="img" aria-label="Gráfico de pizza de tipos de atividade">Carregando...</canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">
+            Horas por Fase Pedagógica
+            <i class="fa-solid fa-circle-info info-icon" data-tooltip="Soma de todas as horas de atividades (cursos, aulas, etc.) agrupadas por cada fase da jornada pedagógica do projeto."></i>
+          </div>
+          <div class="chart-sub">Distribuição de horas do conteúdo programático</div>
+          <div class="chart-legend" id="legend-config-fase"></div>
+          <div style="position:relative;height:220px">
+            <canvas id="chartConfigFase" role="img" aria-label="Gráfico de pizza de horas por fase pedagógica">Carregando...</canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Descrição</th>
+              <th>Tipo</th>
+              <th>Fase Pedagógica</th>
+              <th>Horas</th>
+              <th>Pontos (Valor)</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-config">
+            <tr>
               <td colspan="6">
-                <div class="empty-state">
-                  <i class="fa-solid fa-spinner spinner"></i>
-                  Carregando dados da planilha...
-                </div>
+                <!-- Conteúdo será preenchido pelo JavaScript -->
               </td>
             </tr>
           </tbody>
@@ -629,544 +648,12 @@
     </div>
     <div class="modal-body" id="modal-body">
       <div class="empty-state">
-        <i class="fa-solid fa-spinner spinner"></i>
-        Carregando...
+        <!-- Conteúdo será preenchido pelo JavaScript -->
       </div>
     </div>
   </div>
 </div>
 
-<script>
-  // ── CONFIG ─────────────────────────────────────────────────────────────
-  const API_BASE = "https://script.google.com/macros/s/AKfycbz4RQ0OnhomLbHwe1WIpQygtA3obEKbVrVJznOczGETLRLDI3gSLWn8U21I1JCHdo2Z/exec";
-
-  const BADGE_LABELS = ['Aprendiz Curiosa 🐾','Mulher de Propósito ✨','Fera da Técnica  🎓','Profissional que Arrasa 💼','Embaixadora Pet Rocinha 👑'];
-  const BADGE_COLORS = ['#378add','#1d9e75','#ef9f27','#d4537e', '#8b5cf6'];
-  const BADGE_CLASS  = ['b-curiosa','b-proposito','b-tecnica','b-embaixadora', 'b-rainha'];
-  const PIE_PALETTE  = ['#378add','#1d9e75','#ef9f27','#d4537e','#8b5cf6','#f97316','#0ea5e9','#a3a3a3'];
-
-  let MEMBROS = [];
-  let SOCIO   = [];
-  let socioChartsReady = false;
-
-  // ── Navigation ─────────────────────────────────────────────────────────
-  function switchPanel(id, el) {
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-    if (el) el.classList.add('active');
-    document.getElementById('panel-' + id).classList.add('active');
-  }
-
-  function toggleSidebar() {
-    document.querySelector('.sidebar').classList.toggle('expanded');
-  }
-
-  // ── Helpers ─────────────────────────────────────────────────────────────
-  function countBy(arr, fn) {
-    return arr.reduce((a, v) => {
-      const k = fn(v) || 'Não informado';
-      a[k] = (a[k] || 0) + 1;
-      return a;
-    }, {});
-  }
-  function initials(name) {
-    const parts = name.trim().split(' ');
-    return (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
-  }
-  function makeLegend(elId, labels, colors) {
-    const el = document.getElementById(elId);
-    if (!el) return;
-    el.innerHTML = labels.map((l, i) =>
-      `<span class="leg-item"><span class="leg-dot" style="background:${colors[i]}"></span>${l}</span>`
-    ).join('');
-  }
-
-  // ── PDF Export ──────────────────────────────────────────────────────────
-  function showPdfOptionsModal() {
-    const optionsList = document.getElementById('pdf-options-list');
-    optionsList.innerHTML = ''; // Limpa opções anteriores
-
-    document.querySelectorAll('.panel').forEach(panel => {
-      const panelId = panel.id;
-      const panelTitle = panel.querySelector('.page-title').textContent;
-      const isChecked = panel.classList.contains('active'); // Pré-seleciona a aba ativa
-
-      const checkboxHTML = `
-        <label style="display: flex; align-items: center; gap: 10px; padding: 8px; background: var(--surface2); border-radius: 8px; cursor: pointer;">
-          <input type="checkbox" data-panel-id="${panelId}" ${isChecked ? 'checked' : ''} style="width: 16px; height: 16px;">
-          <span style="font-weight: 500;">${panelTitle}</span>
-        </label>
-      `;
-      optionsList.insertAdjacentHTML('beforeend', checkboxHTML);
-    });
-
-    document.getElementById('pdf-options-modal').style.display = 'flex';
-  }
-
-  function closePdfOptionsModal() {
-    document.getElementById('pdf-options-modal').style.display = 'none';
-  }
-
-  function executePdfExport() {
-    closePdfOptionsModal();
-
-    const selectedPanelIds = Array.from(document.querySelectorAll('#pdf-options-list input:checked'))
-                                  .map(input => input.getAttribute('data-panel-id'));
-
-    if (selectedPanelIds.length === 0) {
-      alert('Por favor, selecione pelo menos uma seção para exportar.');
-      return;
-    }
-
-    const activePanelId = document.querySelector('.panel.active').id;
-    const originalTitle = document.title;
-    const mainElement = document.querySelector('.main');
-
-    // 1. Preparar para captura: desativar animações, mostrar painéis SELECIONADOS
-    Chart.defaults.animation = false;
-    document.querySelectorAll('.panel').forEach(p => {
-      p.style.display = selectedPanelIds.includes(p.id) ? 'block' : 'none';
-    });
-
-    // Pequeno atraso para permitir que o navegador renderize os painéis
-    setTimeout(() => {
-        const today = new Date();
-        const yyyy = today.getFullYear();
-        const mm = String(today.getMonth() + 1).padStart(2, '0'); // Meses são base 0
-        const dd = String(today.getDate()).padStart(2, '0');
-        const formattedDate = `${yyyy}-${mm}-${dd}`;
-
-        const opt = {
-            margin:       [10, 10, 10, 10], // top, left, bottom, right in mm
-            filename:     `relatorio-profissao-pet-rocinha-${formattedDate}.pdf`,
-            image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2, useCORS: true, logging: false },
-            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        };
-
-        // 2. Clonar o elemento principal para a geração do PDF
-        const elementToPrint = mainElement.cloneNode(true);
-
-        // 3. Limpar o clone (remover botões, etc.)
-        elementToPrint.querySelectorAll('.btn, .filter-sel, .modal-backdrop, .menu-toggle').forEach(el => el.remove());
-
-        // 4. Substituir os canvas por imagens no clone
-        const originalCanvases = mainElement.querySelectorAll('canvas');
-        const clonedCanvases = elementToPrint.querySelectorAll('canvas');
-        originalCanvases.forEach((canvas, index) => {
-            if (clonedCanvases[index]) {
-                const dataURL = canvas.toDataURL('image/png');
-                const img = document.createElement('img');
-                img.src = dataURL; img.style.width = '100%'; img.style.height = 'auto';
-                clonedCanvases[index].parentNode.replaceChild(img, clonedCanvases[index]);
-            }
-        });
-
-        // 5. Gerar o PDF a partir do clone preparado
-        html2pdf().from(elementToPrint).set(opt).save().then(() => {
-            // 6. Restaurar o estado original após salvar
-            document.title = originalTitle;
-            Chart.defaults.animation = true;
-            document.querySelectorAll('.panel').forEach(p => {
-                // Reverte a visibilidade para o estado original (apenas o ativo é 'block')
-                p.style.display = (p.id === activePanelId) ? 'block' : 'none';
-            });
-        });
-    }, 100); // Atraso crucial para a renderização
-  }
-
-  // ── Charts ──────────────────────────────────────────────────────────────
-  function donutChart(id, labels, data, colors) {
-    const ctx = document.getElementById(id);
-    if (!ctx) return;
-    const total = data.reduce((a, b) => a + b, 0);
-    new Chart(ctx, {
-      type: 'doughnut',
-      data: {
-        labels,
-        datasets: [{ data, backgroundColor: colors, borderWidth: 3, borderColor: '#ffffff', hoverOffset: 4 }]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false, cutout: '62%', animation: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            callbacks: {
-              label: c => ` ${c.label}: ${c.raw} (${Math.round(c.raw / total * 100)}%)`
-            }
-          }
-        }
-      }
-    });
-  }
-
-  function hBarChart(id, labels, data, color) {
-    const ctx = document.getElementById(id);
-    if (!ctx) return;
-    const wrap = ctx.parentElement;
-    wrap.style.height = Math.max(labels.length * 40 + 60, 160) + 'px';
-    new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels,
-        datasets: [{ data, backgroundColor: color, borderRadius: 4, borderSkipped: false }]
-      },
-      options: {
-        indexAxis: 'y',
-        responsive: true, maintainAspectRatio: false, animation: false,
-        plugins: { legend: { display: false } },
-        scales: {
-          x: { grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { font: { size: 11 } }, beginAtZero: true },
-          y: { grid: { display: false }, ticks: { font: { size: 11 } } }
-        }
-      }
-    });
-  }
-
-  function barChart(id, labels, data, color) {
-    const ctx = document.getElementById(id);
-    if (!ctx) return;
-    new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels,
-        datasets: [{ data, backgroundColor: color, borderRadius: 5, borderSkipped: false }]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false, animation: false,
-        plugins: { legend: { display: false } },
-        scales: {
-          x: { grid: { display: false }, ticks: { font: { size: 11 }, maxRotation: 30 } },
-          y: { grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { font: { size: 11 } }, beginAtZero: true }
-        }
-      }
-    });
-  }
-
-  // ── Visão Geral charts ──────────────────────────────────────────────────
-  function initGeraisCharts(membros) {
-    const badgeCounts = countBy(membros, m => m.badge);
-    const bData = BADGE_LABELS.map(l => badgeCounts[l] || 0);
-    donutChart('chartBadge', BADGE_LABELS, bData, BADGE_COLORS);
-    makeLegend('legend-badge',
-      BADGE_LABELS.map((l, i) => `${l} (${bData[i]})`),
-      BADGE_COLORS
-    );
-
-    const top5 = [...membros].sort((a, b) => b.arrasas - a.arrasas).slice(0, 5);
-    barChart(
-      'chartTop5',
-      top5.map(m => m.nome.split(' ')[0]),
-      top5.map(m => m.arrasas),
-      '#003366'
-    );
-
-    const total = membros.length;
-    const prog = document.getElementById('progress-badges');
-    prog.innerHTML = BADGE_LABELS.map((l, i) => {
-      const pct = total ? Math.round((bData[i] / total) * 100) : 0;
-      return `<div class="progress-item">
-        <div class="progress-top">
-          <span>${l}</span>
-          <span class="progress-pct">${bData[i]} alunas · ${pct}%</span>
-        </div>
-        <div class="progress-track">
-          <div class="progress-fill" style="width:${pct}%;background:${BADGE_COLORS[i]}"></div>
-        </div>
-      </div>`;
-    }).join('');
-  }
-
-  // ── Socio charts ────────────────────────────────────────────────────────
-  function initSocioCharts() {
-    const s = SOCIO;
-
-    const raca = countBy(s, r => r.raca);
-    const racaL = Object.keys(raca), racaD = Object.values(raca);
-    donutChart('chartRaca', racaL, racaD, PIE_PALETTE.slice(0, racaL.length));
-    makeLegend('legend-raca', racaL.map((l, i) => `${l} (${racaD[i]})`), PIE_PALETTE.slice(0, racaL.length));
-
-    const gen = countBy(s, r => r.genero);
-    const genL = Object.keys(gen), genD = Object.values(gen);
-    donutChart('chartGenero', genL, genD, PIE_PALETTE.slice(0, genL.length));
-    makeLegend('legend-genero', genL.map((l, i) => `${l} (${genD[i]})`), PIE_PALETTE.slice(0, genL.length));
-
-    const escl = countBy(s, r => r.escolaridade);
-    hBarChart('chartEscola', Object.keys(escl), Object.values(escl), '#185fa5');
-
-    const renda = countBy(s, r => r.ganhos);
-    hBarChart('chartRenda', Object.keys(renda), Object.values(renda), '#0f6e56');
-
-    const civil = countBy(s, r => r.estadoCivil);
-    const civL = Object.keys(civil), civD = Object.values(civil);
-    donutChart('chartCivil', civL, civD, PIE_PALETTE.slice(0, civL.length));
-    makeLegend('legend-civil', civL.map((l, i) => `${l} (${civD[i]})`), PIE_PALETTE.slice(0, civL.length));
-
-    const emprego = countBy(s, r => {
-      if (!r.trabalhando) return 'Sem vínculo';
-      return r.ocupacao || 'Com vínculo';
-    });
-    const empL = Object.keys(emprego), empD = Object.values(emprego);
-    donutChart('chartEmprego', empL, empD, PIE_PALETTE.slice(0, empL.length));
-    makeLegend('legend-emprego', empL.map((l, i) => `${l} (${empD[i]})`), PIE_PALETTE.slice(0, empL.length));
-
-    const pessoas = countBy(s, r => r.pessoasDomicilio ? String(r.pessoasDomicilio) + ' pessoas' : null);
-    const pesL = Object.keys(pessoas).sort();
-    barChart('chartPessoas', pesL, pesL.map(k => pessoas[k]), '#7c3aed');
-
-    const orientacao = countBy(s, r => r.orientacao);
-    const orL = Object.keys(orientacao), orD = Object.values(orientacao);
-    donutChart('chartOrientacao', orL, orD, PIE_PALETTE.slice(0, orL.length));
-    makeLegend('legend-orientacao', orL.map((l, i) => `${l} (${orD[i]})`), PIE_PALETTE.slice(0, orL.length));
-
-    const alunasComSocio = MEMBROS.filter(m => m.dadosSocio && m.idade);
-    const idade = countBy(alunasComSocio, m => {
-      if (m.idade <= 24) return '18-24 anos';
-      if (m.idade <= 34) return '25-34 anos';
-      if (m.idade <= 44) return '35-44 anos';
-      if (m.idade <= 54) return '45-54 anos';
-      return '55+ anos';
-    });
-    const idadeL = ['18-24 anos', '25-34 anos', '35-44 anos', '45-54 anos', '55+ anos'];
-    const idadeD = idadeL.map(k => idade[k] || 0);
-    hBarChart('chartIdade', idadeL, idadeD, '#d4537e');
-
-
-    const comFilhos = s.filter(r => r.filhos === 'Sim').length;
-    const comTrabalho = s.filter(r => r.trabalhando).length;
-    const baixaRenda = s.filter(r => r.ganhos && (r.ganhos.includes('500') || r.ganhos.includes('1.413') || r.ganhos.includes('1413'))).length;
-    const pf = s.length ? ` (${Math.round(comFilhos / s.length * 100)}%)` : '';
-    const pt = s.length ? ` (${Math.round(comTrabalho / s.length * 100)}%)` : '';
-    const pb = s.length ? ` (${Math.round(baixaRenda / s.length * 100)}%)` : '';
-
-    document.getElementById('s-filhos').textContent = comFilhos + pf;
-    document.getElementById('s-trabalho').textContent = comTrabalho + pt;
-    document.getElementById('s-baixa-renda').textContent = baixaRenda + pb;
-  }
-
-  // ── Table ───────────────────────────────────────────────────────────────
-  function renderTabela() {
-    const filtBadge = document.getElementById('filter-badge-sel').value;
-    const filtSocio = document.getElementById('filter-socio-sel').value;
-    let lista = [...MEMBROS];
-    if (filtBadge) lista = lista.filter(m => m.badge === filtBadge);
-    if (filtSocio === 'ok') lista = lista.filter(m => m.dadosSocio);
-    if (filtSocio === 'pend') lista = lista.filter(m => !m.dadosSocio);
-
-    const tbody = document.getElementById('tbody-alunas');
-    if (!lista.length) {
-      tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><i class="fa-solid fa-magnifying-glass"></i>Nenhuma aluna encontrada.</div></td></tr>`;
-      return;
-    }
-    tbody.innerHTML = lista.map(m => {
-      const badgeIdx = BADGE_LABELS.indexOf(m.badge);
-      const bClass = badgeIdx >= 0 ? BADGE_CLASS[badgeIdx] : 'b-curiosa';
-      return `<tr>
-        <td>
-          <div class="name-cell">
-            <span class="avatar">${initials(m.nome || '')}</span>
-            <strong style="cursor:pointer;text-decoration:underline;" onclick="showSocioModal('${m.cpf}')">${m.nome}</strong>
-          </div>
-        </td>
-        <td style="color:var(--muted);font-size:12px">${m.email}</td>
-        <td><span class="pill ${bClass}">${m.badge}</span></td>
-        <td><strong>${m.arrasas.toLocaleString('pt-BR')} AS</strong></td>
-        <td>${m.xp.toLocaleString('pt-BR')} XP</td>
-        <td>
-          ${m.dadosSocio
-            ? `<span class="status-ok"><i class="fa-solid fa-circle-check"></i> Concluído</span>`
-            : `<span class="status-pend"><i class="fa-regular fa-clock"></i> Pendente</span>`
-          }
-        </td>
-      </tr>`;
-    }).join('');
-  }
-
-  // ── Modal Logic ─────────────────────────────────────────────────────────
-  function showSocioModal(cpf) {
-    const aluna = MEMBROS.find(m => m.cpf === cpf);
-    if (!aluna) return;
-
-    document.getElementById('modal-title').textContent = `Perfil de ${aluna.nome.split(' ')[0]}`;
-    const body = document.getElementById('modal-body');
-
-    if (!aluna.dadosSocio) {
-      body.innerHTML = `<div class="empty-state"><i class="fa-regular fa-file-lines"></i>Formulário socioeconômico não preenchido.</div>`;
-    } else {
-      const s = aluna.dadosSocio;
-      const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString('pt-BR') : 'Não informado';
-
-      const programDetails = [
-        { label: 'E-mail', value: aluna.email },
-        { label: 'Telefone (WPP)', value: aluna.wpp },
-        { label: 'Medalha Atual', value: aluna.badge },
-        { label: 'Arrasas (AS)', value: aluna.arrasas.toLocaleString('pt-BR') },
-        { label: 'Experiência (XP)', value: aluna.xp.toLocaleString('pt-BR') },
-        { label: 'Tags', value: aluna.tags },
-        { label: 'Alertas', value: aluna.alertas },
-        { label: 'ID da Aluna', value: aluna.id },
-        { label: 'Data de Cadastro', value: formatDate(aluna.criadoEm) },
-        { label: 'Última Visita', value: formatDate(aluna.ultimaVisita) },
-      ];
-
-      const socioDetails = [
-        { label: 'Idade', value: aluna.idade ? `${aluna.idade} anos` : 'Não informado' },
-        { label: 'CPF', value: s.cpf },
-        { label: 'NIS', value: s.nis },
-        { label: 'Gênero', value: s.genero },
-        { label: 'Raça/Cor', value: s.raca },
-        { label: 'Orientação Sexual', value: s.orientacao },
-        { label: 'Estado Civil', value: s.estadoCivil },
-        { label: 'Filhos', value: `${s.filhos}${s.quantosFilhos > 0 ? ` (${s.quantosFilhos})` : ''}` },
-        { label: 'Escolaridade', value: s.escolaridade },
-        { label: 'Situação Profissional', value: s.situacaoProf },
-        { label: 'Trabalhando Hoje?', value: s.trabalhando ? 'Sim' : 'Não' },
-        { label: 'Ocupação', value: s.ocupacao },
-        { label: 'Renda Familiar', value: s.ganhos },
-        { label: 'Pessoas no Domicílio', value: s.pessoasDomicilio },
-        { label: 'Organização Financeira', value: s.orgFinanceira },
-        { label: 'Renda Extra', value: `${s.rendaExtra}${s.rendaExtraOque ? ` (${s.rendaExtraOque})` : ''}` },
-        { label: 'Maiores Gastos', value: s.maioresGastos },
-        { label: 'Interesse no Curso', value: s.interesse },
-        { label: 'Melhor Horário', value: s.horario },
-        { label: 'Indicação', value: s.indicacao },
-        { label: 'Motivação', value: s.motivacao },
-      ];
-
-      const renderGrid = (details) => details.map(d => `
-        <div class="detail-item">
-          <div class="detail-label">${d.label}</div>
-          <div class="detail-value">${d.value || 'Não informado'}</div>
-        </div>
-      `).join('');
-
-      body.innerHTML = `
-        <div class="modal-profile-header">
-          <img src="${aluna.imgUrl || 'https://github.com/juanjsales/PETRocinha/blob/main/pet%20(1).png?raw=true'}" alt="Foto de ${aluna.nome}" class="modal-profile-img">
-          <div>
-            <h3 style="font-size:18px; color:var(--navy);">${aluna.nome}</h3>
-            <p style="font-size:12px; color:var(--muted);">${aluna.email}</p>
-          </div>
-        </div>
-        <h4><i class="fa-solid fa-award"></i> Perfil do Programa</h4>
-        <div class="detail-grid">
-          ${renderGrid(programDetails)}
-        </div>
-        <div class="divider"></div>
-        <h4><i class="fa-solid fa-users"></i> Perfil Socioeconômico</h4>
-        <div class="detail-grid">
-          ${renderGrid(socioDetails)}
-        </div>`;
-    }
-    document.getElementById('socio-modal').style.display = 'flex';
-  }
-  function closeModal() {
-    document.getElementById('socio-modal').style.display = 'none';
-  }
-
-  // ── Data Merging ────────────────────────────────────────────────────────
-  function tentarMergeEProcessar() {
-    // Só executa se ambos os datasets estiverem carregados
-    if (MEMBROS.length === 0 || SOCIO.length === 0) return;
-
-    // Cria um mapa dos dados socioeconômicos usando CPF como chave para busca rápida
-    const socioMap = new Map(SOCIO.map(s => [s.cpf, s]));
-
-    // Itera sobre as alunas para cruzar os dados
-    MEMBROS.forEach(membro => {
-      const dadosSocio = socioMap.get(membro.cpf);
-      if (dadosSocio) {
-        membro.dadosSocio = dadosSocio; // Anexa o objeto socioeconômico completo
-      }
-
-      // Calcula a idade a partir da data de nascimento
-      if (membro.nascimento) {
-        const birthDate = new Date(membro.nascimento);
-        const today = new Date();
-        let age = today.getFullYear() - birthDate.getFullYear();
-        const m = today.getMonth() - birthDate.getMonth();
-        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-            age--;
-        }
-        membro.idade = age;
-      }
-    });
-
-    // Agora que os dados estão mesclados, podemos processar as métricas e a tabela
-    let totalAS = 0, totalXP = 0, socioOk = 0;
-    MEMBROS.forEach(m => {
-      totalAS += m.arrasas;
-      totalXP += m.xp;
-      if (m.dadosSocio) socioOk++;
-    });
-    const pct = MEMBROS.length ? Math.round(socioOk / MEMBROS.length * 100) : 0;
-
-    document.getElementById('m-total').textContent = MEMBROS.length;
-    document.getElementById('m-arrasas').textContent = totalAS.toLocaleString('pt-BR') + ' AS';
-    document.getElementById('m-socio').textContent = socioOk;
-    document.getElementById('m-socio-pct').textContent = `${pct}% concluíram o formulário`;
-    document.getElementById('m-xp').textContent = totalXP.toLocaleString('pt-BR') + ' XP';
-
-    initGeraisCharts(MEMBROS);
-    if (!socioChartsReady) {
-      initSocioCharts();
-      socioChartsReady = true;
-    }
-    renderTabela();
-  }
-
-  // ── Data loading ────────────────────────────────────────────────────────
-  function processarDadosBI(dados) {
-    if (!dados || dados.erro) {
-      document.getElementById('tbody-alunas').innerHTML = `<tr><td colspan="6"><div class="empty-state"><i class="fa-solid fa-triangle-exclamation"></i>Erro ao carregar membros: ${dados && dados.erro ? dados.erro : 'Verifique o script.'}</div></td></tr>`;
-      return;
-    }
-    MEMBROS = dados;
-    tentarMergeEProcessar();
-  }
-
-  function processarSocioBI(dados) {
-    if (!dados || dados.erro) return;
-    SOCIO = dados;
-    tentarMergeEProcessar();
-  }
-
-  function carregar() {
-    const s1 = document.createElement('script');
-    s1.src = `${API_BASE}?callback=processarDadosBI&endpoint=membros`;
-    document.body.appendChild(s1);
-
-    const s2 = document.createElement('script');
-    s2.src = `${API_BASE}?callback=processarSocioBI&endpoint=socioeconomico`;
-    document.body.appendChild(s2);
-
-    // Close modal on outside click
-    document.getElementById('socio-modal').addEventListener('click', function(e) {
-      if (e.target === this) closeModal();
-    });
-
-    // Close PDF options modal on outside click
-    document.getElementById('pdf-options-modal').addEventListener('click', function(e) {
-      if (e.target === this) closePdfOptionsModal();
-    });
-
-    if (window.innerWidth <= 860) {
-      document.querySelector('.sidebar').classList.remove('expanded');
-    }
-
-    // Close sidebar on outside click (mobile)
-    document.addEventListener('click', function(event) {
-      const sidebar = document.querySelector('.sidebar');
-      const isClickInsideSidebar = sidebar.contains(event.target);
-      const isMenuToggle = event.target.closest('.menu-toggle');
-
-      if (sidebar.classList.contains('expanded') && !isClickInsideSidebar && !isMenuToggle) {
-        sidebar.classList.remove('expanded');
-      }
-    });
-  }
-
-  window.addEventListener('load', carregar);
-</script>
+<script src="script.js" defer></script>
 </body>
 </html>
