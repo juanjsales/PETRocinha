@@ -1,0 +1,414 @@
+<div class="circle-embed-container" style="position: relative; width: 100%; min-height: 700px;">
+    <iframe srcdoc='
+    <!DOCTYPE html>
+    <html lang="pt-br">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Mapeamento PET Rocinha</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+        <style>
+            body { font-family: "Plus Jakarta Sans", sans-serif; background-color: #f8fafc; margin: 0; overflow-x: hidden; }
+            .step { display: none; opacity: 0; pointer-events: none; }
+            .step.active { display: flex; opacity: 1; pointer-events: auto; animation: fadeIn 0.4s ease-out forwards; }
+            @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+            
+            .option-btn { border: 2px solid #e2e8f0; transition: all 0.2s; cursor: pointer; border-radius: 1rem; text-align: left; width: 100%; background: white; z-index: 10; position: relative; }
+            .option-btn:hover { border-color: #2563eb; background-color: #f0f9ff; }
+            
+            .social-checkbox:checked + div { border-color: #2563eb; background-color: #f0f9ff; color: #2563eb; font-weight: bold; }
+            .custom-scroll::-webkit-scrollbar { width: 5px; }
+            .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+
+            .slide-photo {
+                position: absolute;
+                inset: 0;
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                object-position: center;
+                opacity: 0;
+                transition: opacity 1.5s ease-in-out;
+                z-index: 1;
+            }
+            .slide-photo.active { opacity: 0.5; }
+
+            .logo-fixa {
+                position: relative;
+                z-index: 20;
+                mix-blend-mode: multiply;
+            }
+        </style>
+    </head>
+    <body class="min-h-screen flex items-center justify-center p-4">
+
+        <div class="w-full max-w-5xl bg-white rounded-[2rem] shadow-2xl overflow-hidden flex flex-col md:flex-row min-h-[650px] relative">
+            
+            <div class="md:w-5/12 bg-gray-900 relative overflow-hidden" id="slider-container">
+                <img src="https://github.com/juanjsales/map_rocinha/blob/main/WhatsApp%20Image%202026-04-24%20at%2013.39.11.jpeg?raw=true" class="slide-photo active">
+                <img src="https://github.com/juanjsales/map_rocinha/blob/main/20241012_140801.jpg?raw=true" class="slide-photo">
+                <img src="https://github.com/juanjsales/map_rocinha/blob/main/WhatsApp%20Image%202026-04-24%20at913.51.02.jpeg?raw=true" class="slide-photo">
+                <img src="https://github.com/juanjsales/map_rocinha/blob/main/SEJA%20MUITO%20BEM%20VINDA%20(3).png?raw=true" class="slide-photo">
+                
+                <div class="relative z-10 p-10 h-full flex flex-col justify-end items-center text-center bg-gradient-to-t from-black/90 via-black/20 to-transparent text-white">
+                    <img src="https://github.com/juanjsales/map_rocinha/blob/main/Etiquetas_Movimento%20(1).png?raw=true" 
+                         class="logo-fixa w-24 h-24 mb-4 rounded-full object-cover shadow-2xl" 
+                         alt="Logo Profissão PET">
+                    
+                    <h2 class="text-3xl font-extrabold leading-tight">Mapeamento PET Rocinha</h2>
+                    <p class="mt-4 text-gray-300">Cuidar é o novo futuro! Fortaleça nossa rede.</p>
+                </div>
+            </div>
+
+            <div class="md:w-7/12 p-8 md:p-12 flex flex-col justify-center relative bg-white">
+                <div class="absolute top-0 left-0 w-full h-1.5 bg-gray-100 z-50">
+                    <div id="progress" class="h-full bg-blue-600 transition-all duration-500" style="width: 5%"></div>
+                </div>
+
+                <!-- STEP 0: INICIAL (Editado conforme a imagem) -->
+                <div class="step active flex-col" id="step-0">
+                    <div class="mb-6">
+                        <h3 class="text-blue-600 font-bold uppercase tracking-widest text-xs mb-2">🐾 Fortalecendo a Rocinha</h3>
+                        <h1 class="text-2xl md:text-3xl font-extrabold text-gray-900 leading-tight">Mapeamento PET Rocinha: Vamos fortalecer o nosso corre! 🐾</h1>
+                    </div>
+                    
+                    <p class="text-gray-600 mb-6 leading-relaxed">
+                        O mercado pet não para de crescer! Nosso objetivo com essa pesquisa é conectar quem já trabalha na área, quem quer começar, tutores e protetores que cuidam desse setor aqui na Rocinha.
+                    </p>
+
+                    <div class="space-y-4 mb-8">
+                        <p class="font-bold text-gray-900">Por que participar? Em menos de 1 minuto, você:</p>
+                        
+                        <div class="flex items-start gap-3">
+                            <span class="text-xl">🚀</span>
+                            <p class="text-gray-600">
+                                <strong class="text-gray-900">Ganha visibilidade:</strong> Coloca seu "corre" no mapa para mais clientes te acharem.
+                            </p>
+                        </div>
+
+                        <div class="flex items-start gap-3">
+                            <span class="text-xl">🤝</span>
+                            <p class="text-gray-600">
+                                <strong class="text-gray-900">Cria conexões:</strong> Conhece parceiros e fortalece sua rede.
+                            </p>
+                        </div>
+
+                        <div class="flex items-start gap-3">
+                            <span class="text-xl">💡</span>
+                            <p class="text-gray-600">
+                                <strong class="text-gray-900">Atrai oportunidades:</strong> Mostra o tamanho do nosso mercado para trazer melhorias para a comunidade.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="bg-blue-50 text-blue-700 py-3 px-6 rounded-lg text-center font-bold italic mb-6">
+                        Bora crescer juntos? É rápido e 100% confidencial!
+                    </div>
+
+                    <button onclick="next(1)" class="bg-blue-600 text-white font-bold py-4 px-10 rounded-xl shadow-lg hover:bg-blue-700 transition-all w-full flex items-center justify-center gap-2">
+                        Bora Começar! <span>&rarr;</span>
+                    </button>
+                </div>
+
+                <div class="step flex-col" id="step-1">
+                    <button onclick="next(0)" class="text-gray-400 hover:text-blue-600 font-bold text-sm mb-4 flex items-center gap-1">&larr; Voltar</button>
+                    <h3 class="text-2xl font-bold mb-6">Consentimento LGPD</h3>
+                    <label class="flex items-start gap-4 p-6 border-2 border-gray-100 rounded-2xl cursor-pointer hover:bg-blue-50 mb-6">
+                        <input type="checkbox" id="lgpd" class="mt-1 w-6 h-6 text-blue-600">
+                        <span class="text-sm text-gray-600 leading-relaxed">Autorizo o uso dos meus dados para este mapeamento e contato pela Profissão PET conforme a LGPD.</span>
+                    </label>
+                    <button onclick="validaLGPD()" class="bg-blue-600 text-white font-bold py-4 rounded-xl">Aceitar e Continuar</button>
+                </div>
+
+                <div class="step flex-col" id="step-2">
+                    <button onclick="next(1)" class="text-gray-400 hover:text-blue-600 font-bold text-sm mb-4 flex items-center gap-1">&larr; Voltar</button>
+                    <h3 class="text-2xl font-bold mb-6">Dados de Contato</h3>
+                    <div class="space-y-4 mb-6">
+                        <input type="text" id="nome" class="w-full text-lg border-b-2 p-2 outline-none focus:border-blue-500" placeholder="Nome Completo">
+                        <input type="email" id="email" class="w-full text-lg border-b-2 p-2 outline-none focus:border-blue-500" placeholder="E-mail">
+                        <input type="text" id="whatsapp" oninput="maskTel(this)" class="w-full text-lg border-b-2 p-2 outline-none focus:border-blue-500" placeholder="WhatsApp (21) 9XXXX-XXXX">
+                    </div>
+                    <p class="text-sm font-bold text-gray-500 mb-3 uppercase">Suas Redes Sociais:</p>
+                    <div class="grid grid-cols-2 gap-2 mb-4">
+                        <label class="cursor-pointer"><input type="checkbox" name="rede" value="Instagram" class="hidden social-checkbox"><div class="option-btn p-3 text-center text-sm font-semibold">Instagram</div></label>
+                        <label class="cursor-pointer"><input type="checkbox" name="rede" value="Facebook" class="hidden social-checkbox"><div class="option-btn p-3 text-center text-sm font-semibold">Facebook</div></label>
+                        <label class="cursor-pointer"><input type="checkbox" name="rede" value="TikTok" class="hidden social-checkbox"><div class="option-btn p-3 text-center text-sm font-semibold">TikTok</div></label>
+                        <label class="cursor-pointer">
+                            <input type="checkbox" id="check-rede-outros" name="rede" value="Outros" class="hidden social-checkbox" onchange="toggleOutraRede(this)">
+                            <div class="option-btn p-3 text-center text-sm font-semibold">Outros</div>
+                        </label>
+                    </div>
+                    <div id="container-outra-rede" class="hidden mb-6">
+                        <input type="text" id="input-outra-rede" class="w-full text-lg border-b-2 border-blue-500 p-2 outline-none" placeholder="Quais outras?">
+                    </div>
+                    <button onclick="validaContato()" class="bg-blue-600 text-white font-bold py-4 rounded-xl">Próximo</button>
+                </div>
+
+                <div class="step flex-col" id="step-3">
+                    <button onclick="next(2)" class="text-gray-400 hover:text-blue-600 font-bold text-sm mb-4 flex items-center gap-1">&larr; Voltar</button>
+                    <h3 class="text-2xl font-bold mb-6">Onde você mora na Rocinha?</h3>
+                    <div id="locais-grid" class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[300px] overflow-y-auto pr-2 custom-scroll mb-4 p-1"></div>
+                    <div id="outro-local-container" class="hidden space-y-4">
+                        <input type="text" id="input-outro-local" class="w-full text-lg border-b-2 border-blue-500 p-2 outline-none" placeholder="Qual localidade?">
+                        <div class="flex gap-2">
+                             <button onclick="document.getElementById(&apos;outro-local-container&apos;).classList.add(&apos;hidden&apos;); document.getElementById(&apos;locais-grid&apos;).style.display = &apos;grid&apos;;" class="w-1/3 bg-gray-100 text-gray-600 font-bold py-3 rounded-xl">Voltar</button>
+                             <button onclick="salvarOutroLocal()" class="w-2/3 bg-blue-600 text-white font-bold py-3 rounded-xl">Confirmar Local</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step flex-col" id="step-4">
+                    <button onclick="next(3)" class="text-gray-400 hover:text-blue-600 font-bold text-sm mb-4 flex items-center gap-1">&larr; Voltar</button>
+                    <h3 class="text-2xl font-bold mb-8 text-center">Tem pet em casa?</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <button onclick="saveAndNext(&apos;temPet&apos;, &apos;Sim&apos;, 5)" class="option-btn p-8 font-bold text-center">Sim! 🐕</button>
+                        <button onclick="saveAndNext(&apos;temPet&apos;, &apos;Ainda não&apos;, 5)" class="option-btn p-8 font-bold text-center">Não ❌</button>
+                    </div>
+                </div>
+
+                <div class="step flex-col" id="step-5">
+                    <button onclick="next(4)" class="text-gray-400 hover:text-blue-600 font-bold text-sm mb-4 flex items-center gap-1">&larr; Voltar</button>
+                    <h3 class="text-2xl font-bold mb-6">Qual sua relação com pets?</h3>
+                    <div class="space-y-4">
+                        <button onclick="logicaRamificacao(&apos;Tutor&apos;)" class="option-btn p-5 font-medium text-gray-700">🏠 Tutor / Dono</button>
+                        <button onclick="logicaRamificacao(&apos;Interessado&apos;)" class="option-btn p-5 font-medium text-gray-700">🔍 Quero me profissionalizar</button>
+                        <div class="relative">
+                            <select id="select-pro" onchange="selecionarProfissao(this.value)" class="option-btn p-5 text-blue-600 font-bold border-blue-200 bg-blue-50 appearance-none outline-none">
+                                <option value="" disabled selected>🩺 Trabalho na área (Selecione...)</option>
+                                <option value="Médico Veterinário">Médico Veterinário</option>
+                                <option value="Banho e Tosa">Banho e Tosa</option>
+                                <option value="Comércio PET">Comércio PET</option>
+                                <option value="Cuidador/babá PET">Cuidador/babá PET</option>
+                                <option value="Protetora">Protetora</option>
+                                <option value="Outro">Outro</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step flex-col" id="step-interessado-areas">
+                    <button onclick="next(5)" class="text-gray-400 hover:text-blue-600 font-bold text-sm mb-4 flex items-center gap-1">&larr; Voltar</button>
+                    <h3 class="text-2xl font-bold mb-6">Qual área te interessa?</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                        <button onclick="salvarInteresse(&apos;Pet Sitter&apos;)" class="option-btn p-4 font-semibold">Pet Sitter</button>
+                        <button onclick="salvarInteresse(&apos;Passeador de Cães (Dog Walker)&apos;)" class="option-btn p-4 font-semibold">Passeador de Cães (Dog Walker)</button>
+                        <button onclick="salvarInteresse(&apos;Comida Pet&apos;)" class="option-btn p-4 font-semibold">Comida Pet</button>
+                        <button onclick="salvarInteresse(&apos;Banhista&apos;)" class="option-btn p-4 font-semibold">Banhista</button>
+                        <button onclick="salvarInteresse(&apos;Hospedagem/Creche Pet&apos;)" class="option-btn p-4 font-semibold">Hospedagem/Creche Pet</button>
+                        <button onclick="document.getElementById(&apos;container-outro-interesse&apos;).classList.remove(&apos;hidden&apos;)" class="option-btn p-4 font-semibold text-blue-600">Outros</button>
+                    </div>
+                    <div id="container-outro-interesse" class="hidden space-y-4">
+                        <input type="text" id="input-outro-interesse" class="w-full text-lg border-b-2 border-blue-500 p-2 outline-none" placeholder="Qual área te interessa?">
+                        <div class="flex gap-2">
+                            <button onclick="document.getElementById(&apos;container-outro-interesse&apos;).classList.add(&apos;hidden&apos;)" class="w-1/3 bg-gray-100 text-gray-600 font-bold py-3 rounded-xl">Cancelar</button>
+                            <button onclick="salvarInteresse(document.getElementById(&apos;input-outro-interesse&apos;).value)" class="w-2/3 bg-blue-600 text-white font-bold py-3 rounded-xl">Confirmar</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step flex-col" id="step-pro-dados">
+                    <button onclick="next(5)" class="text-gray-400 hover:text-blue-600 font-bold text-sm mb-4 flex items-center gap-1">&larr; Voltar</button>
+                    <h3 class="text-2xl font-bold mb-6">Sobre seu trabalho</h3>
+                    <div class="space-y-4 mb-6">
+                        <input type="text" id="nome_estabelecimento" class="w-full text-lg border-b-2 p-2 outline-none focus:border-blue-500" placeholder="Nome do Estabelecimento / Seu corre">
+                        <input type="text" id="insta_profissional" class="w-full text-lg border-b-2 p-2 outline-none focus:border-blue-500" placeholder="Instagram Profissional (se tiver)">
+                    </div>
+                    <button onclick="salvarDadosPro()" class="bg-blue-600 text-white font-bold py-4 rounded-xl">Próximo</button>
+                </div>
+
+                <div class="step flex-col" id="step-pro-1">
+                    <button onclick="next(&apos;pro-dados&apos;)" class="text-gray-400 hover:text-blue-600 font-bold text-sm mb-4 flex items-center gap-1">&larr; Voltar</button>
+                    <h3 class="text-2xl font-bold mb-6">Atende na sua própria casa?</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <button onclick="saveAndNext(&apos;atendimentoCasa&apos;, &apos;Sim&apos;, &apos;pro-2&apos;)" class="option-btn p-6 text-center font-bold">Sim</button>
+                        <button onclick="saveAndNext(&apos;atendimentoCasa&apos;, &apos;Não&apos;, &apos;pro-2&apos;)" class="option-btn p-6 text-center font-bold">Não</button>
+                    </div>
+                </div>
+
+                <div class="step flex-col" id="step-pro-2">
+                    <button onclick="next(&apos;pro-1&apos;)" class="text-gray-400 hover:text-blue-600 font-bold text-sm mb-4 flex items-center gap-1">&larr; Voltar</button>
+                    <h3 class="text-2xl font-bold mb-6">Movimentação mensal:</h3>
+                    <div class="space-y-3">
+                        <button onclick="salvarProFinal(&apos;Até R$ 1.000&apos;)" class="option-btn p-4 font-semibold">Até R$ 1.000</button>
+                        <button onclick="salvarProFinal(&apos;R$ 1.001 a R$ 2.000&apos;)" class="option-btn p-4 font-semibold">R$ 1.001 a R$ 2.000</button>
+                        <button onclick="salvarProFinal(&apos;R$ 2.001 a R$ 5.000&apos;)" class="option-btn p-4 font-semibold">R$ 2.001 a R$ 5.000</button>
+                        <button onclick="salvarProFinal(&apos;Acima de R$ 5.000&apos;)" class="option-btn p-4 font-semibold">Acima de R$ 5.000</button>
+                    </div>
+                </div>
+
+                <div class="step flex-col" id="step-gasto">
+                    <button onclick="window.history.back();" id="btn-voltar-gasto" class="text-gray-400 hover:text-blue-600 font-bold text-sm mb-4 flex items-center gap-1">&larr; Voltar</button>
+                    <h3 class="text-2xl font-bold mb-6">Qual o gasto médio mensal com seu pet?</h3>
+                    <div class="space-y-3">
+                        <button onclick="finalizarTudo(&apos;Até R$ 100&apos;)" class="option-btn p-5 font-bold">Até R$ 100</button>
+                        <button onclick="finalizarTudo(&apos;R$ 101 a R$ 300&apos;)" class="option-btn p-5 font-bold">R$ 101 a R$ 300</button>
+                        <button onclick="finalizarTudo(&apos;Acima de R$ 300&apos;)" class="option-btn p-5 font-bold">Acima de R$ 300</button>
+                    </div>
+                </div>
+
+                <div class="step flex-col items-center text-center" id="step-success">
+                    <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6">
+                        <img src="https://img.icons8.com/fluency/96/ok.png" class="w-12 h-12">
+                    </div>
+                    <h2 class="text-3xl font-extrabold text-gray-900">Mapeado com sucesso! ✨</h2>
+                    <p class="text-gray-500 mt-4 leading-relaxed">Sua participação ajuda a fortalecer a causa animal na nossa comunidade.</p>
+                    <button onclick="window.location.reload()" class="mt-8 bg-blue-600 text-white font-bold py-4 px-8 rounded-xl w-full">Finalizar</button>
+                </div>
+            </div>
+        </div>
+
+    <script>
+        let slideIndex = 0;
+        const slides = document.querySelectorAll(".slide-photo");
+        function showSlides() {
+            slides.forEach(img => img.classList.remove("active"));
+            slideIndex = (slideIndex + 1) % slides.length;
+            slides[slideIndex].classList.add("active");
+            setTimeout(showSlides, 4000);
+        }
+        if(slides.length > 0) setTimeout(showSlides, 4000);
+
+        const scriptURL = &apos;https://script.google.com/macros/s/AKfycbwfHPXTOzLSriWPmeTJMG6M_Y5onqOB6oiyiC8VEv-kMwPSWdlwwH5qipALJsyn1PMR/exec&apos;; 
+        let responses = {};
+
+        const localidades = [&apos;Via Ápia&apos;, &apos;Largo do Boiadeiro&apos;, &apos;Caminho do Boiadeiro&apos;, &apos;Vila Verde&apos;, &apos;Laboriaux&apos;, &apos;Curva do S&apos;, &apos;Roupa Suja&apos;, &apos;Roupa Suja Baixa&apos;, &apos;Bairro Barcelos&apos;, &apos;Rua Dionéia&apos;, &apos;Cachopa&apos;, &apos;Valão&apos;, &apos;Roça&apos;, &apos;Mata Machado&apos;, &apos;Beco do 199&apos;, &apos;Toca da Onça&apos;, &apos;Lazer&apos;, &apos;Vila Cruzado&apos;, &apos;99&apos;, &apos;Canal&apos;, &apos;Parque da Cidade&apos;, &apos;Santuário&apos;, &apos;Outros&apos;];
+        
+        const grid = document.getElementById(&apos;locais-grid&apos;);
+        localidades.forEach(loc => {
+            const btn = document.createElement(&apos;button&apos;);
+            btn.className = &apos;option-btn p-4 font-semibold text-gray-700 text-sm&apos;;
+            btn.innerText = loc;
+            btn.onclick = () => {
+                if(loc === &apos;Outros&apos;) {
+                    document.getElementById(&apos;outro-local-container&apos;).classList.remove(&apos;hidden&apos;);
+                    grid.style.display = &apos;none&apos;;
+                } else {
+                    saveAndNext(&apos;territorio&apos;, loc, 4);
+                }
+            };
+            grid.appendChild(btn);
+        });
+
+        function next(id) {
+            document.querySelectorAll(&apos;.step&apos;).forEach(s => s.classList.remove(&apos;active&apos;));
+            const target = document.getElementById(`step-${id}`);
+            if(target) target.classList.add(&apos;active&apos;);
+            
+            const progMap = { 
+                0:5, 1:15, 2:30, 3:45, 4:55, 5:65, 
+                &apos;interessado-areas&apos;: 75, 
+                &apos;pro-dados&apos;: 75, 
+                &apos;pro-1&apos;: 85, &apos;pro-2&apos;: 90, 
+                &apos;gasto&apos;: 95, &apos;success&apos;: 100 
+            };
+            document.getElementById(&apos;progress&apos;).style.width = (progMap[id] || 100) + &apos;%&apos;;
+
+            if(id === &apos;gasto&apos;){
+                const btnVoltarGasto = document.getElementById(&apos;btn-voltar-gasto&apos;);
+                if(responses.relacao === &apos;Tutor&apos;) btnVoltarGasto.onclick = () => next(5);
+                else if(responses.relacao === &apos;Interessado&apos;) btnVoltarGasto.onclick = () => next(&apos;interessado-areas&apos;);
+                else btnVoltarGasto.onclick = () => next(&apos;pro-2&apos;);
+            }
+
+            window.scrollTo(0,0);
+        }
+
+        function saveAndNext(key, val, nextId) { responses[key] = val; next(nextId); }
+
+        function validaLGPD() { if(!document.getElementById(&apos;lgpd&apos;).checked) return alert("Aceite os termos."); next(2); }
+
+        function toggleOutraRede(checkbox) {
+            const container = document.getElementById(&apos;container-outra-rede&apos;);
+            container.classList.toggle(&apos;hidden&apos;, !checkbox.checked);
+        }
+
+        function validaContato() {
+            const nome = document.getElementById(&apos;nome&apos;).value.trim();
+            const zap = document.getElementById(&apos;whatsapp&apos;).value;
+            const redesCheckboxes = Array.from(document.querySelectorAll(&apos;input[name="rede"]:checked&apos;));
+            if(nome.length < 3 || zap.length < 14) return alert("Preencha nome e WhatsApp corretamente.");
+            
+            let redes = redesCheckboxes.map(r => r.value);
+            if(document.getElementById(&apos;check-rede-outros&apos;).checked) {
+                const outraVal = document.getElementById(&apos;input-outra-rede&apos;).value.trim();
+                if(outraVal) { redes = redes.filter(r => r !== &apos;Outros&apos;); redes.push(outraVal); }
+            }
+
+            responses.nome = nome;
+            responses.email = document.getElementById(&apos;email&apos;).value.trim();
+            responses.whatsapp = "55" + zap.replace(/\D/g, "");
+            responses.redes_sociais_pessoal = redes.join(&apos;, &apos;);
+            next(3);
+        }
+
+        function salvarOutroLocal() {
+            const v = document.getElementById(&apos;input-outro-local&apos;).value.trim();
+            if (v.length < 2) return alert("Digite a localidade.");
+            responses.territorio = v;
+            next(4);
+        }
+
+        function selecionarProfissao(valor) { 
+            responses.relacao = &apos;Profissional&apos;; 
+            responses.profissao_especifica = valor;
+            next(&apos;pro-dados&apos;);
+        }
+
+        function salvarDadosPro() {
+            responses.estabelecimento = document.getElementById(&apos;nome_estabelecimento&apos;).value.trim();
+            responses.instagram_profissional = document.getElementById(&apos;insta_profissional&apos;).value.trim();
+            next(&apos;pro-1&apos;);
+        }
+
+        function logicaRamificacao(perfil) {
+            responses.relacao = perfil;
+            const temPet = responses.temPet === &apos;Sim&apos;;
+
+            if (perfil === &apos;Interessado&apos;) {
+                next(&apos;interessado-areas&apos;);
+            } else if (perfil === &apos;Tutor&apos;) {
+                temPet ? next(&apos;gasto&apos;) : finalizarTudo(&apos;Informou ser tutor mas sem pet&apos;);
+            }
+        }
+
+        function salvarInteresse(valor) {
+            if(!valor || valor.length < 2) return alert("Por favor, informe a área de interesse.");
+            responses.area_interesse = valor;
+            const temPet = responses.temPet === &apos;Sim&apos;;
+            temPet ? next(&apos;gasto&apos;) : finalizarTudo(&apos;Não possui pet&apos;);
+        }
+
+        function salvarProFinal(f) { 
+            responses.faturamento = f; 
+            if (responses.temPet === &apos;Sim&apos;) {
+                next(&apos;gasto&apos;);
+            } else {
+                finalizarTudo(&apos;Não possui pet&apos;);
+            }
+        }
+
+        async function finalizarTudo(g) {
+            responses.gastoMensal = g;
+            next(&apos;success&apos;);
+            try { 
+                await fetch(scriptURL, { 
+                    method: &apos;POST&apos;, 
+                    mode: &apos;no-cors&apos;, 
+                    headers: { &apos;Content-Type&apos;: &apos;application/json&apos; },
+                    body: JSON.stringify(responses) 
+                }); 
+            } catch (e) { console.error("Erro no fetch:", e); }
+        }
+
+        function maskTel(i) {
+            let v = i.value.replace(/\D/g, "");
+            v = v.replace(/^(\d{2})(\d)/g, "($1) $2");
+            v = v.replace(/(\d)(\d{4})$/, "$1-$2");
+            i.value = v;
+        }
+    </script>
+    </body>
+    </html>' 
+    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;"></iframe>
+</div>
