@@ -440,11 +440,18 @@ function initImpactoCharts() {
     'Acima de R$ 2.001': { sum: 2500, count: 0 }
   };
 
+  // Mapeamento de substrings para chaves do objeto faixasDeRenda
+  const rendaMap = {
+    '500': 'Até R$ 500',
+    '1.412': 'De R$ 501 a R$ 1.412',
+    '2.000': 'De R$ 1.413 a R$ 2.000',
+    '2.001': 'Acima de R$ 2.001'
+  };
+
   SOCIO.forEach(s => {
-    const ganho = s.ganhos || 'Não informado';
-    if (ganho in faixasDeRenda) {
-      faixasDeRenda[ganho].count++;
-    }
+    const ganhoStr = s.ganhos || '';
+    const key = Object.keys(rendaMap).find(sub => ganhoStr.includes(sub));
+    if (key) faixasDeRenda[rendaMap[key]].count++;
   });
 
   const potLabels = Object.keys(faixasDeRenda);
