@@ -1,5 +1,3 @@
-<div class="circle-embed-container" style="position: relative; width: 100%;">
-    <iframe id="form-iframe" srcdoc='
     <!DOCTYPE html>
     <html lang="pt-br">
     <head>
@@ -152,7 +150,7 @@
                     <div id="outro-local-container" class="hidden space-y-4">
                         <input type="text" id="input-outro-local" class="w-full text-lg border-b-2 border-blue-500 p-2 outline-none" placeholder="Qual localidade?">
                         <div class="flex gap-2">
-                             <button onclick="document.getElementById(&apos;outro-local-container&apos;).classList.add(&apos;hidden&apos;); document.getElementById(&apos;locais-grid&apos;).style.display = &apos;grid&apos;;" class="w-1/3 bg-gray-100 text-gray-600 font-bold py-3 rounded-xl">Voltar</button>
+                             <button onclick="document.getElementById('outro-local-container').classList.add('hidden'); document.getElementById('locais-grid').style.display = 'grid';" class="w-1/3 bg-gray-100 text-gray-600 font-bold py-3 rounded-xl">Voltar</button>
                              <button onclick="salvarOutroLocal()" class="w-2/3 bg-blue-600 text-white font-bold py-3 rounded-xl">Confirmar Local</button>
                         </div>
                     </div>
@@ -162,8 +160,8 @@
                     <button onclick="next(3)" class="text-gray-400 hover:text-blue-600 font-bold text-sm mb-4 flex items-center gap-1">&larr; Voltar</button>
                     <h3 class="text-2xl font-bold mb-8 text-center">Tem pet em casa?</h3>
                     <div class="grid grid-cols-2 gap-4">
-                        <button onclick="saveAndNext(&apos;temPet&apos;, &apos;Sim&apos;, 5)" class="option-btn p-8 font-bold text-center">Sim! 🐕</button>
-                        <button onclick="saveAndNext(&apos;temPet&apos;, &apos;Ainda não&apos;, 5)" class="option-btn p-8 font-bold text-center">Não ❌</button>
+                        <button onclick="saveAndNext('temPet', 'Sim', 5)" class="option-btn p-8 font-bold text-center">Sim! 🐕</button>
+                        <button onclick="saveAndNext('temPet', 'Ainda não', 5)" class="option-btn p-8 font-bold text-center">Não ❌</button>
                     </div>
                 </div>
 
@@ -171,15 +169,15 @@
                     <button onclick="next(4)" class="text-gray-400 hover:text-blue-600 font-bold text-sm mb-4 flex items-center gap-1">&larr; Voltar</button>
                     <h3 class="text-2xl font-bold mb-6">Qual sua relação com pets?</h3>
                     <div class="space-y-4">
-                        <button onclick="logicaRamificacao(&apos;Tutor&apos;)" class="option-btn p-5 font-medium text-gray-700">🏠 Tutor / Dono</button>
-                        <button onclick="logicaRamificacao(&apos;Interessado&apos;)" class="option-btn p-5 font-medium text-gray-700">🔍 Quero me profissionalizar</button>
+                        <button onclick="logicaRamificacao('Tutor')" class="option-btn p-5 font-medium text-gray-700">🏠 Tutor / Dono</button>
+                        <button onclick="logicaRamificacao('Interessado')" class="option-btn p-5 font-medium text-gray-700">🔍 Interessado em ingressar</button>
                         <div class="relative">
                             <select id="select-pro" onchange="selecionarProfissao(this.value)" class="option-btn p-5 text-blue-600 font-bold border-blue-200 bg-blue-50 appearance-none outline-none">
                                 <option value="" disabled selected>🩺 Trabalho na área (Selecione...)</option>
                                 <option value="Médico Veterinário">Médico Veterinário</option>
                                 <option value="Banho e Tosa">Banho e Tosa</option>
                                 <option value="Comércio PET">Comércio PET</option>
-                                <option value="Cuidador/babá PET">Cuidador/babá PET</option>
+                                <option value="Cuidador PET">Cuidador PET</option>
                                 <option value="Protetora">Protetora</option>
                                 <option value="Outro">Outro</option>
                             </select>
@@ -191,18 +189,18 @@
                     <button onclick="next(5)" class="text-gray-400 hover:text-blue-600 font-bold text-sm mb-4 flex items-center gap-1">&larr; Voltar</button>
                     <h3 class="text-2xl font-bold mb-6">Qual área te interessa?</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
-                        <button onclick="salvarInteresse(&apos;Pet Sitter&apos;)" class="option-btn p-4 font-semibold">Pet Sitter</button>
-                        <button onclick="salvarInteresse(&apos;Passeador de Cães (Dog Walker)&apos;)" class="option-btn p-4 font-semibold">Passeador de Cães (Dog Walker)</button>
-                        <button onclick="salvarInteresse(&apos;Comida Pet&apos;)" class="option-btn p-4 font-semibold">Comida Pet</button>
-                        <button onclick="salvarInteresse(&apos;Banhista&apos;)" class="option-btn p-4 font-semibold">Banhista</button>
-                        <button onclick="salvarInteresse(&apos;Hospedagem/Creche Pet&apos;)" class="option-btn p-4 font-semibold">Hospedagem/Creche Pet</button>
-                        <button onclick="document.getElementById(&apos;container-outro-interesse&apos;).classList.remove(&apos;hidden&apos;)" class="option-btn p-4 font-semibold text-blue-600">Outros</button>
+                        <button onclick="salvarInteresse('Pet Sitter')" class="option-btn p-4 font-semibold">Pet Sitter</button>
+                        <button onclick="salvarInteresse('Dog Walker')" class="option-btn p-4 font-semibold">Dog Walker</button>
+                        <button onclick="salvarInteresse('Comida Pet')" class="option-btn p-4 font-semibold">Comida Pet</button>
+                        <button onclick="salvarInteresse('Banhista')" class="option-btn p-4 font-semibold">Banhista</button>
+                        <button onclick="salvarInteresse('Hotel Pet')" class="option-btn p-4 font-semibold">Hotel Pet</button>
+                        <button onclick="document.getElementById('container-outro-interesse').classList.remove('hidden')" class="option-btn p-4 font-semibold text-blue-600">Outros</button>
                     </div>
                     <div id="container-outro-interesse" class="hidden space-y-4">
                         <input type="text" id="input-outro-interesse" class="w-full text-lg border-b-2 border-blue-500 p-2 outline-none" placeholder="Qual área te interessa?">
                         <div class="flex gap-2">
-                            <button onclick="document.getElementById(&apos;container-outro-interesse&apos;).classList.add(&apos;hidden&apos;)" class="w-1/3 bg-gray-100 text-gray-600 font-bold py-3 rounded-xl">Cancelar</button>
-                            <button onclick="salvarInteresse(document.getElementById(&apos;input-outro-interesse&apos;).value)" class="w-2/3 bg-blue-600 text-white font-bold py-3 rounded-xl">Confirmar</button>
+                            <button onclick="document.getElementById('container-outro-interesse').classList.add('hidden')" class="w-1/3 bg-gray-100 text-gray-600 font-bold py-3 rounded-xl">Cancelar</button>
+                            <button onclick="salvarInteresse(document.getElementById('input-outro-interesse').value)" class="w-2/3 bg-blue-600 text-white font-bold py-3 rounded-xl">Confirmar</button>
                         </div>
                     </div>
                 </div>
@@ -218,22 +216,22 @@
                 </div>
 
                 <div class="step flex-col" id="step-pro-1">
-                    <button onclick="next(&apos;pro-dados&apos;)" class="text-gray-400 hover:text-blue-600 font-bold text-sm mb-4 flex items-center gap-1">&larr; Voltar</button>
+                    <button onclick="next('pro-dados')" class="text-gray-400 hover:text-blue-600 font-bold text-sm mb-4 flex items-center gap-1">&larr; Voltar</button>
                     <h3 class="text-2xl font-bold mb-6">Atende na sua própria casa?</h3>
                     <div class="grid grid-cols-2 gap-4">
-                        <button onclick="saveAndNext(&apos;atendimentoCasa&apos;, &apos;Sim&apos;, &apos;pro-2&apos;)" class="option-btn p-6 text-center font-bold">Sim</button>
-                        <button onclick="saveAndNext(&apos;atendimentoCasa&apos;, &apos;Não&apos;, &apos;pro-2&apos;)" class="option-btn p-6 text-center font-bold">Não</button>
+                        <button onclick="saveAndNext('atendimentoCasa', 'Sim', 'pro-2')" class="option-btn p-6 text-center font-bold">Sim</button>
+                        <button onclick="saveAndNext('atendimentoCasa', 'Não', 'pro-2')" class="option-btn p-6 text-center font-bold">Não</button>
                     </div>
                 </div>
 
                 <div class="step flex-col" id="step-pro-2">
-                    <button onclick="next(&apos;pro-1&apos;)" class="text-gray-400 hover:text-blue-600 font-bold text-sm mb-4 flex items-center gap-1">&larr; Voltar</button>
+                    <button onclick="next('pro-1')" class="text-gray-400 hover:text-blue-600 font-bold text-sm mb-4 flex items-center gap-1">&larr; Voltar</button>
                     <h3 class="text-2xl font-bold mb-6">Movimentação mensal:</h3>
                     <div class="space-y-3">
-                        <button onclick="salvarProFinal(&apos;Até R$ 1.000&apos;)" class="option-btn p-4 font-semibold">Até R$ 1.000</button>
-                        <button onclick="salvarProFinal(&apos;R$ 1.001 a R$ 2.000&apos;)" class="option-btn p-4 font-semibold">R$ 1.001 a R$ 2.000</button>
-                        <button onclick="salvarProFinal(&apos;R$ 2.001 a R$ 5.000&apos;)" class="option-btn p-4 font-semibold">R$ 2.001 a R$ 5.000</button>
-                        <button onclick="salvarProFinal(&apos;Acima de R$ 5.000&apos;)" class="option-btn p-4 font-semibold">Acima de R$ 5.000</button>
+                        <button onclick="salvarProFinal('Até R$ 1.000')" class="option-btn p-4 font-semibold">Até R$ 1.000</button>
+                        <button onclick="salvarProFinal('R$ 1.001 a R$ 2.000')" class="option-btn p-4 font-semibold">R$ 1.001 a R$ 2.000</button>
+                        <button onclick="salvarProFinal('R$ 2.001 a R$ 5.000')" class="option-btn p-4 font-semibold">R$ 2.001 a R$ 5.000</button>
+                        <button onclick="salvarProFinal('Acima de R$ 5.000')" class="option-btn p-4 font-semibold">Acima de R$ 5.000</button>
                     </div>
                 </div>
 
@@ -241,9 +239,9 @@
                     <button onclick="window.history.back();" id="btn-voltar-gasto" class="text-gray-400 hover:text-blue-600 font-bold text-sm mb-4 flex items-center gap-1">&larr; Voltar</button>
                     <h3 class="text-2xl font-bold mb-6">Qual o gasto médio mensal com seu pet?</h3>
                     <div class="space-y-3">
-                        <button onclick="finalizarTudo(&apos;Até R$ 100&apos;)" class="option-btn p-5 font-bold">Até R$ 100</button>
-                        <button onclick="finalizarTudo(&apos;R$ 101 a R$ 300&apos;)" class="option-btn p-5 font-bold">R$ 101 a R$ 300</button>
-                        <button onclick="finalizarTudo(&apos;Acima de R$ 300&apos;)" class="option-btn p-5 font-bold">Acima de R$ 300</button>
+                        <button onclick="finalizarTudo('Até R$ 100')" class="option-btn p-5 font-bold">Até R$ 100</button>
+                        <button onclick="finalizarTudo('R$ 101 a R$ 300')" class="option-btn p-5 font-bold">R$ 101 a R$ 300</button>
+                        <button onclick="finalizarTudo('Acima de R$ 300')" class="option-btn p-5 font-bold">Acima de R$ 300</button>
                     </div>
                 </div>
 
@@ -269,46 +267,46 @@
         }
         if(slides.length > 0) setTimeout(showSlides, 4000);
 
-        const scriptURL = &apos;https://script.google.com/macros/s/AKfycbwfHPXTOzLSriWPmeTJMG6M_Y5onqOB6oiyiC8VEv-kMwPSWdlwwH5qipALJsyn1PMR/exec&apos;; 
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbwfHPXTOzLSriWPmeTJMG6M_Y5onqOB6oiyiC8VEv-kMwPSWdlwwH5qipALJsyn1PMR/exec'; 
         let responses = {};
 
-        const localidades = [&apos;Via Ápia&apos;, &apos;Largo do Boiadeiro&apos;, &apos;Caminho do Boiadeiro&apos;, &apos;Vila Verde&apos;, &apos;Laboriaux&apos;, &apos;Curva do S&apos;, &apos;Roupa Suja&apos;, &apos;Roupa Suja Baixa&apos;, &apos;Bairro Barcelos&apos;, &apos;Rua Dionéia&apos;, &apos;Cachopa&apos;, &apos;Valão&apos;, &apos;Roça&apos;, &apos;Mata Machado&apos;, &apos;Beco do 199&apos;, &apos;Toca da Onça&apos;, &apos;Lazer&apos;, &apos;Vila Cruzado&apos;, &apos;99&apos;, &apos;Canal&apos;, &apos;Parque da Cidade&apos;, &apos;Santuário&apos;, &apos;Outros&apos;];
+        const localidades = ['Via Ápia', 'Largo do Boiadeiro', 'Caminho do Boiadeiro', 'Vila Verde', 'Laboriaux', 'Curva do S', 'Roupa Suja', 'Roupa Suja Baixa', 'Bairro Barcelos', 'Rua Dionéia', 'Cachopa', 'Valão', 'Roça', 'Mata Machado', 'Beco do 199', 'Toca da Onça', 'Lazer', 'Vila Cruzado', '99', 'Canal', 'Parque da Cidade', 'Santuário', 'Outros'];
         
-        const grid = document.getElementById(&apos;locais-grid&apos;);
+        const grid = document.getElementById('locais-grid');
         localidades.forEach(loc => {
-            const btn = document.createElement(&apos;button&apos;);
-            btn.className = &apos;option-btn p-4 font-semibold text-gray-700 text-sm&apos;;
+            const btn = document.createElement('button');
+            btn.className = 'option-btn p-4 font-semibold text-gray-700 text-sm';
             btn.innerText = loc;
             btn.onclick = () => {
-                if(loc === &apos;Outros&apos;) {
-                    document.getElementById(&apos;outro-local-container&apos;).classList.remove(&apos;hidden&apos;);
-                    grid.style.display = &apos;none&apos;;
+                if(loc === 'Outros') {
+                    document.getElementById('outro-local-container').classList.remove('hidden');
+                    grid.style.display = 'none';
                 } else {
-                    saveAndNext(&apos;territorio&apos;, loc, 4);
+                    saveAndNext('territorio', loc, 4);
                 }
             };
             grid.appendChild(btn);
         });
 
         function next(id) {
-            document.querySelectorAll(&apos;.step&apos;).forEach(s => s.classList.remove(&apos;active&apos;));
+            document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
             const target = document.getElementById(`step-${id}`);
-            if(target) target.classList.add(&apos;active&apos;);
+            if(target) target.classList.add('active');
             
             const progMap = { 
                 0:5, 1:15, 2:30, 3:45, 4:55, 5:65, 
-                &apos;interessado-areas&apos;: 75, 
-                &apos;pro-dados&apos;: 75, 
-                &apos;pro-1&apos;: 85, &apos;pro-2&apos;: 90, 
-                &apos;gasto&apos;: 95, &apos;success&apos;: 100 
+                'interessado-areas': 75, 
+                'pro-dados': 75, 
+                'pro-1': 85, 'pro-2': 90, 
+                'gasto': 95, 'success': 100 
             };
-            document.getElementById(&apos;progress&apos;).style.width = (progMap[id] || 100) + &apos;%&apos;;
+            document.getElementById('progress').style.width = (progMap[id] || 100) + '%';
 
-            if(id === &apos;gasto&apos;){
-                const btnVoltarGasto = document.getElementById(&apos;btn-voltar-gasto&apos;);
-                if(responses.relacao === &apos;Tutor&apos;) btnVoltarGasto.onclick = () => next(5);
-                else if(responses.relacao === &apos;Interessado&apos;) btnVoltarGasto.onclick = () => next(&apos;interessado-areas&apos;);
-                else btnVoltarGasto.onclick = () => next(&apos;pro-2&apos;);
+            if(id === 'gasto'){
+                const btnVoltarGasto = document.getElementById('btn-voltar-gasto');
+                if(responses.relacao === 'Tutor') btnVoltarGasto.onclick = () => next(5);
+                else if(responses.relacao === 'Interessado') btnVoltarGasto.onclick = () => next('interessado-areas');
+                else btnVoltarGasto.onclick = () => next('pro-2');
             }
 
             window.scrollTo(0,0);
@@ -316,86 +314,86 @@
 
         function saveAndNext(key, val, nextId) { responses[key] = val; next(nextId); }
 
-        function validaLGPD() { if(!document.getElementById(&apos;lgpd&apos;).checked) return alert("Aceite os termos."); next(2); }
+        function validaLGPD() { if(!document.getElementById('lgpd').checked) return alert("Aceite os termos."); next(2); }
 
         function toggleOutraRede(checkbox) {
-            const container = document.getElementById(&apos;container-outra-rede&apos;);
-            container.classList.toggle(&apos;hidden&apos;, !checkbox.checked);
+            const container = document.getElementById('container-outra-rede');
+            container.classList.toggle('hidden', !checkbox.checked);
         }
 
         function validaContato() {
-            const nome = document.getElementById(&apos;nome&apos;).value.trim();
-            const zap = document.getElementById(&apos;whatsapp&apos;).value;
-            const redesCheckboxes = Array.from(document.querySelectorAll(&apos;input[name="rede"]:checked&apos;));
+            const nome = document.getElementById('nome').value.trim();
+            const zap = document.getElementById('whatsapp').value;
+            const redesCheckboxes = Array.from(document.querySelectorAll('input[name="rede"]:checked'));
             if(nome.length < 3 || zap.length < 14) return alert("Preencha nome e WhatsApp corretamente.");
             
             let redes = redesCheckboxes.map(r => r.value);
-            if(document.getElementById(&apos;check-rede-outros&apos;).checked) {
-                const outraVal = document.getElementById(&apos;input-outra-rede&apos;).value.trim();
-                if(outraVal) { redes = redes.filter(r => r !== &apos;Outros&apos;); redes.push(outraVal); }
+            if(document.getElementById('check-rede-outros').checked) {
+                const outraVal = document.getElementById('input-outra-rede').value.trim();
+                if(outraVal) { redes = redes.filter(r => r !== 'Outros'); redes.push(outraVal); }
             }
 
             responses.nome = nome;
-            responses.email = document.getElementById(&apos;email&apos;).value.trim();
+            responses.email = document.getElementById('email').value.trim();
             responses.whatsapp = "55" + zap.replace(/\D/g, "");
-            responses.redes_sociais_pessoal = redes.join(&apos;, &apos;);
+            responses.redes_sociais_pessoal = redes.join(', ');
             next(3);
         }
 
         function salvarOutroLocal() {
-            const v = document.getElementById(&apos;input-outro-local&apos;).value.trim();
+            const v = document.getElementById('input-outro-local').value.trim();
             if (v.length < 2) return alert("Digite a localidade.");
             responses.territorio = v;
             next(4);
         }
 
         function selecionarProfissao(valor) { 
-            responses.relacao = &apos;Profissional&apos;; 
-            responses.profissao_especifica = valor;
-            next(&apos;pro-dados&apos;);
+            responses.relacao = 'Profissional'; 
+            responses.profissao_especifica = valor; 
+            next('pro-dados');
         }
 
         function salvarDadosPro() {
-            responses.estabelecimento = document.getElementById(&apos;nome_estabelecimento&apos;).value.trim();
-            responses.instagram_profissional = document.getElementById(&apos;insta_profissional&apos;).value.trim();
-            next(&apos;pro-1&apos;);
+            responses.estabelecimento = document.getElementById('nome_estabelecimento').value.trim();
+            responses.instagram_profissional = document.getElementById('insta_profissional').value.trim();
+            next('pro-1');
         }
 
         function logicaRamificacao(perfil) {
             responses.relacao = perfil;
-            const temPet = responses.temPet === &apos;Sim&apos;;
+            const temPet = responses.temPet === 'Sim';
 
-            if (perfil === &apos;Interessado&apos;) {
-                next(&apos;interessado-areas&apos;);
-            } else if (perfil === &apos;Tutor&apos;) {
-                temPet ? next(&apos;gasto&apos;) : finalizarTudo(&apos;Informou ser tutor mas sem pet&apos;);
+            if (perfil === 'Interessado') {
+                next('interessado-areas');
+            } else if (perfil === 'Tutor') {
+                temPet ? next('gasto') : finalizarTudo('Informou ser tutor mas sem pet');
             }
         }
 
         function salvarInteresse(valor) {
             if(!valor || valor.length < 2) return alert("Por favor, informe a área de interesse.");
             responses.area_interesse = valor;
-            const temPet = responses.temPet === &apos;Sim&apos;;
-            temPet ? next(&apos;gasto&apos;) : finalizarTudo(&apos;Não possui pet&apos;);
+            const temPet = responses.temPet === 'Sim';
+            temPet ? next('gasto') : finalizarTudo('Não possui pet');
         }
 
         function salvarProFinal(f) { 
             responses.faturamento = f; 
-            if (responses.temPet === &apos;Sim&apos;) {
-                next(&apos;gasto&apos;);
+            if (responses.temPet === 'Sim') {
+                next('gasto');
             } else {
-                finalizarTudo(&apos;Não possui pet&apos;);
+                finalizarTudo('Não possui pet');
             }
         }
 
         async function finalizarTudo(g) {
             responses.gastoMensal = g;
-            next(&apos;success&apos;);
+            next('success');
             try { 
                 await fetch(scriptURL, { 
-                    method: &apos;POST&apos;, 
-                    mode: &apos;no-cors&apos;, 
-                    headers: { &apos;Content-Type&apos;: &apos;application/json&apos; },
+                    method: 'POST', 
+                    mode: 'no-cors', 
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(responses) 
                 }); 
             } catch (e) { console.error("Erro no fetch:", e); }
@@ -407,19 +405,6 @@
             v = v.replace(/(\d)(\d{4})$/, "$1-$2");
             i.value = v;
         }
-
-        // Ajuste dinâmico da altura do iframe
-        const iframe = window.parent.document.getElementById('form-iframe');
-        if (iframe) {
-            const resizeObserver = new ResizeObserver(entries => {
-                for (let entry of entries) {
-                    iframe.style.height = entry.target.scrollHeight + 'px';
-                }
-            });
-            resizeObserver.observe(document.body);
-        }
     </script>
     </body>
-    </html>' 
-    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;"></iframe>
-</div>
+    </html>
