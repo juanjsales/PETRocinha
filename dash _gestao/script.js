@@ -957,6 +957,19 @@ async function saveConfigChanges() {
   }
 }
 
+/**
+ * Configura o marquee de patrocinadores duplicando os logotipos para criar um efeito de rolagem infinita.
+ */
+function setupSponsorMarquee() {
+  const logosContainer = document.querySelector('.sponsors-logos');
+  if (!logosContainer) return;
+
+  const logos = logosContainer.querySelectorAll('img');
+  logos.forEach(logo => {
+    logosContainer.appendChild(logo.cloneNode(true));
+  });
+}
+
 window.addEventListener('load', () => {
   initApp();
   setupSponsorMarquee();

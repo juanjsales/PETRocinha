@@ -507,7 +507,7 @@ body {
   flex-direction: column; 
   gap: 14px; 
 }
-.progress-item {}
+
 .progress-top { 
   display: flex; 
   justify-content: space-between;
@@ -590,7 +590,7 @@ body {
   text-transform: uppercase; 
   letter-spacing: 1.5px;
   color: rgba(255,255,255,0.3);
-  margin-bottom: 5px;
+  margin-bottom: 15px;
   text-align: center;
 }
 .sponsors-logos {
@@ -599,6 +599,7 @@ body {
     align-items: center;
    
     flex-direction: row; /* Alinha os logos horizontalmente */
+    width: max-content; /* Garante que o container se expanda para todo o conteúdo */
     align-items: center; /* Centraliza verticalmente */
     gap: 25px; /* Espaço entre os logos */
     /* Animação */
@@ -606,18 +607,20 @@ body {
 }
 
 .sponsors-logos img {
-    max-width: 60%; /* Larger, but constrained */
-    
-    max-height: 80px; /* Altura máxima para os logos */
-    width: auto;
-    background-color: transparent; /* Explicitly transparent */
-    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.25)); /* Add shadow */
+    height: 60px; /* Altura fixa */
+    width: 60px; /* Largura fixa para criar um círculo */
+    border-radius: 50%; /* Torna o elemento redondo */
+    background-color: white; /* Fundo branco */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sombra */
+    object-fit: contain; /* Garante que o logo caiba no círculo */
+    padding: 8px; /* Espaçamento interno */
     transition: transform 0.2s ease;
     flex-shrink: 0; /* Impede que os logos encolham */
 }
 
 .sponsors-logos img:hover {
     transform: scale(1.05); /* Subtle hover effect */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
     animation-play-state: paused; /* Pausa a animação no hover */
 }
 
