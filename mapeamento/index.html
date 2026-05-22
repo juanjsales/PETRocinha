@@ -1,5 +1,5 @@
-<div class="circle-embed-container" style="position: relative; width: 100%; min-height: 700px;">
-    <iframe srcdoc='
+<div class="circle-embed-container" style="position: relative; width: 100%;">
+    <iframe id="form-iframe" srcdoc='
     <!DOCTYPE html>
     <html lang="pt-br">
     <head>
@@ -406,6 +406,17 @@
             v = v.replace(/^(\d{2})(\d)/g, "($1) $2");
             v = v.replace(/(\d)(\d{4})$/, "$1-$2");
             i.value = v;
+        }
+
+        // Ajuste dinâmico da altura do iframe
+        const iframe = window.parent.document.getElementById('form-iframe');
+        if (iframe) {
+            const resizeObserver = new ResizeObserver(entries => {
+                for (let entry of entries) {
+                    iframe.style.height = entry.target.scrollHeight + 'px';
+                }
+            });
+            resizeObserver.observe(document.body);
         }
     </script>
     </body>
