@@ -989,8 +989,7 @@ async function sendQuizLogToBackend(isCorrect, quizPergunta) {
                     if (!currentData.historico) currentData.historico = [];
                     currentData.historico.unshift({
                         data: new Date().toLocaleDateString('pt-BR'),
-                        acao: "Quiz Diário - Acerto",
-                        pontos: 1
+                        acao: "Quiz Diário - Acerto"
                     });
                     renderDashboard(); // Atualiza a tela para exibir a nova linha no Extrato imediatamente
                 }
