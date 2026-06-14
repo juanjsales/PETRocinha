@@ -305,7 +305,14 @@ if (mapContainer.clientWidth === 0 || mapContainer.clientHeight === 0) {
   }
 
   const heatData = [];
-  markersLayerInstance = L.layerGroup().addTo(mapInstance);
+  markersLayerInstance = L.layerGroup();
+  
+  // Respeita a escolha do usuário antes de desenhar na tela
+  const checkboxMarcadores = document.getElementById('ctrl-marcadores');
+  if (!checkboxMarcadores || checkboxMarcadores.checked) {
+    markersLayerInstance.addTo(mapInstance);
+  }
+
   
   // Varre a lista de MEMBROS (agora com CEP) para plotar no mapa
   MEMBROS.forEach(m => {
@@ -378,6 +385,20 @@ function atualizarMapaCalor() {
     blur: blur,
     gradient: gradientConfig
   });
+}
+// ── CONTROLE DE MARCADORES (SHOW/HIDE) ────────────────────────────────────
+function toggleMarcadores() {
+  if (!mapInstance || !markersLayerInstance) return;
+  
+  const checkbox = document.getElementById('ctrl-marcadores');
+  
+  if (checkbox.checked) {
+    // Se marcado, adiciona a camada de pontos de volta ao mapa
+    mapInstance.addLayer(markersLayerInstance);
+  } else {
+    // Se desmarcado, remove a camada de pontos da visão
+    mapInstance.removeLayer(markersLayerInstance);
+  }
 }
 
 // Função assíncrona que integra a geocodificação no frontend silenciosamente
