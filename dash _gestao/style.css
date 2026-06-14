@@ -160,6 +160,32 @@ body {
   color: #fff; 
 }
 
+/* ── Estados do Botão (Carregamento / Disabled) ── */
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.8;
+  pointer-events: none;
+}
+
+.btn-loading {
+  position: relative;
+  overflow: hidden;
+}
+.btn-loading::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(
+    45deg,
+    rgba(0,0,0,0.1) 25%, transparent 25%,
+    transparent 50%, rgba(0,0,0,0.1) 50%,
+    rgba(0,0,0,0.1) 75%, transparent 75%, transparent
+  );
+  background-size: 20px 20px;
+  animation: progress-stripes 1s linear infinite;
+  z-index: 1;
+}
+
 /* ── Chart Card ── */
 .chart-card {
   background: var(--surface); 
@@ -768,6 +794,11 @@ tr:hover td {
   to { 
     transform: rotate(360deg); 
   } 
+}
+
+@keyframes progress-stripes {
+  from { background-position: 20px 0; }
+  to { background-position: 0 0; }
 }
 
 @keyframes scroll {
