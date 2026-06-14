@@ -349,6 +349,36 @@ if (mapContainer.clientWidth === 0 || mapContainer.clientHeight === 0) {
     }
   }
 }
+// ── CONTROLES DO MAPA DE CALOR EM TEMPO REAL ──────────────────────────────
+function atualizarMapaCalor() {
+  if (!heatLayerInstance) return;
+
+  // Lê os valores atuais das barras deslizantes e do menu
+  const radius = parseInt(document.getElementById('ctrl-radius').value);
+  const blur = parseInt(document.getElementById('ctrl-blur').value);
+  const theme = document.getElementById('ctrl-gradient').value;
+
+  // Define os gradientes de cor (do mais frio/distante ao mais quente/denso)
+  let gradientConfig = {};
+  
+  if (theme === 'padrao') {
+    // Cores clássicas de Heatmap
+    gradientConfig = { 0.4: 'blue', 0.6: 'cyan', 0.7: 'lime', 0.8: 'yellow', 1.0: 'red' };
+  } else if (theme === 'institucional') {
+    // Cores baseadas na sua paleta do CSS (Roxo e Rosa)
+    gradientConfig = { 0.4: '#ede9fe', 0.6: '#8b5cf6', 0.8: '#d4537e', 1.0: '#be123c' };
+  } else if (theme === 'oceano') {
+    // Tons de água e esmeralda
+    gradientConfig = { 0.4: '#e0f2fe', 0.6: '#38bdf8', 0.8: '#34d399', 1.0: '#059669' };
+  }
+
+  // A mágica acontece aqui: aplicamos as configurações instantaneamente
+  heatLayerInstance.setOptions({
+    radius: radius,
+    blur: blur,
+    gradient: gradientConfig
+  });
+}
 
 // Função assíncrona que integra a geocodificação no frontend silenciosamente
 async function geocodeSocioDataBackground() {
