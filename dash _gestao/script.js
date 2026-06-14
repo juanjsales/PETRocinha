@@ -31,11 +31,7 @@ function switchPanel(id, el) {
       sessionStorage.setItem('adminAuthorized', 'true');
     }
 
-    if (!isAuthorized) {
-      const emailInput = prompt("Acesso restrito. Insira o e-mail de administrador para continuar:");
-      if (emailInput && emailInput.trim().toLowerCase() === "profissaopet@j3lab.com.br") {
-        sessionStorage.setItem('adminAuthorized', 'true');
-      } else {
+    else {
         alert("Acesso negado. Esta área é restrita para profissaopet@j3lab.com.br");
         return; // Interrompe a função e bloqueia a navegação
       }
