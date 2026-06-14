@@ -14,9 +14,34 @@ let socioChartsReady = false;
 const SALARIO_MINIMO = 1412;
 const VALOR_HORA_AULA_SOCIAL = 18.50; // Valor simbólico em R$ para o cálculo do sROI, baseado em fontes de referência (ex: Pronatec/MEC)
 let chartInstances = {}; // Para armazenar e gerenciar as instâncias dos gráficos
+let mapInstance = null; // Para armazenar a instância do mapa de calor
+let heatLayerInstance = null; // Para atualizar a camada de calor progressivamente
+let markersLayerInstance = null; // Para armazenar os marcadores interativos das alunas
 
 // ── NAVEGAÇÃO ─────────────────────────────────────────────────────────
 function switchPanel(id, el) {
+  if (id === 'config') {
+    let isAuthorized = sessionStorage.getItem('adminAuthorized');
+    
+    // Tenta ler o e-mail da URL (caso o Circle.so passe o e-mail como parâmetro no Iframe)
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlEmail = urlParams.get('email');
+    if (urlEmail && urlEmail.toLowerCase() === "profissaopet@j3lab.com.br") {
+      isAuthorized = 'true';
+      sessionStorage.setItem('adminAuthorized', 'true');
+    }
+
+    if (!isAuthorized) {
+      const emailInput = prompt("Acesso restrito. Insira o e-mail de administrador para continuar:");
+      if (emailInput && emailInput.trim().toLowerCase() === "profissaopet@j3lab.com.br") {
+        sessionStorage.setItem('adminAuthorized', 'true');
+      } else {
+        alert("Acesso negado. Esta área é restrita para profissaopet@j3lab.com.br");
+        return; // Interrompe a função e bloqueia a navegação
+      }
+    }
+  }
+
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   if (el) el.classList.add('active');
@@ -28,6 +53,10 @@ function switchPanel(id, el) {
   if (id === 'config') {
     // Garante que os gráficos da aba de config sejam renderizados
     initConfigCharts();
+  }
+  if (id === 'radar-pet' && mapInstance) {
+    // Garante a re-renderização correta do tamanho do mapa ao voltar para a aba
+    setTimeout(() => mapInstance.invalidateSize(), 100);
   }
 }
 
@@ -246,6 +275,130 @@ function groupedBarChart(id, labels, datasets) {
   });
 }
 
+// ── MAPA DE CALOR ─────────────────────────────────────────────────────────
+function initMapaCalor() {
+  const mapContainer = document.getElementById('mapa-calor-rocinha');
+  if (!mapContainer) return;
+
+  if (!mapInstance) {
+    // Centro aproximado da Rocinha - Instancia o mapa principal apenas uma vez
+    mapInstance = L.map('mapa-calor-rocinha').setView([-22.9886, -43.2486], 15);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap',
+      crossOrigin: true
+    }).addTo(mapInstance);
+  }
+
+  if (heatLayerInstance) {
+    // Remove a camada de calor anterior para atualizar sem piscar a base do mapa
+    mapInstance.removeLayer(heatLayerInstance);
+  }
+  if (markersLayerInstance) {
+    // Remove marcadores antigos
+    mapInstance.removeLayer(markersLayerInstance);
+  }
+
+  const heatData = [];
+  markersLayerInstance = L.layerGroup().addTo(mapInstance);
+  
+  // Varre a lista de MEMBROS (agora com CEP) para plotar no mapa
+  MEMBROS.forEach(m => {
+    const lat = m.lat || (m.dadosSocio && m.dadosSocio.lat);
+    const lng = m.lng || (m.dadosSocio && m.dadosSocio.lng);
+    
+    if (lat && lng) {
+      const pLat = parseFloat(lat);
+      const pLng = parseFloat(lng);
+      heatData.push([pLat, pLng, 1]); // O número '1' é a intensidade
+      
+      // Define a cor do marcador baseada na medalha da aluna
+      const badgeIdx = BADGE_LABELS.indexOf(m.badge);
+      const mColor = badgeIdx >= 0 ? BADGE_COLORS[badgeIdx] : '#378add';
+
+      // Cria um marcador interativo para a aluna
+      const marker = L.circleMarker([pLat, pLng], {
+        radius: 7, fillColor: mColor, color: '#ffffff', weight: 2, opacity: 1, fillOpacity: 0.9
+      });
+
+      // Adiciona o nome ao passar o mouse e o evento de clique para abrir o modal de Perfil
+      marker.bindTooltip(`<b>${m.nome}</b><br><span style="font-size:11px">${m.badge || 'Sem medalha'}</span>`);
+      if (m.cpf) marker.on('click', () => showSocioModal(m.cpf));
+      markersLayerInstance.addLayer(marker);
+    }
+  });
+
+  if (heatData.length > 0) {
+    if (typeof L.heatLayer !== 'undefined') {
+      heatLayerInstance = L.heatLayer(heatData, { radius: 25, blur: 15, maxZoom: 17 }).addTo(mapInstance);
+    }
+  } else {
+    // Enquanto os dados reais não terminam de converter, mantemos os pontos ilustrativos
+    for (let i = 0; i < 50; i++) {
+      const randLat = -22.9886 + (Math.random() - 0.5) * 0.01;
+      const randLng = -43.2486 + (Math.random() - 0.5) * 0.01;
+      heatData.push([randLat, randLng, 1]);
+    }
+    if (typeof L.heatLayer !== 'undefined') {
+      heatLayerInstance = L.heatLayer(heatData, { radius: 25, blur: 15, maxZoom: 17 }).addTo(mapInstance);
+    }
+  }
+}
+
+// Função assíncrona que integra a geocodificação no frontend silenciosamente
+async function geocodeSocioDataBackground() {
+  let updated = false;
+
+  for (const m of MEMBROS) {
+    // Tenta pegar o CEP diretamente de MEMBROS ou cai para os dados socioeconômicos como fallback
+    const cepStr = m.cep || m.CEP || (m.dadosSocio && (m.dadosSocio.cep || m.dadosSocio.CEP)); 
+    
+    if ((!m.lat && !m.latitude) && cepStr) {
+      const cacheKey = `geo_${cepStr}`;
+      const cached = localStorage.getItem(cacheKey); // Verifica se já pesquisou antes
+
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        m.lat = parsed.lat;
+        m.lng = parsed.lon;
+        updated = true;
+      } else {
+        try {
+          // Pausa de 1.5s entre requisições para evitar ser bloqueado pela API gratuita
+          await new Promise(resolve => setTimeout(resolve, 1500));
+          
+          const cleanCep = String(cepStr).replace(/\D/g, ''); 
+          let url = cleanCep.length === 8 
+            ? `https://nominatim.openstreetmap.org/search?postalcode=${cleanCep}&country=Brazil&format=json`
+            : `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(cepStr + ", Rio de Janeiro, Brasil")}&format=json`;
+
+          const response = await fetch(url);
+          const data = await response.json();
+          
+          if (data && data.length > 0) {
+            m.lat = data[0].lat;
+            m.lng = data[0].lon;
+            // Salva na memória do navegador para ficar muito rápido nas próximas vezes
+            localStorage.setItem(cacheKey, JSON.stringify({ lat: m.lat, lon: m.lng }));
+            updated = true;
+            
+            // Atualiza o mapa na hora a cada novo CEP localizado
+            initMapaCalor();
+          }
+        } catch (error) {
+          console.warn(`Erro ao converter CEP ${cepStr}:`, error);
+        }
+      }
+    }
+  }
+
+  // Atualização de varredura final se houve atualizações em massa pelo cache rápido
+  if (updated) {
+    initMapaCalor();
+  }
+}
+
 // ── GRÁFICOS: VISÃO GERAL ──────────────────────────────────────────────────
 function initGeraisCharts(membros) {
   const badgeCounts = countBy(membros, m => m.badge);
@@ -303,6 +456,9 @@ function initGeraisCharts(membros) {
       '#ef9f27'  // Cor para Agir
     ]);
   }
+  
+  // Inicializa o Mapa de Calor
+  initMapaCalor();
 }
 
 // ── GRÁFICOS: SOCIOECONÔMICO ────────────────────────────────────────────────────────
@@ -606,6 +762,12 @@ function showSocioModal(cpf) {
   } else {
     const s = aluna.dadosSocio;
     const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString('pt-BR') : 'Não informado';
+    const formatCep = (cep) => {
+      if (!cep) return 'Não informado';
+      const clean = String(cep).replace(/\D/g, '');
+      return clean.length === 8 ? clean.replace(/(\d{5})(\d{3})/, '$1-$2') : cep;
+    };
+    const endId = 'end-' + Date.now(); // Gera um ID único para evitar conflito de tela
 
     const programDetails = [
       { label: 'E-mail', value: aluna.email },
@@ -618,6 +780,8 @@ function showSocioModal(cpf) {
       { label: 'ID da Aluna', value: aluna.id },
       { label: 'Data de Cadastro', value: formatDate(aluna.criadoEm) },
       { label: 'Última Visita', value: formatDate(aluna.ultimaVisita) },
+      { label: 'CEP', value: formatCep(aluna.cep || s.cep || s.CEP) },
+      { label: 'Endereço', value: `<span id="${endId}"><i class="fa-solid fa-spinner fa-spin"></i> Buscando...</span>` },
     ];
 
     const socioDetails = [
@@ -668,6 +832,29 @@ function showSocioModal(cpf) {
       <div class="detail-grid">
         ${renderGrid(socioDetails)}
       </div>`;
+
+    // Dispara a busca no ViaCEP de forma assíncrona (não trava a abertura do modal)
+    const cepVal = aluna.cep || s.cep || s.CEP;
+    const cleanCep = cepVal ? String(cepVal).replace(/\D/g, '') : '';
+    
+    if (cleanCep.length === 8) {
+      fetch(`https://viacep.com.br/ws/${cleanCep}/json/`)
+        .then(res => res.json())
+        .then(data => {
+          const el = document.getElementById(endId);
+          if (el) {
+            if (data.erro) el.textContent = 'CEP não encontrado';
+            else el.textContent = data.logradouro ? `${data.logradouro}, ${data.bairro}` : `${data.localidade} - ${data.uf}`;
+          }
+        })
+        .catch(() => {
+          const el = document.getElementById(endId);
+          if (el) el.textContent = 'Erro ao buscar endereço';
+        });
+    } else {
+      const el = document.getElementById(endId);
+      if (el) el.textContent = cleanCep ? 'CEP inválido' : 'Não informado';
+    }
   }
   document.getElementById('socio-modal').style.display = 'flex';
 }
@@ -719,8 +906,12 @@ function closeModal() {
 
 // ── JUNÇÃO E PROCESSAMENTO DE DADOS ───────────────────────────────────────────
 function tentarMergeEProcessar() {
-  // Guardião: Só executa se todos os conjuntos de dados estiverem carregados
-  if (MEMBROS.length === 0 || SOCIO.length === 0 || CONFIG.length === 0 || LOG.length === 0) return;
+  // Guardião: Se não houver dados de membros, não processa o restante e destrava o carregamento
+  if (MEMBROS.length === 0) {
+    document.getElementById('loading-overlay').style.display = 'none';
+    setReloadButtonState(false);
+    return;
+  }
 
   // Cria um mapa dos dados socioeconômicos para busca rápida
   const socioMap = new Map(SOCIO.map(s => [s.cpf, s]));
@@ -741,6 +932,12 @@ function tentarMergeEProcessar() {
 
   // Esconde a tela de carregamento
   document.getElementById('loading-overlay').style.display = 'none';
+  
+  // Restaura o botão de recarregar
+  setReloadButtonState(false);
+
+  // Dispara a conversão de CEP -> Coordenadas em segundo plano sem travar a interface
+  geocodeSocioDataBackground();
 }
 
 /**
@@ -799,30 +996,19 @@ function updateDashboardUI(metrics) {
 }
 
 // ── CARREGAMENTO DE DADOS ────────────────────────────────────────────────────────
-function processarDadosBI(dados) {
+function processarTudo(dados) {
   if (!dados || dados.erro) {
-    document.getElementById('tbody-alunas').innerHTML = `<tr><td colspan="6"><div class="empty-state"><i class="fa-solid fa-triangle-exclamation"></i>Erro ao carregar membros: ${dados && dados.erro ? dados.erro : 'Verifique o script.'}</div></td></tr>`;
+    document.getElementById('tbody-alunas').innerHTML = `<tr><td colspan="6"><div class="empty-state"><i class="fa-solid fa-triangle-exclamation"></i>Erro ao carregar dados: ${dados && dados.erro ? dados.erro : 'Verifique o script.'}</div></td></tr>`;
+    document.getElementById('loading-overlay').style.display = 'none';
+    setReloadButtonState(false); // Restaura em caso de erro
     return;
   }
-  MEMBROS = dados;
-  tentarMergeEProcessar();
-}
-
-function processarSocioBI(dados) {
-  if (!dados || dados.erro) return;
-  SOCIO = dados;
-  tentarMergeEProcessar();
-}
-
-function processarConfig(dados) {
-  if (!dados || dados.erro) return;
-  CONFIG = dados;
-  tentarMergeEProcessar();
-}
-
-function processarLog(dados) {
-  if (!dados || dados.erro) return;
-  LOG = dados;
+  // Alimenta todas as variáveis de uma vez
+  MEMBROS = dados.membros || [];
+  SOCIO   = dados.socio   || [];
+  CONFIG  = dados.config  || [];
+  LOG     = dados.log     || [];
+  
   tentarMergeEProcessar();
 }
 
@@ -843,25 +1029,11 @@ function fetchData() {
   // Remove scripts antigos para evitar cache e duplicação de dados
   document.querySelectorAll('.jsonp-script').forEach(el => el.remove());
 
+  // Faz uma única requisição unificada ao backend para carregar todas as planilhas
   const s1 = document.createElement('script');
-  s1.src = `${API_BASE}?callback=processarDadosBI&endpoint=membros`;
+  s1.src = `${API_BASE}?callback=processarTudo&endpoint=all`;
   s1.className = 'jsonp-script';
   document.body.appendChild(s1);
-
-  const s2 = document.createElement('script');
-  s2.src = `${API_BASE}?callback=processarSocioBI&endpoint=socioeconomico`;
-  s2.className = 'jsonp-script';
-  document.body.appendChild(s2);
-
-  const s3 = document.createElement('script');
-  s3.src = `${API_BASE}?callback=processarConfig&endpoint=config`;
-  s3.className = 'jsonp-script';
-  document.body.appendChild(s3);
-
-  const s4 = document.createElement('script');
-  s4.src = `${API_BASE}?callback=processarLog&endpoint=log`;
-  s4.className = 'jsonp-script';
-  document.body.appendChild(s4);
 }
 
 function clearUIForLoading() {
@@ -877,7 +1049,30 @@ function clearUIForLoading() {
   });
 }
 
+function setReloadButtonState(isLoading) {
+  const buttons = document.querySelectorAll('button[onclick="reloadData()"]');
+  buttons.forEach(btn => {
+    if (isLoading) {
+      btn.disabled = true;
+      if (!btn.dataset.originalText) {
+        btn.dataset.originalText = btn.innerHTML; // Salva o ícone e texto original
+      }
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Pensando...';
+      btn.classList.add('btn-loading'); // Adiciona a barra de progresso em CSS
+    } else {
+      btn.disabled = false;
+      if (btn.dataset.originalText) {
+        btn.innerHTML = btn.dataset.originalText;
+      }
+      btn.classList.remove('btn-loading');
+    }
+  });
+}
+
 function reloadData() {
+  // Bloqueia os botões e mostra a barra de progresso animada
+  setReloadButtonState(true);
+
   // Mostra a tela de carregamento
   document.getElementById('loading-overlay').style.display = 'flex';
 
@@ -942,7 +1137,11 @@ async function saveConfigChanges() {
 
   // Exibe um feedback visual para o usuário
   const saveButton = document.querySelector('#panel-config .btn-primary');
-  saveButton.innerHTML = '<i class="fa-solid fa-spinner spinner"></i> Salvando...';
+  if (!saveButton.dataset.originalText) {
+    saveButton.dataset.originalText = saveButton.innerHTML;
+  }
+  saveButton.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Salvando...';
+  saveButton.classList.add('btn-loading');
   saveButton.disabled = true;
 
   try {
@@ -955,11 +1154,15 @@ async function saveConfigChanges() {
 
     // Idealmente, verificaríamos a resposta, mas por simplicidade, assumimos sucesso.
     alert('Alterações salvas com sucesso! Os dados serão recarregados.');
+    saveButton.innerHTML = saveButton.dataset.originalText;
+    saveButton.classList.remove('btn-loading');
+    saveButton.disabled = false;
     reloadData();
 
   } catch (error) {
     alert('Ocorreu um erro ao salvar as alterações. Verifique o console para mais detalhes.');
-    saveButton.innerHTML = '<i class="fa-solid fa-save"></i> Salvar Alterações';
+    saveButton.innerHTML = saveButton.dataset.originalText || '<i class="fa-solid fa-save"></i> Salvar Alterações';
+    saveButton.classList.remove('btn-loading');
     saveButton.disabled = false;
   }
 }
