@@ -997,20 +997,30 @@ function updateDashboardUI(metrics) {
 
 // ── CARREGAMENTO DE DADOS ────────────────────────────────────────────────────────
 function processarTudo(dados) {
-  if (!dados || dados.erro) {
-    document.getElementById('tbody-alunas').innerHTML = `<tr><td colspan="6"><div class="empty-state"><i class="fa-solid fa-triangle-exclamation"></i>Erro ao carregar dados: ${dados && dados.erro ? dados.erro : 'Verifique o script.'}</div></td></tr>`;
+  // NOVO: try...catch garante que qualquer erro no processamento não trave a tela
+  try {
+    if (!dados || dados.erro) {
+      document.getElementById('tbody-alunas').innerHTML = `<tr><td colspan="6"><div class="empty-state"><i class="fa-solid fa-triangle-exclamation"></i>Erro ao carregar dados: ${dados && dados.erro ? dados.erro : 'Verifique o script.'}</div></td></tr>`;
+      document.getElementById('loading-overlay').style.display = 'none';
+      setReloadButtonState(false); // Restaura em caso de erro
+      return;
+    }
+    // Alimenta todas as variáveis de uma vez
+    MEMBROS = dados.membros || [];
+    SOCIO   = dados.socio   || [];
+    CONFIG  = dados.config  || [];
+    LOG     = dados.log     || [];
+    
+    tentarMergeEProcessar();
+  } catch (erro) {
+    console.error("Erro fatal ao processar e desenhar os dados na tela:", erro);
+    // Mesmo que dê erro na renderização, a gente tira a tela de loading!
     document.getElementById('loading-overlay').style.display = 'none';
-    setReloadButtonState(false); // Restaura em caso de erro
-    return;
+    setReloadButtonState(false);
+    alert("Conseguimos baixar os dados, mas houve um erro ao desenhar os gráficos. Verifique o console.");
   }
-  // Alimenta todas as variáveis de uma vez
-  MEMBROS = dados.membros || [];
-  SOCIO   = dados.socio   || [];
-  CONFIG  = dados.config  || [];
-  LOG     = dados.log     || [];
-  
-  tentarMergeEProcessar();
 }
+
 
 function renderAllCharts() {
   initGeraisCharts(MEMBROS);
@@ -1033,8 +1043,18 @@ function fetchData() {
   const s1 = document.createElement('script');
   s1.src = `${API_BASE}?callback=processarTudo&endpoint=all`;
   s1.className = 'jsonp-script';
+  
+  // NOVO: Tratamento de erro caso o link do Google Script falhe silenciosamente
+  s1.onerror = function() {
+    console.error("Falha na requisição: O banco de dados (Google Apps Script) não respondeu.");
+    document.getElementById('loading-overlay').style.display = 'none';
+    setReloadButtonState(false);
+    alert("Erro de conexão com o banco de dados. Verifique sua internet ou tente recarregar a página.");
+  };
+
   document.body.appendChild(s1);
 }
+
 
 function clearUIForLoading() {
   document.getElementById('tbody-alunas').innerHTML = '';
