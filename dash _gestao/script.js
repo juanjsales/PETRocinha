@@ -54,9 +54,11 @@ function switchPanel(id, el) {
     // Garante que os gráficos da aba de config sejam renderizados
     initConfigCharts();
   }
-  if (id === 'radar-pet' && mapInstance) {
-    // Garante a re-renderização correta do tamanho do mapa ao voltar para a aba
-    setTimeout(() => mapInstance.invalidateSize(), 100);
+  if (id === 'radar-pet') {
+    setTimeout(() => {
+      if (mapInstance) mapInstance.invalidateSize();
+      initMapaCalor(); // Força a renderização do mapa agora que a aba está visível
+    }, 100);
   }
 }
 
@@ -279,7 +281,9 @@ function groupedBarChart(id, labels, datasets) {
 function initMapaCalor() {
   const mapContainer = document.getElementById('mapa-calor-rocinha');
   if (!mapContainer) return;
-
+if (mapContainer.clientWidth === 0 || mapContainer.clientHeight === 0) {
+    return;
+  }
   if (!mapInstance) {
     // Centro aproximado da Rocinha - Instancia o mapa principal apenas uma vez
     mapInstance = L.map('mapa-calor-rocinha').setView([-22.9886, -43.2486], 15);
