@@ -31,7 +31,11 @@ function switchPanel(id, el) {
       sessionStorage.setItem('adminAuthorized', 'true');
     }
 
-    else {
+    if (!isAuthorized) {
+      const emailInput = prompt("Acesso restrito. Insira o e-mail de administrador para continuar:");
+      if (emailInput && emailInput.trim().toLowerCase() === "profissaopet@j3lab.com.br") {
+        sessionStorage.setItem('adminAuthorized', 'true');
+      } else {
         alert("Acesso negado. Esta área é restrita para profissaopet@j3lab.com.br");
         return; // Interrompe a função e bloqueia a navegação
       }
@@ -54,7 +58,7 @@ function switchPanel(id, el) {
     // Garante a re-renderização correta do tamanho do mapa ao voltar para a aba
     setTimeout(() => mapInstance.invalidateSize(), 100);
   }
-
+}
 
 function toggleSidebar() {
   document.querySelector('.sidebar').classList.toggle('expanded');
