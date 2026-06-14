@@ -232,14 +232,17 @@
                     <input type="range" id="ctrl-blur" min="5" max="50" value="15" oninput="atualizarMapaCalor()">
                   </div>
         
-                  <div style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
-                    <label for="ctrl-gradient">Cores:</label>
-                    <select id="ctrl-gradient" onchange="atualizarMapaCalor()" class="table-input" style="padding: 4px; border-radius: 4px; border: 1px solid #ccc; background: white;">
-                      <option value="padrao">Padrão (Fogo)</option>
-                      <option value="institucional">Institucional (Roxo/Rosa)</option>
-                      <option value="oceano">Oceano (Azul/Verde)</option>
-                    </select>
-                  </div>
+                           <!-- Controle de Estilo do Mapa -->
+                           <div style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
+                             <label for="ctrl-map-style">Fundo:</label>
+                             <select id="ctrl-map-style" onchange="mudarEstiloMapa()" class="table-input" style="padding: 4px; border-radius: 4px; border: 1px solid #ccc; background: white;">
+                               <option value="padrao">Padrão (OSM)</option>
+                               <option value="claro">Claro (Preto e Branco)</option>
+                               <option value="escuro">Escuro (Modo Noturno)</option>
+                               <option value="satelite">Satélite</option>
+                             </select>
+                           </div>
+                 
                             <!-- Novo controle de Marcadores Individuais -->
                             <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; border-left: 1px solid #ccc; padding-left: 12px; margin-left: auto;">
                               <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-weight: 500;">

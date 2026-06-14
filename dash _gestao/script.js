@@ -14,6 +14,7 @@ let socioChartsReady = false;
 const SALARIO_MINIMO = 1621;
 const VALOR_HORA_AULA_SOCIAL = 18.50; // Valor simbólico em R$ para o cálculo do sROI, baseado em fontes de referência (ex: Pronatec/MEC)
 let chartInstances = {}; // Para armazenar e gerenciar as instâncias dos gráficos
+let baseTileLayer = null; // Para armazenar a camada de fundo do mapa
 let mapInstance = null; // Para armazenar a instância do mapa de calor
 let heatLayerInstance = null; // Para atualizar a camada de calor progressivamente
 let markersLayerInstance = null; // Para armazenar os marcadores interativos das alunas
@@ -288,12 +289,14 @@ if (mapContainer.clientWidth === 0 || mapContainer.clientHeight === 0) {
     // Centro aproximado da Rocinha - Instancia o mapa principal apenas uma vez
     mapInstance = L.map('mapa-calor-rocinha').setView([-22.9886, -43.2486], 15);
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    // Salva a camada base na variável para podermos trocá-la depois
+    baseTileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '© OpenStreetMap',
       crossOrigin: true
     }).addTo(mapInstance);
   }
+
 
   if (heatLayerInstance) {
     // Remove a camada de calor anterior para atualizar sem piscar a base do mapa
@@ -356,6 +359,56 @@ if (mapContainer.clientWidth === 0 || mapContainer.clientHeight === 0) {
     }
   }
 }
+// ── TROCA DE ESTILO DO MAPA BASE (TILE LAYER) ─────────────────────────────
+function mudarEstiloMapa() {
+  if (!mapInstance) return;
+
+  const estilo = document.getElementById('ctrl-map-style').value;
+  let url = '';
+  let attribution = '';
+
+  // Define os provedores de mapas gratuitos para cada estilo
+  switch (estilo) {
+    case 'claro':
+      // CartoDB Positron (Preto e branco claro, ótimo para visualizar os pontos)
+      url = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+      attribution = '© OpenStreetMap, © CartoDB';
+      break;
+    case 'escuro':
+      // CartoDB Dark Matter (Fundo escuro, faz o mapa de calor brilhar)
+      url = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+      attribution = '© OpenStreetMap, © CartoDB';
+      break;
+    case 'satelite':
+      // Esri World Imagery (Imagens de satélite reais)
+      url = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+      attribution = 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community';
+      break;
+    case 'padrao':
+    default:
+      // OpenStreetMap padrão
+      url = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+      attribution = '© OpenStreetMap';
+      break;
+  }
+
+  // Se houver um mapa atual, removemos ele
+  if (baseTileLayer) {
+    mapInstance.removeLayer(baseTileLayer);
+  }
+
+  // Cria e adiciona a nova camada ao mapa
+  baseTileLayer = L.tileLayer(url, {
+    maxZoom: 19,
+    attribution: attribution,
+    crossOrigin: true
+  }).addTo(mapInstance);
+
+  // Garante que o mapa de calor e os pontos não fiquem escondidos atrás do novo fundo
+  if (heatLayerInstance) heatLayerInstance.bringToFront();
+  if (markersLayerInstance) markersLayerInstance.bringToFront();
+}
+
 // ── CONTROLES DO MAPA DE CALOR EM TEMPO REAL ──────────────────────────────
 function atualizarMapaCalor() {
   if (!heatLayerInstance) return;
