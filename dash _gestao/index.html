@@ -40,6 +40,9 @@
     <a class="nav-item" data-panel="socioeconomico" onclick="switchPanel('socioeconomico', this)">
       <i class="fa-solid fa-users"></i> <span>Socioeconômico</span>
     </a>
+    <a class="nav-item" data-panel="radar-pet" onclick="switchPanel('radar-pet', this)">
+      <i class="fa-solid fa-map-location-dot"></i> <span>Radar Pet</span>
+    </a>
     <a class="nav-item" data-panel="alunas" onclick="switchPanel('alunas', this)">
       <i class="fa-solid fa-table-list"></i> <span>Alunas</span>
     </a>
@@ -180,14 +183,6 @@
         <div class="chart-sub">Evolução da turma no programa Profissão Pet</div>
         <div class="progress-list" id="progress-badges" style="margin-top:14px"></div>
       </div>
-<div class="chart-card" style="margin-bottom:16px">
-        <div class="chart-title">
-          Densidade Geográfica das Alunas na Rocinha
-          <i class="fa-solid fa-circle-info info-icon" data-tooltip="Mapa térmico gerado em tempo real a partir dos CEPs das alunas cadastrados na Circle."></i>
-        </div>
-        <div class="chart-sub">Concentração e capilaridade do projeto dentro da comunidade</div>
-        <div id="mapa-calor-rocinha" style="width: 100%; height: 400px; border-radius: 8px; border: 1px solid #e2e8f0; margin-top: 14px; z-index: 1;"></div>
-      </div>
       <div class="chart-card">
         <div class="chart-title">
           Média de Horas Concluídas por Fase Pedagógica
@@ -197,6 +192,33 @@
         <div style="position:relative;height:250px">
           <canvas id="chartAvgHorasFase" role="img" aria-label="Gráfico de média de horas por fase pedagógica">Carregando...</canvas>
         </div>
+      </div>
+    </div>
+
+    <!-- ══ RADAR PET ══ -->
+    <div class="panel" id="panel-radar-pet">
+      <div class="topbar">
+        <div class="topbar-left">
+          <button class="menu-toggle" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
+          <div class="page-title">Radar Pet</div>
+          <div class="page-sub">Densidade Geográfica e Capilaridade na Rocinha</div>
+        </div>
+        <div class="topbar-actions">
+          <button class="btn btn-outline" onclick="reloadData()">
+            <i class="fa-solid fa-rotate-right"></i> Recarregar
+          </button>
+          <button class="btn btn-primary" onclick="showPdfOptionsModal()">
+            <i class="fa-solid fa-print"></i> Exportar relatório
+          </button>
+        </div>
+      </div>
+      <div class="chart-card" style="margin-bottom:16px">
+        <div class="chart-title">
+          Densidade Geográfica das Alunas na Rocinha
+          <i class="fa-solid fa-circle-info info-icon" data-tooltip="Mapa térmico gerado em tempo real a partir dos CEPs das alunas cadastrados na Circle."></i>
+        </div>
+        <div class="chart-sub">Concentração e capilaridade do projeto dentro da comunidade</div>
+        <div id="mapa-calor-rocinha" style="width: 100%; height: 600px; border-radius: 8px; border: 1px solid #e2e8f0; margin-top: 14px; z-index: 1;"></div>
       </div>
     </div>
 
