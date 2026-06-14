@@ -11,7 +11,7 @@ let SOCIO   = [];
 let CONFIG  = [];
 let LOG     = [];
 let socioChartsReady = false;
-const SALARIO_MINIMO = 1412;
+const SALARIO_MINIMO = 1621;
 const VALOR_HORA_AULA_SOCIAL = 18.50; // Valor simbólico em R$ para o cálculo do sROI, baseado em fontes de referência (ex: Pronatec/MEC)
 let chartInstances = {}; // Para armazenar e gerenciar as instâncias dos gráficos
 let mapInstance = null; // Para armazenar a instância do mapa de calor
@@ -54,7 +54,7 @@ function switchPanel(id, el) {
     // Garante a re-renderização correta do tamanho do mapa ao voltar para a aba
     setTimeout(() => mapInstance.invalidateSize(), 100);
   }
-}
+
 
 function toggleSidebar() {
   document.querySelector('.sidebar').classList.toggle('expanded');
