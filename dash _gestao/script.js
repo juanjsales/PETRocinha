@@ -1099,6 +1099,8 @@ function reloadData() {
 
   // Mostra a tela de carregamento
   document.getElementById('loading-overlay').style.display = 'flex';
+    document.body.classList.add('no-scroll'); // <-- TRAVA A TELA
+
 
   clearUIForLoading();
 
