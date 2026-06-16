@@ -8,10 +8,11 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-  <link rel="stylesheet" href="style.css">
+  <!-- Bibliotecas do Leaflet (OpenStreetMap) -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+  <link rel="stylesheet" href="style.css">
 </head>
 </head>
 <body>
@@ -45,6 +46,9 @@
     </a>
     <a class="nav-item" data-panel="alunas" onclick="switchPanel('alunas', this)">
       <i class="fa-solid fa-table-list"></i> <span>Alunas</span>
+    </a>
+    <a class="nav-item" data-panel="eventos" onclick="switchPanel('eventos', this)">
+      <i class="fa-regular fa-calendar-days"></i> <span>Eventos</span>
     </a>
     <a class="nav-item" data-panel="ods" onclick="switchPanel('ods', this)">
       <i class="fa-solid fa-bullseye"></i> <span>ODS</span>
@@ -212,48 +216,43 @@
           </button>
         </div>
       </div>
-      <div class="chart-card" style="margin-bottom:16px">
+      
+      <div class="chart-card">
         <div class="chart-title">
-          Densidade Geográfica das Alunas na Rocinha
-          <i class="fa-solid fa-circle-info info-icon" data-tooltip="Mapa térmico gerado em tempo real a partir dos CEPs das alunas cadastrados na Circle."></i>
+          Radar de Capilaridade (OpenStreetMap)
+          <i class="fa-solid fa-circle-info info-icon" data-tooltip="Mapa gerado via código utilizando Leaflet e OpenStreetMap, sem depender do Google. Os CEPs são convertidos gratuitamente via Nominatim."></i>
         </div>
-        <div class="chart-sub">Concentração e capilaridade do projeto dentro da comunidade</div>
-                <!-- Controles do Mapa de Calor -->
-                <div class="heatmap-controls" style="display: flex; gap: 20px; align-items: center; margin-top: 14px; padding: 12px 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; flex-wrap: wrap;">
-                  <div style="font-size: 14px; font-weight: 600; color: var(--navy);"><i class="fa-solid fa-sliders"></i> Ajustes:</div>
-                  
-                  <div style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
-                    <label for="ctrl-radius" title="Tamanho de cada ponto no mapa">Espalhamento:</label>
-                    <input type="range" id="ctrl-radius" min="10" max="60" value="25" oninput="atualizarMapaCalor()">
-                  </div>
+        <div class="chart-sub">Distribuição baseada nos CEPs coletados via formulário</div>
         
-                  <div style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
-                    <label for="ctrl-blur" title="Nível de mistura entre os pontos">Suavidade:</label>
-                    <input type="range" id="ctrl-blur" min="5" max="50" value="15" oninput="atualizarMapaCalor()">
-                  </div>
+        <!-- Controles do Mapa -->
+        <div class="heatmap-controls" style="display: flex; gap: 20px; align-items: center; margin-top: 14px; padding: 12px 16px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; flex-wrap: wrap;">
+          <div style="font-size: 14px; font-weight: 600; color: var(--navy);"><i class="fa-solid fa-sliders"></i> Visualização:</div>
+          
+          <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; border-left: 1px solid var(--border); padding-left: 12px;">
+            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-weight: 500;">
+              <input type="checkbox" id="ctrl-leaflet-heat" checked onchange="toggleLeafletHeat()" style="width: 16px; height: 16px; cursor: pointer;">
+              Nuvem de Calor
+            </label>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
+            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-weight: 500;">
+              <input type="checkbox" id="ctrl-leaflet-markers" checked onchange="toggleLeafletMarkers()" style="width: 16px; height: 16px; cursor: pointer;">
+              Marcadores
+            </label>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; border-left: 1px solid var(--border); padding-left: 12px; margin-left: auto;">
+            <label for="ctrl-leaflet-style" style="font-weight: 500;">Estilo de Fundo:</label>
+            <select id="ctrl-leaflet-style" onchange="changeLeafletStyle()" class="table-input" style="padding: 4px 8px; border-radius: 6px; background: white; width: auto; font-size: 12px; cursor: pointer;">
+              <option value="standard">Padrão (Ruas)</option>
+              <option value="dark">Escuro (Dark Mode)</option>
+              <option value="light">Claro (Light Mode)</option>
+            </select>
+          </div>
+        </div>
         
-                           <!-- Controle de Estilo do Mapa -->
-                           <div style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
-                             <label for="ctrl-map-style">Fundo:</label>
-                             <select id="ctrl-map-style" onchange="mudarEstiloMapa()" class="table-input" style="padding: 4px; border-radius: 4px; border: 1px solid #ccc; background: white;">
-                               <option value="padrao">Padrão (OSM)</option>
-                               <option value="claro">Claro (Preto e Branco)</option>
-                               <option value="escuro">Escuro (Modo Noturno)</option>
-                               <option value="satelite">Satélite</option>
-                             </select>
-                           </div>
-                 
-                            <!-- Novo controle de Marcadores Individuais -->
-                            <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; border-left: 1px solid #ccc; padding-left: 12px; margin-left: auto;">
-                              <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-weight: 500;">
-                                <input type="checkbox" id="ctrl-marcadores" checked onchange="toggleMarcadores()" style="width: 16px; height: 16px;">
-                                Mostrar Marcadores Individuais
-                              </label>
-                            </div>
-                  
-                </div>
-        
-        <div id="mapa-calor-rocinha" style="width: 100%; height: 600px; border-radius: 8px; border: 1px solid #e2e8f0; margin-top: 14px; z-index: 1;"></div>
+        <div id="mapa-calor-leaflet" style="width: 100%; height: 600px; border-radius: 8px; border: 1px solid #e2e8f0; margin-top: 14px; z-index: 1;"></div>
       </div>
     </div>
 
@@ -462,6 +461,25 @@
             </tr>
           </tbody>
         </table>
+      </div>
+    </div>
+
+    <!-- ══ EVENTOS ══ -->
+    <div class="panel" id="panel-eventos">
+      <div class="topbar">
+        <div class="topbar-left">
+          <button class="menu-toggle" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
+          <div class="page-title">Eventos e Agendas</div>
+          <div class="page-sub">Controle de presença e atividades presenciais</div>
+        </div>
+        <div class="topbar-actions">
+          <button class="btn btn-outline" onclick="reloadData()">
+            <i class="fa-solid fa-rotate-right"></i> Recarregar
+          </button>
+        </div>
+      </div>
+      <div class="events-grid" id="events-container">
+        <!-- Conteúdo preenchido pelo JavaScript -->
       </div>
     </div>
 
@@ -717,6 +735,34 @@
     <div class="modal-body" id="modal-body">
       <div class="empty-state">
         <!-- Conteúdo será preenchido pelo JavaScript -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PRESENÇA DE EVENTO -->
+<div class="modal-backdrop" id="attendance-modal">
+  <div class="modal-content" style="max-width: 500px;">
+    <div class="modal-header">
+      <div class="modal-title" id="attendance-modal-title">Lista de Presença</div>
+      <button class="modal-close" onclick="closeAttendanceModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group" style="margin-bottom: 20px;">
+        <label for="event-title-input" style="font-size: 13px; font-weight: 600; color: var(--navy); margin-bottom: 8px; display: block;">Nome do Evento:</label>
+        <input type="text" id="event-title-input" class="table-input" style="border: 1px solid var(--border); background: var(--surface2); width: 100%; margin-bottom: 15px;">
+
+        <label for="event-datetime" style="font-size: 13px; font-weight: 600; color: var(--navy); margin-bottom: 8px; display: block;">Data e Hora do Evento:</label>
+        <input type="datetime-local" id="event-datetime" class="table-input" style="border: 1px solid var(--border); background: var(--surface2);">
+      </div>
+      <div class="divider"></div>
+
+      <h4 style="font-size: 14px; color: var(--navy); margin-bottom: 12px;">Alunas Presentes (<span id="attendance-count">0</span>)</h4>
+      <div id="attendance-list" class="attendance-list" style="max-height: 250px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
+        <!-- Preenchido via JS -->
+      </div>
+      <div style="margin-top: 24px; display: flex; justify-content: flex-end;">
+        <button class="btn btn-primary" onclick="saveEventAndAttendance()"><i class="fa-solid fa-save"></i> Salvar Alterações</button>
       </div>
     </div>
   </div>
