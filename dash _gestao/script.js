@@ -10,14 +10,18 @@ let MEMBROS = [];
 let SOCIO   = [];
 let CONFIG  = [];
 let LOG     = [];
+let EVENTOS = [];
+let PRESENCAS = [];
+let isLoadingEventos = false;
+let currentEventId = null;
 let socioChartsReady = false;
 const SALARIO_MINIMO = 1621;
 const VALOR_HORA_AULA_SOCIAL = 18.50; // Valor simbólico em R$ para o cálculo do sROI, baseado em fontes de referência (ex: Pronatec/MEC)
 let chartInstances = {}; // Para armazenar e gerenciar as instâncias dos gráficos
-let baseTileLayer = null; // Para armazenar a camada de fundo do mapa
-let mapInstance = null; // Para armazenar a instância do mapa de calor
-let heatLayerInstance = null; // Para atualizar a camada de calor progressivamente
-let markersLayerInstance = null; // Para armazenar os marcadores interativos das alunas
+let leafletMap = null; // Instância do mapa OpenStreetMap
+let leafletHeat = null; // Instância da camada de calor Leaflet
+let leafletMarkers = null; // Instância para armazenar os marcadores (bolinhas) das alunas
+let leafletTileLayer = null; // Instância da camada de fundo do mapa
 
 // ── NAVEGAÇÃO ─────────────────────────────────────────────────────────
 function switchPanel(id, el) {
@@ -33,13 +37,8 @@ function switchPanel(id, el) {
     }
 
     if (!isAuthorized) {
-      const emailInput = prompt("Acesso restrito. Insira o e-mail de administrador para continuar:");
-      if (emailInput && emailInput.trim().toLowerCase() === "profissaopet@j3lab.com.br") {
-        sessionStorage.setItem('adminAuthorized', 'true');
-      } else {
-        alert("Acesso negado. Esta área é restrita para profissaopet@j3lab.com.br");
-        return; // Interrompe a função e bloqueia a navegação
-      }
+      alert("Acesso negado. Esta área é restrita para profissaopet@j3lab.com.br");
+      return; // Interrompe a função e bloqueia a navegação
     }
   }
 
@@ -55,10 +54,12 @@ function switchPanel(id, el) {
     // Garante que os gráficos da aba de config sejam renderizados
     initConfigCharts();
   }
+  if (id === 'eventos') {
+    loadEventosData();
+  }
   if (id === 'radar-pet') {
     setTimeout(() => {
-      if (mapInstance) mapInstance.invalidateSize();
-      initMapaCalor(); // Força a renderização do mapa agora que a aba está visível
+      if (typeof initLeafletMap === 'function') initLeafletMap();
     }, 100);
   }
 }
@@ -278,221 +279,153 @@ function groupedBarChart(id, labels, datasets) {
   });
 }
 
-// ── MAPA DE CALOR ─────────────────────────────────────────────────────────
-function initMapaCalor() {
-  const mapContainer = document.getElementById('mapa-calor-rocinha');
-  if (!mapContainer) return;
-if (mapContainer.clientWidth === 0 || mapContainer.clientHeight === 0) {
-    return;
-  }
-  if (!mapInstance) {
-    // Centro aproximado da Rocinha - Instancia o mapa principal apenas uma vez
-    mapInstance = L.map('mapa-calor-rocinha').setView([-22.9886, -43.2486], 15);
+// ── MAPA DE CALOR LEAFLET (OPENSTREETMAP) ─────────────────────────────────
+function initLeafletMap() {
+  const container = document.getElementById('mapa-calor-leaflet');
+  if (!container || typeof L === 'undefined') return;
 
-    // Salva a camada base na variável para podermos trocá-la depois
-    baseTileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  // Evita erro de Canvas "source width is 0" se a aba do mapa estiver oculta
+  if (container.clientWidth === 0 || container.clientHeight === 0) return;
+
+  // Inicializa o mapa apenas na primeira vez
+  if (!leafletMap) {
+    leafletMap = L.map('mapa-calor-leaflet').setView([-22.9886, -43.2486], 15); // Centralizado na Rocinha
+    
+    // Adiciona as "texturas" de mapa gratuitas do OpenStreetMap
+    leafletTileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
-      attribution: '© OpenStreetMap',
-      crossOrigin: true
-    }).addTo(mapInstance);
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(leafletMap);
   }
 
-
-  if (heatLayerInstance) {
-    // Remove a camada de calor anterior para atualizar sem piscar a base do mapa
-    mapInstance.removeLayer(heatLayerInstance);
-  }
-  if (markersLayerInstance) {
-    // Remove marcadores antigos
-    mapInstance.removeLayer(markersLayerInstance);
+  // Camada de Marcadores Interativos
+  if (!leafletMarkers) {
+    leafletMarkers = L.layerGroup();
+  } else {
+    leafletMarkers.clearLayers();
   }
 
   const heatData = [];
-  markersLayerInstance = L.layerGroup();
-  
-  // Respeita a escolha do usuário antes de desenhar na tela
-  const checkboxMarcadores = document.getElementById('ctrl-marcadores');
-  if (!checkboxMarcadores || checkboxMarcadores.checked) {
-    markersLayerInstance.addTo(mapInstance);
-  }
-
-  
-  // Varre a lista de MEMBROS (agora com CEP) para plotar no mapa
   MEMBROS.forEach(m => {
     const lat = m.lat || (m.dadosSocio && m.dadosSocio.lat);
     const lng = m.lng || (m.dadosSocio && m.dadosSocio.lng);
     
     if (lat && lng) {
-      const pLat = parseFloat(lat);
-      const pLng = parseFloat(lng);
-      heatData.push([pLat, pLng, 1]); // O número '1' é a intensidade
-      
-      // Define a cor do marcador baseada na medalha da aluna
+      // Adiciona espalhamento leve para CEPs iguais não ficarem 100% sobrepostos
+      const pLat = parseFloat(lat) + (Math.random() - 0.5) * 0.0015;
+      const pLng = parseFloat(lng) + (Math.random() - 0.5) * 0.0015;
+      heatData.push([pLat, pLng, 1]); // Array formato: [lat, lng, intensidade]
+
+      // Define a cor da bolinha baseada na medalha da aluna
       const badgeIdx = BADGE_LABELS.indexOf(m.badge);
       const mColor = badgeIdx >= 0 ? BADGE_COLORS[badgeIdx] : '#378add';
 
-      // Cria um marcador interativo para a aluna
-      const marker = L.circleMarker([pLat, pLng], {
-        radius: 7, fillColor: mColor, color: '#ffffff', weight: 2, opacity: 1, fillOpacity: 0.9
+      // Cria o marcador interativo (círculo) no mapa
+      const circle = L.circleMarker([pLat, pLng], {
+        radius: 7,
+        fillColor: mColor,
+        color: '#ffffff',
+        weight: 1.5,
+        opacity: 1,
+        fillOpacity: 0.85
       });
 
-      // Adiciona o nome ao passar o mouse e o evento de clique para abrir o modal de Perfil
-      marker.bindTooltip(`<b>${m.nome}</b><br><span style="font-size:11px">${m.badge || 'Sem medalha'}</span>`);
-      if (m.cpf) marker.on('click', () => showSocioModal(m.cpf));
-      markersLayerInstance.addLayer(marker);
+      // Adiciona a tooltip (hover) e o evento de clique para abrir o perfil
+      circle.bindTooltip(`<b>${m.nome}</b><br><span style="font-size:11px">${m.badge || 'Sem medalha'}</span>`, { direction: 'top' });
+      if (m.cpf) {
+        circle.on('click', () => showSocioModal(m.cpf));
+      }
+      
+      circle.addTo(leafletMarkers);
     }
   });
 
-  if (heatData.length > 0) {
-    if (typeof L.heatLayer !== 'undefined') {
-      heatLayerInstance = L.heatLayer(heatData, { radius: 25, blur: 15, maxZoom: 17 }).addTo(mapInstance);
-    }
+  if (leafletHeat) {
+    leafletMap.removeLayer(leafletHeat);
+  }
+
+  const showHeat = document.getElementById('ctrl-leaflet-heat') ? document.getElementById('ctrl-leaflet-heat').checked : true;
+  const showMarkers = document.getElementById('ctrl-leaflet-markers') ? document.getElementById('ctrl-leaflet-markers').checked : true;
+
+  if (heatData.length > 0 && typeof L.heatLayer !== 'undefined') {
+    leafletHeat = L.heatLayer(heatData, {
+      radius: 25, 
+      blur: 20, 
+      maxZoom: 17,
+      gradient: {0.3: '#0ea5e9', 0.5: '#10b981', 0.7: '#eab308', 1.0: '#ef4444'}
+    });
+    if (showHeat) leafletHeat.addTo(leafletMap);
+  }
+
+  if (showMarkers) {
+    leafletMarkers.addTo(leafletMap);
   } else {
-    // Enquanto os dados reais não terminam de converter, mantemos os pontos ilustrativos
-    for (let i = 0; i < 50; i++) {
-      const randLat = -22.9886 + (Math.random() - 0.5) * 0.01;
-      const randLng = -43.2486 + (Math.random() - 0.5) * 0.01;
-      heatData.push([randLat, randLng, 1]);
-    }
-    if (typeof L.heatLayer !== 'undefined') {
-      heatLayerInstance = L.heatLayer(heatData, { radius: 25, blur: 15, maxZoom: 17 }).addTo(mapInstance);
-    }
-  }
-}
-// ── TROCA DE ESTILO DO MAPA BASE (TILE LAYER) ─────────────────────────────
-function mudarEstiloMapa() {
-  if (!mapInstance) return;
-
-  const estilo = document.getElementById('ctrl-map-style').value;
-  let url = '';
-  let attribution = '';
-
-  // Define os provedores de mapas gratuitos para cada estilo
-  switch (estilo) {
-    case 'claro':
-      // CartoDB Positron (Preto e branco claro, ótimo para visualizar os pontos)
-      url = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
-      attribution = '© OpenStreetMap, © CartoDB';
-      break;
-    case 'escuro':
-      // CartoDB Dark Matter (Fundo escuro, faz o mapa de calor brilhar)
-      url = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
-      attribution = '© OpenStreetMap, © CartoDB';
-      break;
-    case 'satelite':
-      // Esri World Imagery (Imagens de satélite reais)
-      url = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
-      attribution = 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community';
-      break;
-    case 'padrao':
-    default:
-      // OpenStreetMap padrão
-      url = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-      attribution = '© OpenStreetMap';
-      break;
+    leafletMap.removeLayer(leafletMarkers);
   }
 
-  // Se houver um mapa atual, removemos ele
-  if (baseTileLayer) {
-    mapInstance.removeLayer(baseTileLayer);
-  }
+  changeLeafletStyle(); // Aplica o estilo caso já tenha sido mudado no select
 
-  // Cria e adiciona a nova camada ao mapa
-  baseTileLayer = L.tileLayer(url, {
-    maxZoom: 19,
-    attribution: attribution,
-    crossOrigin: true
-  }).addTo(mapInstance);
-
-  // Garante que o mapa de calor e os pontos não fiquem escondidos atrás do novo fundo
-  if (heatLayerInstance) heatLayerInstance.bringToFront();
-  if (markersLayerInstance) markersLayerInstance.bringToFront();
+  // Força o mapa a se ajustar ao tamanho da div (corrige bugs de mapa cinza no Leaflet)
+  leafletMap.invalidateSize();
 }
 
-// ── CONTROLES DO MAPA DE CALOR EM TEMPO REAL ──────────────────────────────
-function atualizarMapaCalor() {
-  if (!heatLayerInstance) return;
+// ── CONTROLES DO MAPA LEAFLET ─────────────────────────────────────────────
+function toggleLeafletHeat() {
+  if (!leafletMap || !leafletHeat) return;
+  const isChecked = document.getElementById('ctrl-leaflet-heat').checked;
+  isChecked ? leafletHeat.addTo(leafletMap) : leafletMap.removeLayer(leafletHeat);
+}
 
-  // Lê os valores atuais das barras deslizantes e do menu
-  const radius = parseInt(document.getElementById('ctrl-radius').value);
-  const blur = parseInt(document.getElementById('ctrl-blur').value);
-  const theme = document.getElementById('ctrl-gradient').value;
+function toggleLeafletMarkers() {
+  if (!leafletMap || !leafletMarkers) return;
+  const isChecked = document.getElementById('ctrl-leaflet-markers').checked;
+  isChecked ? leafletMarkers.addTo(leafletMap) : leafletMap.removeLayer(leafletMarkers);
+}
 
-  // Define os gradientes de cor (do mais frio/distante ao mais quente/denso)
-  let gradientConfig = {};
+function changeLeafletStyle() {
+  if (!leafletTileLayer) return;
+  const styleSelect = document.getElementById('ctrl-leaflet-style');
+  if (!styleSelect) return;
   
-  if (theme === 'padrao') {
-    // Cores clássicas de Heatmap
-    gradientConfig = { 0.4: 'blue', 0.6: 'cyan', 0.7: 'lime', 0.8: 'yellow', 1.0: 'red' };
-  } else if (theme === 'institucional') {
-    // Cores baseadas na sua paleta do CSS (Roxo e Rosa)
-    gradientConfig = { 0.4: '#ede9fe', 0.6: '#8b5cf6', 0.8: '#d4537e', 1.0: '#be123c' };
-  } else if (theme === 'oceano') {
-    // Tons de água e esmeralda
-    gradientConfig = { 0.4: '#e0f2fe', 0.6: '#38bdf8', 0.8: '#34d399', 1.0: '#059669' };
-  }
-
-  // A mágica acontece aqui: aplicamos as configurações instantaneamente
-  heatLayerInstance.setOptions({
-    radius: radius,
-    blur: blur,
-    gradient: gradientConfig
-  });
-}
-// ── CONTROLE DE MARCADORES (SHOW/HIDE) ────────────────────────────────────
-function toggleMarcadores() {
-  if (!mapInstance || !markersLayerInstance) return;
+  const style = styleSelect.value;
+  const tileUrls = {
+    'standard': 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    'dark': 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+    'light': 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'
+  };
   
-  const checkbox = document.getElementById('ctrl-marcadores');
-  
-  if (checkbox.checked) {
-    // Se marcado, adiciona a camada de pontos de volta ao mapa
-    mapInstance.addLayer(markersLayerInstance);
-  } else {
-    // Se desmarcado, remove a camada de pontos da visão
-    mapInstance.removeLayer(markersLayerInstance);
-  }
+  // Usa o repositório gratuito e belíssimo do CartoDB para os modos claro e escuro
+  leafletTileLayer.setUrl(tileUrls[style] || tileUrls['standard']);
 }
 
-// Função assíncrona que integra a geocodificação no frontend silenciosamente
+// ── GEOCODIFICAÇÃO GRATUITA (VIACEP + NOMINATIM) ──────────────────────────
 async function geocodeSocioDataBackground() {
   let updated = false;
-
   for (const m of MEMBROS) {
-    // Tenta pegar o CEP diretamente de MEMBROS ou cai para os dados socioeconômicos como fallback
     const cepStr = m.cep || m.CEP || (m.dadosSocio && (m.dadosSocio.cep || m.dadosSocio.CEP)); 
     
     if ((!m.lat && !m.latitude) && cepStr) {
-      const cacheKey = `geo_${cepStr}`;
-      const cached = localStorage.getItem(cacheKey); // Verifica se já pesquisou antes
+      const cleanCep = String(cepStr).replace(/\D/g, ''); 
+      const cacheKey = `geo_os_${cleanCep || cepStr}`;
+      const cached = localStorage.getItem(cacheKey);
 
       if (cached) {
         const parsed = JSON.parse(cached);
-        m.lat = parsed.lat;
-        m.lng = parsed.lon;
+        m.lat = parsed.lat; m.lng = parsed.lon;
         updated = true;
       } else {
         try {
-          // Pausa de 1.5s entre requisições para evitar ser bloqueado pela API gratuita
-          await new Promise(resolve => setTimeout(resolve, 1500));
+          await new Promise(resolve => setTimeout(resolve, 1500)); // Rate limit ético do Nominatim
+          let query = cleanCep.length === 8 ? `${cleanCep}, Rio de Janeiro, Brasil` : `${cepStr}, Rio de Janeiro, Brasil`;
           
-          const cleanCep = String(cepStr).replace(/\D/g, ''); 
-          let url = cleanCep.length === 8 
-            ? `https://nominatim.openstreetmap.org/search?postalcode=${cleanCep}&country=Brazil&format=json`
-            : `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(cepStr + ", Rio de Janeiro, Brasil")}&format=json`;
-
+          const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`;
           const response = await fetch(url);
           const data = await response.json();
           
           if (data && data.length > 0) {
-            m.lat = data[0].lat;
-            m.lng = data[0].lon;
-            // Salva na memória do navegador para ficar muito rápido nas próximas vezes
+            m.lat = parseFloat(data[0].lat); m.lng = parseFloat(data[0].lon);
             localStorage.setItem(cacheKey, JSON.stringify({ lat: m.lat, lon: m.lng }));
-            updated = true;
-            
-            // Atualiza o mapa na hora a cada novo CEP localizado
-            initMapaCalor();
+            updated = true; initLeafletMap();
           }
         } catch (error) {
           console.warn(`Erro ao converter CEP ${cepStr}:`, error);
@@ -500,11 +433,7 @@ async function geocodeSocioDataBackground() {
       }
     }
   }
-
-  // Atualização de varredura final se houve atualizações em massa pelo cache rápido
-  if (updated) {
-    initMapaCalor();
-  }
+  if (updated) initLeafletMap();
 }
 
 // ── GRÁFICOS: VISÃO GERAL ──────────────────────────────────────────────────
@@ -564,9 +493,6 @@ function initGeraisCharts(membros) {
       '#ef9f27'  // Cor para Agir
     ]);
   }
-  
-  // Inicializa o Mapa de Calor
-  initMapaCalor();
 }
 
 // ── GRÁFICOS: SOCIOECONÔMICO ────────────────────────────────────────────────────────
@@ -857,6 +783,267 @@ function renderTabela() {
   }).join('');
 }
 
+// ── EVENTOS E PRESENÇA ───────────────────────────────────────────────────────────
+function renderEventos() {
+  if (isLoadingEventos) return;
+
+  const container = document.getElementById('events-container');
+  if (!container) return;
+  
+  if (!EVENTOS || EVENTOS.length === 0) {
+    container.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1;"><i class="fa-solid fa-list-check"></i>Nenhuma presença registrada ainda.</div>`;
+    return;
+  }
+  
+  container.innerHTML = EVENTOS.map(ev => {
+    const dateObj = new Date(ev.date);
+    const dateStr = dateObj.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short', hour: '2-digit', minute:'2-digit' });
+    const count = (ev.presentes || []).length;
+    
+    const avaliacoes = (ev.presentes || []).filter(p => p.Classificacao);
+    const media = avaliacoes.length ? (avaliacoes.reduce((acc, curr) => acc + Number(curr.Classificacao), 0) / avaliacoes.length).toFixed(1) : '-';
+    
+    const conteudos = avaliacoes.map(p => Number(p.Conteudo)).filter(n => !isNaN(n) && n > 0);
+    const mediaConteudo = conteudos.length ? (conteudos.reduce((a, b) => a + b, 0) / conteudos.length).toFixed(1) : '-';
+
+    const estruturas = avaliacoes.map(p => Number(p.Estrutura)).filter(n => !isNaN(n) && n > 0);
+    const mediaEstrutura = estruturas.length ? (estruturas.reduce((a, b) => a + b, 0) / estruturas.length).toFixed(1) : '-';
+
+    const perfis = countBy(ev.presentes || [], p => p.Perfil);
+    const perfilComum = Object.keys(perfis).length ? Object.keys(perfis).reduce((a, b) => perfis[a] > perfis[b] ? a : b) : '-';
+
+    const comentariosCount = avaliacoes.filter(p => p.Comentario_Geral && String(p.Comentario_Geral).trim().length > 0).length;
+
+    const linkUrl = `${API_BASE}?evento=${encodeURIComponent(ev.title)}`;
+
+    return `
+      <div class="event-card">
+        <div class="event-date"><i class="fa-regular fa-clock"></i> ${dateStr}</div>
+        <div class="event-title">${ev.title}</div>
+        <div class="event-desc">${ev.desc || ''}</div>
+        
+        <div class="event-insights" style="background: var(--surface2); padding: 16px; border-radius: 12px; margin-bottom: 16px; border: 1px solid var(--border);">
+           <div style="font-size: 11px; text-transform: uppercase; color: var(--navy); font-weight: 700; margin-bottom: 12px; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;"><i class="fa-solid fa-chart-simple"></i> Insights do Evento</div>
+           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+             <div title="Total de presenças" style="background: white; padding: 10px; border-radius: 8px; border: 1px solid var(--border);"><span style="font-size: 11px; color: var(--muted); display: block; margin-bottom: 4px;"><i class="fa-solid fa-users"></i> Presenças</span><strong style="font-size: 16px; color: var(--navy);">${count}</strong></div>
+             <div title="Média de avaliação geral" style="background: white; padding: 10px; border-radius: 8px; border: 1px solid var(--border);"><span style="font-size: 11px; color: var(--muted); display: block; margin-bottom: 4px;"><i class="fa-solid fa-star" style="color:var(--gold)"></i> Aval. Geral</span><strong style="font-size: 16px; color: var(--navy);">${media}</strong></div>
+             <div title="Média de avaliação do conteúdo" style="background: white; padding: 10px; border-radius: 8px; border: 1px solid var(--border);"><span style="font-size: 11px; color: var(--muted); display: block; margin-bottom: 4px;"><i class="fa-solid fa-book-open" style="color:var(--purple)"></i> Conteúdo</span><strong style="font-size: 16px; color: var(--navy);">${mediaConteudo}</strong></div>
+             <div title="Média de avaliação da infraestrutura" style="background: white; padding: 10px; border-radius: 8px; border: 1px solid var(--border);"><span style="font-size: 11px; color: var(--muted); display: block; margin-bottom: 4px;"><i class="fa-solid fa-building" style="color:var(--green)"></i> Estrutura</span><strong style="font-size: 16px; color: var(--navy);">${mediaEstrutura}</strong></div>
+             <div style="grid-column: 1 / -1; background: white; padding: 10px; border-radius: 8px; border: 1px solid var(--border);" title="Perfil mais frequente entre os presentes"><span style="font-size: 11px; color: var(--muted); display: block; margin-bottom: 4px;"><i class="fa-solid fa-id-badge" style="color:var(--orange)"></i> Perfil Dominante</span><strong style="font-size: 13px; color: var(--navy);">${perfilComum}</strong></div>
+           </div>
+           ${comentariosCount > 0 ? `<div style="margin-top: 12px; font-size: 12px; color: var(--navy); font-weight: 500; text-align: center;"><i class="fa-regular fa-comments"></i> ${comentariosCount} comentários recebidos</div>` : ''}
+        </div>
+        
+        <div class="event-footer" style="flex-wrap: wrap; gap: 10px;">
+          <button class="btn btn-outline" style="padding: 6px 12px; font-size: 12px; flex: 1;" onclick="navigator.clipboard.writeText('${linkUrl}'); alert('Link de presença copiado!');">
+            <i class="fa-solid fa-link"></i> Link
+          </button>
+          <button class="btn btn-outline" style="padding: 6px 12px; font-size: 12px;" onclick="openAttendanceModal('${ev.id}')">
+            Gerenciar
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// --- LÓGICA DE CARREGAMENTO SOB DEMANDA (LAZY LOAD) ---
+function loadEventosData() {
+  // Se os dados já foram carregados ou estão carregando, não baixa de novo
+  if (PRESENCAS.length > 0 || isLoadingEventos) {
+    renderEventos();
+    return;
+  }
+  
+  isLoadingEventos = true;
+  const container = document.getElementById('events-container');
+  if (container) container.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1;"><i class="fa-solid fa-spinner fa-spin"></i> Baixando presenças da planilha...</div>`;
+  
+  const s1 = document.createElement('script');
+  s1.src = `${API_BASE}?callback=processarEventos&endpoint=presencas`;
+  s1.className = 'jsonp-script-eventos';
+  s1.onerror = function() {
+    isLoadingEventos = false;
+    if (container) container.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1; color: var(--pink);"><i class="fa-solid fa-triangle-exclamation"></i> Erro ao carregar eventos.</div>`;
+  };
+  document.body.appendChild(s1);
+}
+
+function processarEventos(dados) {
+  isLoadingEventos = false;
+  PRESENCAS = dados || [];
+  
+  const presencasPorEvento = {};
+  PRESENCAS.forEach(p => {
+    const eventoNome = p.Evento || "Evento não identificado";
+    if (!presencasPorEvento[eventoNome]) presencasPorEvento[eventoNome] = [];
+    presencasPorEvento[eventoNome].push({
+      Data_do_registro: p['Data do registro'], Evento: p.Evento, Nome: p.Nome, Email: p.Email,
+      CPF: p.CPF, Celular: p.Celular, Localidade: p.Localidade, Perfil: p.Perfil,
+      Classificacao: p['Classificação'], Comentario_Geral: p['Comentario Geral'], Conteudo: p.Conteudo,
+      Comentario_conteudo: p['Comentario conteudo'], Estrutura: p.Estrutura, Comentario_estrutura: p['Comentario estrutura'],
+      cpf: p.CPF
+    });
+  });
+
+  EVENTOS = Object.keys(presencasPorEvento).map((nome, index) => {
+    const presentes = presencasPorEvento[nome];
+    let evDate = new Date().toISOString();
+    if (presentes[0] && presentes[0].Data_do_registro) {
+      const parsed = new Date(presentes[0].Data_do_registro);
+      if (!isNaN(parsed.getTime())) evDate = parsed.toISOString();
+    }
+    return {
+      id: 'ev_' + index,
+      title: nome,
+      date: evDate,
+      desc: 'Registros extraídos da aba Lista de Presença.',
+      presentes: presentes
+    };
+  });
+
+  renderEventos();
+}
+// ----------------------------------------------------
+
+function openAttendanceModal(eventId) {
+  currentEventId = eventId;
+  const ev = EVENTOS.find(e => e.id === eventId);
+  if (!ev) return;
+  
+  document.getElementById('attendance-modal-title').textContent = `Presença: ${ev.title}`;
+  
+  document.getElementById('event-title-input').value = ev.title || '';
+
+  const datetimeInput = document.getElementById('event-datetime');
+  if (ev.date) {
+    // Para popular o <input type="datetime-local">, precisamos de um formato 'YYYY-MM-DDTHH:MM'.
+    // O Date object do JS pode ser complicado com timezones. Esta abordagem garante que a hora local
+    // seja exibida corretamente no input, independentemente do fuso horário do usuário.
+    const d = new Date(ev.date);
+    const tzoffset = d.getTimezoneOffset() * 60000; // Offset em milissegundos
+    const localISOTime = (new Date(d.getTime() - tzoffset)).toISOString().slice(0, 16);
+    datetimeInput.value = localISOTime;
+  } else {
+    datetimeInput.value = '';
+  }
+
+  renderAttendanceList();
+  document.getElementById('attendance-modal').style.display = 'flex';
+}
+
+function closeAttendanceModal() {
+  document.getElementById('attendance-modal').style.display = 'none';
+  currentEventId = null;
+}
+
+function removePresence(cpf) {
+  const ev = EVENTOS.find(e => e.id === currentEventId);
+  if (!ev || !ev.presentes) return;
+
+  ev.presentes = ev.presentes.filter(p => p.CPF !== cpf && p.cpf !== cpf);
+  renderAttendanceList();
+  renderEventos();
+}
+
+function renderAttendanceList() {
+  const ev = EVENTOS.find(e => e.id === currentEventId);
+  const container = document.getElementById('attendance-list');
+  const countSpan = document.getElementById('attendance-count');
+
+  if (!ev || !ev.presentes || ev.presentes.length === 0) {
+    container.innerHTML = `<div class="empty-state" style="padding: 20px;"><i class="fa-solid fa-user-slash"></i>Nenhuma presença registrada.</div>`;
+    countSpan.textContent = '0';
+    return;
+  }
+
+  countSpan.textContent = ev.presentes.length;
+  container.innerHTML = ev.presentes.map(p => `
+    <div class="attendance-item" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: var(--surface2); border-radius: 8px; border: 1px solid var(--border); font-size: 13px;">
+      <div>
+        <strong style="color: var(--navy);">${p.Nome || p.nome || 'Sem Nome'}</strong><br>
+        <span style="font-size: 11px; color: var(--muted);">CPF: ${p.CPF || p.cpf} | Perfil: ${p.Perfil || '-'} | Celular: ${p.Celular || '-'} | Localidade: ${p.Localidade || '-'}</span>
+        <div style="margin-top: 6px; display: flex; gap: 12px; font-size: 11px; font-weight: 500;">
+          ${p.Classificacao ? `<span style="color: var(--gold);"><i class="fa-solid fa-star"></i> Geral: ${p.Classificacao}</span>` : ''}
+          ${p.Conteudo ? `<span style="color: var(--purple);"><i class="fa-solid fa-book-open"></i> Conteúdo: ${p.Conteudo}</span>` : ''}
+          ${p.Estrutura ? `<span style="color: var(--green);"><i class="fa-solid fa-building"></i> Estrutura: ${p.Estrutura}</span>` : ''}
+        </div>
+        ${p.Comentario_Geral ? `<div style="font-size: 11px; color: var(--text-light); margin-top: 4px; font-style: italic;"><strong>Geral:</strong> "${p.Comentario_Geral}"</div>` : ''}
+        ${p.Comentario_conteudo ? `<div style="font-size: 11px; color: var(--text-light); margin-top: 4px; font-style: italic;"><strong>Conteúdo:</strong> "${p.Comentario_conteudo}"</div>` : ''}
+        ${p.Comentario_estrutura ? `<div style="font-size: 11px; color: var(--text-light); margin-top: 4px; font-style: italic;"><strong>Estrutura:</strong> "${p.Comentario_estrutura}"</div>` : ''}
+      </div>
+      <button class="attendance-remove" onclick="removePresence('${p.CPF || p.cpf}')" title="Remover presença" style="color: var(--pink); background: none; border: none; cursor: pointer; font-size: 14px; padding: 4px;">
+        <i class="fa-solid fa-trash-can"></i>
+      </button>
+    </div>
+  `).join('');
+}
+
+async function saveEventAndAttendance() {
+  const btn = document.querySelector('#attendance-modal .btn-primary:last-child');
+  const originalText = btn.innerHTML;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Salvando...';
+  btn.disabled = true;
+
+  try {
+    // --- Parte 1: Atualizar Detalhes do Evento (localmente) ---
+    const ev = EVENTOS.find(e => e.id === currentEventId);
+    if (!ev) throw new Error("Evento não encontrado!");
+
+    const newDateValue = document.getElementById('event-datetime').value;
+    if (newDateValue) {
+      // O valor do input é uma string no formato local, que o new Date() interpreta corretamente.
+      // Convertemos para ISOString para manter o padrão de dados.
+      ev.date = new Date(newDateValue).toISOString();
+    }
+
+    const newTitleValue = document.getElementById('event-title-input').value;
+    if (newTitleValue && newTitleValue.trim() !== '') {
+      ev.title = newTitleValue.trim();
+    }
+
+    // --- Parte 2: Salvar Novas Presenças (no backend) ---
+    const novasPresencas = ev.presentes.filter(p => p.novo);
+    if (novasPresencas.length > 0) {
+      const payload = novasPresencas.map(p => ({
+        'Data do registro': p.Data_do_registro,
+        'Evento': p.Evento,
+        'Nome': p.Nome,
+        'Email': p.Email,
+        'CPF': p.CPF,
+        'Celular': p.Celular,
+        'Localidade': p.Localidade,
+        'Perfil': p.Perfil,
+        'Classificação': p.Classificacao,
+        'Comentario Geral': p.Comentario_Geral,
+        'Conteudo': p.Conteudo,
+        'Comentario conteudo': p.Comentario_conteudo,
+        'Estrutura': p.Estrutura,
+        'Comentario estrutura': p.Comentario_estrutura
+      }));
+
+      await fetch(API_BASE, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ endpoint: 'presencas', data: payload })
+      });
+      
+      novasPresencas.forEach(p => delete p.novo);
+    }
+
+    // --- Parte 3: Finalizar ---
+    renderEventos(); // Re-renderiza os cards de evento com a data atualizada
+    alert('Alterações salvas com sucesso!');
+    closeAttendanceModal();
+
+  } catch (error) {
+    alert('Erro ao salvar as alterações. Verifique sua conexão e tente novamente. Detalhe: ' + error.message);
+  } finally {
+    btn.innerHTML = originalText;
+    btn.disabled = false;
+  }
+}
+
 // ── LÓGICA DO MODAL ─────────────────────────────────────────────────────────
 function showSocioModal(cpf) {
   const aluna = MEMBROS.find(m => m.cpf === cpf);
@@ -1043,7 +1230,7 @@ function tentarMergeEProcessar() {
   
   // Restaura o botão de recarregar
   setReloadButtonState(false);
-
+  
   // Dispara a conversão de CEP -> Coordenadas em segundo plano sem travar a interface
   geocodeSocioDataBackground();
 }
@@ -1141,6 +1328,7 @@ function renderAllCharts() {
   initConfigCharts();
   populateConfigFilter();
   renderTabela();
+  if (typeof renderEventos === 'function') renderEventos();
 }
 
 function fetchData() {
@@ -1213,6 +1401,9 @@ function reloadData() {
   SOCIO = [];
   CONFIG = [];
   LOG = [];
+  EVENTOS = [];
+  PRESENCAS = [];
+  isLoadingEventos = false;
   chartInstances = {};
   socioChartsReady = false;
 
@@ -1230,6 +1421,15 @@ function initApp() {
   document.getElementById('pdf-options-modal').addEventListener('click', function(e) {
     if (e.target === this) closePdfOptionsModal();
   });
+
+  // Fecha o modal de presença
+  const attendanceModal = document.getElementById('attendance-modal');
+  if (attendanceModal) {
+    attendanceModal.addEventListener('click', function(e) {
+      if (e.target === this && typeof closeAttendanceModal === 'function') closeAttendanceModal();
+    });
+  }
+
 
   if (window.innerWidth <= 860) {
     document.querySelector('.sidebar').classList.remove('expanded');
@@ -1314,3 +1514,20 @@ window.addEventListener('load', () => {
   initApp();
   setupSponsorMarquee();
 });
+
+// ── EXPORTS PARA TESTES (NODE.JS) ──────────────────────────────────────────
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    countBy,
+    initials,
+    mergeDataSources,
+    // Exportamos também as variáveis globais para permitir a injeção de dados nos testes
+    setGlobals: (membros, socio, config, log) => {
+      MEMBROS = membros;
+      SOCIO = socio;
+      CONFIG = config;
+      LOG = log;
+    },
+    getGlobals: () => ({ MEMBROS, SOCIO, CONFIG, LOG })
+  };
+}
