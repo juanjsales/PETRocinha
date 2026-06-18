@@ -9,22 +9,22 @@
    ════════════════════════════════════════════════════════════════════════ */
 
 :root {
-  --navy:   #003366;
-  --pink:   #e91e63;
-  --gold:   #e8b800;
-  --green:  #16a34a;
-  --purple: #7c3aed;
-  --blue:   #0ea5e9;
-  --orange: #f97316;
+  --navy:    #003366;
+  --pink:    #e91e63;
+  --gold:    #e8b800;
+  --green:   #16a34a;
+  --purple:  #7c3aed;
+  --blue:    #0ea5e9;
+  --orange:  #f97316;
 
-  --bg:      #f0f2f7;
-  --surface: #ffffff;
+  --bg:       #f0f2f7;
+  --surface:  #ffffff;
   --surface2: #f8f9fc;
-  --border:  #e2e8f0;
-  --text:    #1a202c;
+  --border:   #e2e8f0;
+  --text:     #1a202c;
   --text-light: #4a5568;
-  --muted:   #64748b;
-  --font:    'Plus Jakarta Sans', sans-serif;
+  --muted:    #64748b;
+  --font:     'Plus Jakarta Sans', sans-serif;
 }
 
 * { 
@@ -609,11 +609,10 @@ body.no-scroll {
 }
 
 /* ── Sponsors ── */
-/* ── Sponsors ── */
 .sponsors-section {
   margin-top: 15px;
-  text-align: center; /* Center the content */
-  overflow: hidden; /* Esconde o conteúdo que sai da área */
+  text-align: center; 
+  overflow: hidden; 
   position: relative;
   width: 100%;
 }
@@ -627,33 +626,29 @@ body.no-scroll {
 }
 .sponsors-logos {
     display: flex;
-   
     align-items: center;
-   
-    flex-direction: row; /* Alinha os logos horizontalmente */
-    width: max-content; /* Garante que o container se expanda para todo o conteúdo */
-    align-items: center; /* Centraliza verticalmente */
-    gap: 25px; /* Espaço entre os logos */
-    /* Animação */
+    flex-direction: row; 
+    width: max-content; 
+    gap: 25px; 
     animation: scroll 20s linear infinite;
 }
 
 .sponsors-logos img {
-    height: 60px; /* Altura fixa */
-    width: 60px; /* Largura fixa para criar um círculo */
-    border-radius: 50%; /* Torna o elemento redondo */
-    background-color: white; /* Fundo branco */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sombra */
-    object-fit: contain; /* Garante que o logo caiba no círculo */
-    padding: 8px; /* Espaçamento interno */
+    height: 60px; 
+    width: 60px; 
+    border-radius: 50%; 
+    background-color: white; 
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); 
+    object-fit: contain; 
+    padding: 8px; 
+    flex-shrink: 0; 
     transition: transform 0.2s ease;
-    flex-shrink: 0; /* Impede que os logos encolham */
 }
 
 .sponsors-logos img:hover {
-    transform: scale(1.05); /* Subtle hover effect */
+    transform: scale(1.05); 
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-    animation-play-state: paused; /* Pausa a animação no hover */
+    animation-play-state: paused; 
 }
 
 /* ── Status ── */
@@ -812,13 +807,13 @@ tr:hover td {
     transform: translateX(0);
   }
   to {
-    transform: translateX(-50%); /* Move até a metade para criar o loop */
+    transform: translateX(-50%); 
   }
 }
 
 
 /* ════════════════════════════════════════════════════════════════════════
-   6. RESPONSIVE & PRINT STYLES
+   6. RESPONSIVE & PRINT STYLES (PDF BLINDADO)
    ════════════════════════════════════════════════════════════════════════ */
 
 @media (max-width: 1100px) {
@@ -876,14 +871,63 @@ tr:hover td {
   }
 }
 
+/* 🖨️ ESTILOS DE IMPRESSÃO - CORREÇÃO DE QUEBRA DE PÁGINA (SAGICAD COMPLIANT) */
 @media print {
-  .sidebar { display: none; }
-  .main { margin-left: 0; padding: 0; }
-  .btn, .filter-sel { display: none; }
-  .panel { display: block !important; }
-  .mcard:hover { box-shadow: none; }
-  body { background: white; }
-  .chart-card, .table-card, .mcard { break-inside: avoid; }
+  @page {
+    size: A4 portrait;
+    margin: 15mm 12mm !important; /* Respiro obrigatório para margens do papel */
+  }
+
+  body { 
+    background: #ffffff !important; 
+    color: #000000 !important;
+    -webkit-print-color-adjust: exact !important; /* Preserva as cores dos gráficos */
+    print-color-adjust: exact !important;
+  }
+
+  .sidebar, .btn, .filter-sel, .menu-toggle, .topbar-actions { 
+    display: none !important; /* Oculta controles operacionais da web */
+  }
+
+  .main { 
+    margin-left: 0 !important; 
+    padding: 0 !important; 
+  }
+
+  .panel { 
+    display: block !important; 
+  }
+
+  /* 🚫 EVITA QUE O MOTOR FAÇA CORTES NO MEIO DOS ELEMENTOS */
+  .chart-card, .table-card, .mcard, .event-card, .detail-item, tr, td { 
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    box-shadow: none !important;
+    transform: none !important;
+  }
+
+  /* Força tabelas longas a quebrarem de forma limpa entre linhas */
+  table {
+    page-break-inside: auto !important;
+  }
+
+  /* Impede títulos de ficarem isolados no fim da página (Títulos Órfãos) */
+  h1, h2, h3, h4, .page-title, .chart-title {
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+  }
+
+  /* Ajuste de GRID para impressão para evitar colapso de largura */
+  .metrics-grid, .socio-metrics, .charts-2col {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important; /* Força 2 colunas rígidas no papel */
+    gap: 12px !important;
+  }
+  
+  .charts-3col {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+  }
 }
 
 /* Responsive Table */
@@ -920,7 +964,7 @@ tr:hover td {
     padding: 16px;
     background: #f8f9fc;
   }
-} /* FECHAMENTO CORRIGIDO DA MEDIA QUERY */
+}
 
 /* ── Events & Attendance ── */
 .events-grid {
@@ -989,7 +1033,7 @@ tr:hover td {
   border-top: 1px solid var(--border);
 }
 
-/* ── IIC Presence Container Styles (Embelezado) ── */
+/* ── IIC Presence Container Styles ── */
 #iic-presence-container {
   --azul-iic: #1a1850;
   --verde-iic: #2bc4a9;
