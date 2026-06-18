@@ -875,7 +875,7 @@ tr:hover td {
 @media print {
   @page {
     size: A4 portrait;
-    margin: 20mm 15mm !important; /* Aumentamos a margem para dar mais respiro */
+    margin: 20mm 15mm !important; /* Margem padrão institucional da folha */
   }
 
   html, body {
@@ -883,12 +883,13 @@ tr:hover td {
     color: #000000 !important;
     width: 100% !important;
     height: auto !important;
-    font-size: 11pt !important; /* Ajuste sutil de fonte para caber melhor na página */
+    font-size: 11pt !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+    overflow: visible !important; /* Impede que o corte do iframe mascare o conteúdo */
   }
 
-  /* Oculta elementos de navegação e botões da web */
+  /* Oculta menus laterais, botões e barras de controle do painel web */
   .sidebar, .btn, .filter-sel, .menu-toggle, .topbar-actions, .sidebar-brand, .sidebar-footer { 
     display: none !important; 
   }
@@ -898,27 +899,29 @@ tr:hover td {
     padding: 0 !important; 
     width: 100% !important;
     max-width: 100% !important;
+    position: relative !important;
   }
 
   .panel { 
     display: block !important; 
     width: 100% !important;
+    height: auto !important;
   }
 
-  /* 📊 ORGANIZAÇÃO EM 2 COLUNAS LIMPAS PARA NÃO COMPACTAR */
+  /* 📊 FORCE THE VERTICAL FLOW - Transforma o layout em blocos sequenciais no papel */
   .metrics-grid, .socio-metrics, .charts-2col, .charts-3col {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr !important; /* Força duas colunas bem distribuídas */
-    gap: 16px !important;
+    display: block !important; /* Destrói o grid/flex que pira o motor do iframe */
     width: 100% !important;
-    page-break-inside: auto !important;
+    height: auto !important;
   }
 
-  /* 📦 BLINDAGEM CONTRA FATIAMENTO VERTICAL */
-  .chart-card, .table-card, .mcard, .event-card, .detail-item { 
-    display: flex !important; /* Retorna o flex interno para alinhar ícone e texto */
-    flex-direction: row !important;
-    page-break-inside: avoid !important; /* PROÍBE O CORTE NO MEIO DO CARTÃO */
+  /* 📦 ISOLAMENTO COMPLETO DE COMPONENTES - Impede cortes transversais e horizontais */
+  .chart-card, .table-card, .mcard, .event-card, .detail-item, tr { 
+    display: block !important; /* Garante empilhamento vertical puro */
+    width: 100% !important;
+    height: auto !important;
+    margin-bottom: 24px !important;
+    page-break-inside: avoid !important; /* 🚫 PROIBIDO CORTAR O CARTÃO NO MEIO */
     break-inside: avoid !important;
     box-shadow: none !important;
     transform: none !important;
@@ -926,13 +929,15 @@ tr:hover td {
     background: #ffffff !important;
   }
 
-  /* Garante que o conteúdo interno do cartão não quebre */
-  .mcard-body, .chart-title, .chart-container {
+  /* Redimensiona os canvas de gráficos (Chart.js) para se adaptarem à nova largura real do papel */
+  canvas, .chart-container {
+    max-width: 100% !important;
+    height: auto !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
   }
 
-  /* Evita títulos sozinhos no fim da folha */
+  /* Impede títulos de ficarem isolados sozinhos na base das páginas (Títulos Órfãos) */
   h1, h2, h3, h4, .page-title, .chart-title {
     page-break-after: avoid !important;
     break-after: avoid !important;
