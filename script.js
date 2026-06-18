@@ -1079,8 +1079,8 @@ function registrarAcessoNoMake(dadosAluno) {
     const payloadAcesso = {
         type: "custom_login_painel", // Camuflagem do evento de login
         data: {
-            community_member_id: circleMemberId, // O Módulo 41 da Circle vai ler isso sem dar erro!
-            community_id: circleCommunityId,
+            community_member_id2: circleMemberId, // O Módulo 41 da Circle vai ler isso sem dar erro!
+            community_id2: circleCommunityId,
             evento: "login_painel",
             nome: dadosAluno.nome,
             email: dadosAluno.email,
