@@ -989,17 +989,12 @@ async function sendQuizLogToBackend(isCorrect, quizPergunta) {
     const circleUserEmail = safeStorage('get', 'pet_user_email');
     const email = circleUserEmail ? circleUserEmail : (currentData.email || "");
 
-    // 2. Tenta capturar os IDs da Circle (Com fallback para "SEM_ID" para o Make reconhecer o campo)
-    const circleMemberId = safeStorage('get', 'circle_member_id') || currentData.community_member_id || "SEM_ID";
-    const circleCommunityId = safeStorage('get', 'circle_community_id') || currentData.community_id || "SEM_ID";
-
     // 🔹 3. Monta a carga (Payload) DISFARÇADA DE CIRCLE
     const webhookMake = "https://hook.eu1.make.com/353otbpmuqpb299gksel464kxi853bqr";
     const payloadMake = {
         type: "custom_quiz_answered", // Camuflagem do evento
         data: {
-            community_member_id: circleMemberId, // O Módulo 41 da Circle vai ler isso sem dar erro!
-            community_id: circleCommunityId,
+            
             nome: nome,
             cpf: cpf,
             email: email,
