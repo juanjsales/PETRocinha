@@ -293,6 +293,10 @@ async function buscarESalvarLocal(email) {
             safeStorage('set', 'pet_user_email', email); // Salva para uso no Quiz
             renderDashboard();
             notificarWidget(); // Atualiza o widget
+            
+            // 🔹 CHAMA A TELEMETRIA AQUI (Login Automático)
+            registrarAcessoNoMake(currentData);
+            
         } else {
             console.warn("⚠️ E-mail não encontrado na base de dados:", email);
             document.getElementById('auth-section').style.display = 'block'; // Mostra login via CPF
@@ -474,6 +478,10 @@ async function verificarCPF() {
             console.log("Dados finais processados:", currentData);
             renderDashboard();
             notificarWidget(); // Atualiza o widget após login
+            
+            // 🔹 CHAMA A TELEMETRIA AQUI TAMBÉM (Login Manual)
+            registrarAcessoNoMake(currentData);
+            
         } else {
             alert("Aluna não cadastrada no sistema.");
         }
@@ -1054,3 +1062,33 @@ async function sendQuizLogToBackend(isCorrect, quizPergunta) {
         alert("Ocorreu um erro ao validar sua resposta. Tente novamente.");
     }
 }
+
+// 🚀 --- INÍCIO: TELEMETRIA DE ACESSO AO MAKE --- 🚀
+function registrarAcessoNoMake(dadosAluno) {
+    // ⚠️ ATENÇÃO: Substitua pelo seu Webhook NOVO do Make configurado só para receber os Acessos
+    const webhookAcesso = "https://hook.eu1.make.com/353otbpmuqpb299gksel464kxi853bqr"; 
+    
+    // Resgata os IDs da Circle da memória
+    const circleMemberId = safeStorage('get', 'circle_member_id') || dadosAluno.community_member_id || "SEM_ID";
+    const circleCommunityId = safeStorage('get', 'circle_community_id') || dadosAluno.community_id || "SEM_ID";
+
+    const payloadAcesso = {
+        evento: "login_painel",
+        nome: dadosAluno.nome,
+        email: dadosAluno.email,
+        cpf: dadosAluno.cpf,
+        badge: dadosAluno.badge, // Útil para você saber o nível de quem está logando
+        community_member_id: circleMemberId,
+        community_id: circleCommunityId,
+        timestamp: new Date().toISOString()
+    };
+
+    // Dispara em segundo plano (Fetch assíncrono sem travar a tela)
+    fetch(webhookAcesso, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payloadAcesso)
+    }).then(() => console.log(`📡 Telemetria de login enviada ao Make! (ID: ${circleMemberId})`))
+      .catch(err => console.error("⚠️ Erro na telemetria:", err));
+}
+// 🚀 --- FIM: TELEMETRIA DE ACESSO AO MAKE --- 🚀
