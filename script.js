@@ -97,11 +97,32 @@ function injectSandboxPanel() {
 }
 // --- FIM: CONFIGURAÇÃO DO MODO SANDBOX ---
 
+// 🔹 AQUI EU JÁ ADICIONEI AS 5 PERGUNTAS PARA FICAR DINÂMICO
 const DADOS_QUIZ_LOCAL = [
     {
         pergunta: "Qual a importância do manejo correto do pet?",
         opcoes: ["Segurança e bem-estar", "Apenas estética", "Nenhuma importância"],
         respostaCorreta: "Segurança e bem-estar"
+    },
+    {
+        pergunta: "Qual é a temperatura ideal da água para o banho de um cão?",
+        opcoes: ["Fria (abaixo de 20°C)", "Morna (entre 30°C e 35°C)", "Muito quente"],
+        respostaCorreta: "Morna (entre 30°C e 35°C)"
+    },
+    {
+        pergunta: "Qual a ferramenta correta para desembaraçar pelos longos antes do banho?",
+        opcoes: ["Máquina de tosa", "Rasqueadeira e pente de aço", "Apenas os dedos"],
+        respostaCorreta: "Rasqueadeira e pente de aço"
+    },
+    {
+        pergunta: "Por que é fundamental limpar e secar bem os ouvidos do pet?",
+        opcoes: ["Para evitar infecções como a otite", "Apenas para tirar o mau cheiro", "Para ele ouvir melhor os comandos"],
+        respostaCorreta: "Para evitar infecções como a otite"
+    },
+    {
+        pergunta: "Como deve ser a abordagem inicial com um cão medroso na mesa de tosa?",
+        opcoes: ["Colocar a focinheira imediatamente", "Fazer movimentos rápidos e firmes", "Aproximação calma, oferecendo petiscos e confiança"],
+        respostaCorreta: "Aproximação calma, oferecendo petiscos e confiança"
     }
 ];
 
@@ -140,6 +161,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     const urlParams = new URLSearchParams(window.location.search);
     const emailDaUrl = urlParams.get('email');
     const cacheVercel = safeStorage('get', 'pet_perfil_ativo');
+
+    // 🔹 --- CAPTURA DE IDs DA CIRCLE VIA URL --- 🔹
+    if (urlParams.get('community_member_id')) {
+        safeStorage('set', 'circle_member_id', urlParams.get('community_member_id'));
+    }
+    if (urlParams.get('community_id')) {
+        safeStorage('set', 'circle_community_id', urlParams.get('community_id'));
+    }
 
     // --- INÍCIO: INTERCEPTADOR DO MODO SANDBOX ---
     if (isSandboxMode) {
@@ -247,7 +276,9 @@ function processarDadosAluno(rawData, identificador) {
             pontos: parseInt(h.pontos) || 0 
         })),
         cpf: rawData.cpf || identificador,
-        socioeconomico: rawData.socioeconomico
+        socioeconomico: rawData.socioeconomico,
+        community_member_id: rawData.community_member_id || "", // ID vindo do backend, se tiver
+        community_id: rawData.community_id || "" // ID vindo do backend, se tiver
     };
 }
 
@@ -429,7 +460,7 @@ async function verificarCPF() {
         
         console.log("Dados brutos do Apps Script:", result);
         const rawData = result;
-      
+       
         if (rawData.encontrado) {
             currentData = processarDadosAluno(rawData, currentCPF);
             safeStorage('set', 'pet_perfil_ativo', JSON.stringify(currentData)); // Armazenamos o cache também no CPF
@@ -855,7 +886,6 @@ function switchTab(tabId, el) {
     }
 }
 
-
 document.getElementById("cpf-input").addEventListener("keypress", (e) => { 
     if(e.key === "Enter") verificarCPF(); 
 });
@@ -951,6 +981,10 @@ async function sendQuizLogToBackend(isCorrect, quizPergunta) {
     const circleUserEmail = safeStorage('get', 'pet_user_email');
     const email = circleUserEmail ? circleUserEmail : (currentData.email || "");
 
+    // 🔹 Resgata os IDs da Circle da memória (ou do banco de dados)
+    const circleMemberId = safeStorage('get', 'circle_member_id') || currentData.community_member_id || "";
+    const circleCommunityId = safeStorage('get', 'circle_community_id') || currentData.community_id || "";
+
     // 🚀 --- INÍCIO: DISPARO DO WEBHOOK PARA O MAKE.COM --- 🚀
     try {
         const webhookMake = "https://hook.eu1.make.com/353otbpmuqpb299gksel464kxi853bqr";
@@ -961,6 +995,8 @@ async function sendQuizLogToBackend(isCorrect, quizPergunta) {
             status: acao,           // "acerto" ou "erro"
             pontos: pontos,         // 1 ou 0
             pergunta: quizPergunta, // A pergunta que ela respondeu
+            community_member_id: circleMemberId, // 🔹 ID do Membro na Circle
+            community_id: circleCommunityId,     // 🔹 ID da Comunidade na Circle
             timestamp: new Date().toISOString() // Hora exata da resposta
         };
 
@@ -969,7 +1005,7 @@ async function sendQuizLogToBackend(isCorrect, quizPergunta) {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payloadMake)
-        }).then(res => console.log("📡 Webhook enviado para o Make com sucesso!"))
+        }).then(res => console.log("📡 Webhook enviado para o Make com sucesso! (Incluindo IDs da Circle)"))
           .catch(err => console.error("⚠️ Erro ao enviar webhook para o Make:", err));
 
     } catch (e) {
@@ -984,7 +1020,7 @@ async function sendQuizLogToBackend(isCorrect, quizPergunta) {
             cpf: cpf,
             email: email,
             status: acao,
-            pontos: pontos, // ⚠️ CORRIGIDO: Antes estava 'pontos: ,' e causava erro de sintaxe
+            pontos: pontos, 
             pergunta: quizPergunta
         });
 
@@ -1016,7 +1052,7 @@ async function sendQuizLogToBackend(isCorrect, quizPergunta) {
                     currentData.historico.unshift({
                         data: new Date().toLocaleDateString('pt-BR'),
                         acao: "Quiz Diário - Acerto",
-                        pontos: 1 // Adicionado para manter a consistência do gráfico/extrato local
+                        pontos: 1 
                     });
                     renderDashboard(); // Atualiza a tela para exibir a nova linha no Extrato imediatamente
                 }
