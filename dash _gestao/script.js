@@ -31,7 +31,9 @@ function switchPanel(id, el) {
     // Tenta ler o e-mail da URL (caso o Circle.so passe o e-mail como parâmetro no Iframe)
     const urlParams = new URLSearchParams(window.location.search);
     const urlEmail = urlParams.get('email');
-    if (urlEmail && urlEmail.toLowerCase() === "profissaopet@j3lab.com.br") {
+    
+    // MELHORIA: .trim() para remover espaços e tratamento seguro para evitar erros caso urlEmail venha nulo
+    if (urlEmail && urlEmail.trim().toLowerCase() === "profissaopet@j3lab.com.br") {
       isAuthorized = 'true';
       sessionStorage.setItem('adminAuthorized', 'true');
     }
@@ -300,7 +302,11 @@ function initLeafletMap() {
 
   // Camada de Marcadores Interativos
   if (!leafletMarkers) {
-    leafletMarkers = L.layerGroup();
+    leafletMarkers = L.markerClusterGroup({
+      maxClusterRadius: 40,
+      spiderfyOnMaxZoom: true,
+      disableClusteringAtZoom: 18 // No zoom máximo, mostra a "teia" para endereços idênticos
+    });
   } else {
     leafletMarkers.clearLayers();
   }
@@ -311,9 +317,10 @@ function initLeafletMap() {
     const lng = m.lng || (m.dadosSocio && m.dadosSocio.lng);
     
     if (lat && lng) {
-      // Adiciona espalhamento leve para CEPs iguais não ficarem 100% sobrepostos
-      const pLat = parseFloat(lat) + (Math.random() - 0.5) * 0.0015;
-      const pLng = parseFloat(lng) + (Math.random() - 0.5) * 0.0015;
+      // Sem dados falsos: usamos as coordenadas exatas da API de conversão.
+      const pLat = parseFloat(lat);
+      const pLng = parseFloat(lng);
+
       heatData.push([pLat, pLng, 1]); // Array formato: [lat, lng, intensidade]
 
       // Define a cor da bolinha baseada na medalha da aluna
@@ -451,7 +458,7 @@ function initGeraisCharts(membros) {
     'chartTop5',
     top5.map(m => m.nome.split(' ')[0]),
     top5.map(m => m.arrasas),
-    '#003366'
+    #003366'
   );
 
   const total = membros.length;
@@ -675,7 +682,6 @@ function initImpactoCharts() {
   const incentivoLabels = Object.keys(pontosPorFase);
   const incentivoData = Object.values(pontosPorFase);
   barChart('chartSroiIncentivos', incentivoLabels, incentivoData, '#003366');
-
 }
 
 // ── GRÁFICOS E TABELA: CONFIGURAÇÕES ───────────────────────────────────────────────
@@ -807,7 +813,7 @@ function renderEventos() {
     const mediaConteudo = conteudos.length ? (conteudos.reduce((a, b) => a + b, 0) / conteudos.length).toFixed(1) : '-';
 
     const estruturas = avaliacoes.map(p => Number(p.Estrutura)).filter(n => !isNaN(n) && n > 0);
-    const mediaEstrutura = estruturas.length ? (estruturas.reduce((a, b) => a + b, 0) / estruturas.length).toFixed(1) : '-';
+    const mediaEstrutura = estruturas.length ? (estrutures.reduce((a, b) => a + b, 0) / estruturas.length).toFixed(1) : '-';
 
     const perfis = countBy(ev.presentes || [], p => p.Perfil);
     const perfilComum = Object.keys(perfis).length ? Object.keys(perfis).reduce((a, b) => perfis[a] > perfis[b] ? a : b) : '-';
@@ -917,9 +923,6 @@ function openAttendanceModal(eventId) {
 
   const datetimeInput = document.getElementById('event-datetime');
   if (ev.date) {
-    // Para popular o <input type="datetime-local">, precisamos de um formato 'YYYY-MM-DDTHH:MM'.
-    // O Date object do JS pode ser complicado com timezones. Esta abordagem garante que a hora local
-    // seja exibida corretamente no input, independentemente do fuso horário do usuário.
     const d = new Date(ev.date);
     const tzoffset = d.getTimezoneOffset() * 60000; // Offset em milissegundos
     const localISOTime = (new Date(d.getTime() - tzoffset)).toISOString().slice(0, 16);
@@ -986,14 +989,11 @@ async function saveEventAndAttendance() {
   btn.disabled = true;
 
   try {
-    // --- Parte 1: Atualizar Detalhes do Evento (localmente) ---
     const ev = EVENTOS.find(e => e.id === currentEventId);
     if (!ev) throw new Error("Evento não encontrado!");
 
     const newDateValue = document.getElementById('event-datetime').value;
     if (newDateValue) {
-      // O valor do input é uma string no formato local, que o new Date() interpreta corretamente.
-      // Convertemos para ISOString para manter o padrão de dados.
       ev.date = new Date(newDateValue).toISOString();
     }
 
@@ -1002,7 +1002,6 @@ async function saveEventAndAttendance() {
       ev.title = newTitleValue.trim();
     }
 
-    // --- Parte 2: Salvar Novas Presenças (no backend) ---
     const novasPresencas = ev.presentes.filter(p => p.novo);
     if (novasPresencas.length > 0) {
       const payload = novasPresencas.map(p => ({
@@ -1031,8 +1030,7 @@ async function saveEventAndAttendance() {
       novasPresencas.forEach(p => delete p.novo);
     }
 
-    // --- Parte 3: Finalizar ---
-    renderEventos(); // Re-renderiza os cards de evento com a data atualizada
+    renderEventos(); 
     alert('Alterações salvas com sucesso!');
     closeAttendanceModal();
 
@@ -1062,7 +1060,7 @@ function showSocioModal(cpf) {
       const clean = String(cep).replace(/\D/g, '');
       return clean.length === 8 ? clean.replace(/(\d{5})(\d{3})/, '$1-$2') : cep;
     };
-    const endId = 'end-' + Date.now(); // Gera um ID único para evitar conflito de tela
+    const endId = 'end-' + Date.now(); 
 
     const programDetails = [
       { label: 'E-mail', value: aluna.email },
@@ -1128,7 +1126,6 @@ function showSocioModal(cpf) {
         ${renderGrid(socioDetails)}
       </div>`;
 
-    // Dispara a busca no ViaCEP de forma assíncrona (não trava a abertura do modal)
     const cepVal = aluna.cep || s.cep || s.CEP;
     const cleanCep = cepVal ? String(cepVal).replace(/\D/g, '') : '';
     
@@ -1158,10 +1155,9 @@ function mergeDataSources(socioMap) {
   MEMBROS.forEach(membro => {
     const dadosSocio = socioMap.get(membro.cpf);
     if (dadosSocio) {
-      membro.dadosSocio = dadosSocio; // Anexa o objeto socioeconômico completo
+      membro.dadosSocio = dadosSocio; 
     }
 
-    // Calcula a idade a partir da data de nascimento
     if (membro.nascimento) {
       const birthDate = new Date(membro.nascimento);
       const today = new Date();
@@ -1174,10 +1170,8 @@ function mergeDataSources(socioMap) {
     }
   });
 
-  // Cria um mapa de referência de Código -> Horas para consulta rápida
   const configMap = new Map(CONFIG.map(item => [item.Codigo, Number(item.Horas) || 0]));
 
-  // Agrupa os logs por e-mail da aluna
   const logPorAluna = LOG.reduce((acc, logEntry) => {
     const email = logEntry.Email;
     if (email) {
@@ -1187,7 +1181,6 @@ function mergeDataSources(socioMap) {
     return acc;
   }, {});
 
-  // Calcula as horas concluídas e o status de formada para cada membro
   MEMBROS.forEach(membro => {
     const alunaLogs = logPorAluna[membro.email] || [];
     membro.horasConcluidas = alunaLogs.reduce((totalHoras, codigo) => totalHoras + (configMap.get(codigo) || 0), 0);
@@ -1201,19 +1194,16 @@ function closeModal() {
 
 // ── JUNÇÃO E PROCESSAMENTO DE DADOS ───────────────────────────────────────────
 function tentarMergeEProcessar() {
-  // Guardião: Se não houver dados de membros, não processa o restante e destrava o carregamento
   if (MEMBROS.length === 0) {
     document.getElementById('loading-overlay').style.display = 'none';
     setReloadButtonState(false);
     return;
   }
 
-  // Cria um mapa dos dados socioeconômicos para busca rápida
   const socioMap = new Map(SOCIO.map(s => [s.cpf, s]));
 
-  mergeDataSources(socioMap); // Passa o mapa como argumento
+  mergeDataSources(socioMap); 
 
-  // Agora que os dados estão mesclados, podemos processar as métricas e a tabela
   let totalAlunas = MEMBROS.length, totalAS = 0, totalXP = 0, socioOk = 0;
   MEMBROS.forEach(m => {
     totalAS += m.arrasas;
@@ -1225,20 +1215,11 @@ function tentarMergeEProcessar() {
   updateDashboardUI({ totalAlunas, totalAS, totalXP, socioOk, pct });
   renderAllCharts();
 
-  // Esconde a tela de carregamento
   document.getElementById('loading-overlay').style.display = 'none';
-  
-  // Restaura o botão de recarregar
   setReloadButtonState(false);
-  
-  // Dispara a conversão de CEP -> Coordenadas em segundo plano sem travar a interface
   geocodeSocioDataBackground();
 }
 
-/**
- * Atualiza todos os componentes da UI com os dados processados.
- * @param {object} metrics - Objeto contendo as métricas calculadas.
- */
 function updateDashboardUI(metrics) {
   const { totalAlunas, totalAS, totalXP, socioOk, pct } = metrics;
 
@@ -1248,17 +1229,14 @@ function updateDashboardUI(metrics) {
   document.getElementById('m-socio-pct').textContent = `${pct}% concluíram o formulário`;
   document.getElementById('m-xp').textContent = totalXP.toLocaleString('pt-BR') + ' XP';
 
-  // Calcula e atualiza a métrica de horas de curso
   const totalHorasCurso = CONFIG
     .filter(item => item.Tipo === 'Curso')
     .reduce((sum, curso) => sum + (Number(curso.Horas) || 0), 0);
   
   document.getElementById('m-horas-curso').textContent = `${totalHorasCurso}h`;
 
-  // Limpa os diffs antigos antes de adicionar novos
   document.querySelectorAll('.mcard-diff').forEach(el => el.remove());
 
-  // --- Lógica de Comparação com Dia Anterior ---
   const todayStr = new Date().toISOString().slice(0, 10);
   const storageKey = 'petRocinhaMetrics';
   const yesterdayMetrics = JSON.parse(localStorage.getItem(storageKey));
@@ -1267,7 +1245,6 @@ function updateDashboardUI(metrics) {
     date: todayStr, totalAlunas, totalAS, socioOk, totalXP
   };
 
-  // Salva as métricas de hoje se não houver dados ou se os dados forem de outro dia
   if (!yesterdayMetrics || yesterdayMetrics.date !== todayStr) {
     localStorage.setItem(storageKey, JSON.stringify(currentMetrics));
   }
@@ -1286,21 +1263,17 @@ function updateDashboardUI(metrics) {
     document.getElementById('m-socio').parentElement.insertAdjacentHTML('beforeend', renderDiff(currentMetrics.socioOk, yesterdayMetrics.socioOk));
     document.getElementById('m-xp').parentElement.insertAdjacentHTML('beforeend', renderDiff(currentMetrics.totalXP, yesterdayMetrics.totalXP));
   }
-  // --- Fim da Lógica de Comparação ---
-  // A renderização dos gráficos é chamada a partir de tentarMergeEProcessar
 }
 
 // ── CARREGAMENTO DE DADOS ────────────────────────────────────────────────────────
 function processarTudo(dados) {
-  // NOVO: try...catch garante que qualquer erro no processamento não trave a tela
   try {
     if (!dados || dados.erro) {
       document.getElementById('tbody-alunas').innerHTML = `<tr><td colspan="6"><div class="empty-state"><i class="fa-solid fa-triangle-exclamation"></i>Erro ao carregar dados: ${dados && dados.erro ? dados.erro : 'Verifique o script.'}</div></td></tr>`;
       document.getElementById('loading-overlay').style.display = 'none';
-      setReloadButtonState(false); // Restaura em caso de erro
+      setReloadButtonState(false); 
       return;
     }
-    // Alimenta todas as variáveis de uma vez
     MEMBROS = dados.membros || [];
     SOCIO   = dados.socio   || [];
     CONFIG  = dados.config  || [];
@@ -1309,13 +1282,11 @@ function processarTudo(dados) {
     tentarMergeEProcessar();
   } catch (erro) {
     console.error("Erro fatal ao processar e desenhar os dados na tela:", erro);
-    // Mesmo que dê erro na renderização, a gente tira a tela de loading!
     document.getElementById('loading-overlay').style.display = 'none';
     setReloadButtonState(false);
     alert("Conseguimos baixar os dados, mas houve um erro ao desenhar os gráficos. Verifique o console.");
   }
 }
-
 
 function renderAllCharts() {
   initGeraisCharts(MEMBROS);
@@ -1332,15 +1303,12 @@ function renderAllCharts() {
 }
 
 function fetchData() {
-  // Remove scripts antigos para evitar cache e duplicação de dados
   document.querySelectorAll('.jsonp-script').forEach(el => el.remove());
 
-  // Faz uma única requisição unificada ao backend para carregar todas as planilhas
   const s1 = document.createElement('script');
   s1.src = `${API_BASE}?callback=processarTudo&endpoint=all`;
   s1.className = 'jsonp-script';
   
-  // NOVO: Tratamento de erro caso o link do Google Script falhe silenciosamente
   s1.onerror = function() {
     console.error("Falha na requisição: O banco de dados (Google Apps Script) não respondeu.");
     document.getElementById('loading-overlay').style.display = 'none';
@@ -1350,7 +1318,6 @@ function fetchData() {
 
   document.body.appendChild(s1);
 }
-
 
 function clearUIForLoading() {
   document.getElementById('tbody-alunas').innerHTML = '';
@@ -1371,10 +1338,10 @@ function setReloadButtonState(isLoading) {
     if (isLoading) {
       btn.disabled = true;
       if (!btn.dataset.originalText) {
-        btn.dataset.originalText = btn.innerHTML; // Salva o ícone e texto original
+        btn.dataset.originalText = btn.innerHTML; 
       }
       btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Pensando...';
-      btn.classList.add('btn-loading'); // Adiciona a barra de progresso em CSS
+      btn.classList.add('btn-loading'); 
     } else {
       btn.disabled = false;
       if (btn.dataset.originalText) {
@@ -1386,17 +1353,12 @@ function setReloadButtonState(isLoading) {
 }
 
 function reloadData() {
-  // Bloqueia os botões e mostra a barra de progresso animada
   setReloadButtonState(true);
-
-  // Mostra a tela de carregamento
   document.getElementById('loading-overlay').style.display = 'flex';
-    document.body.classList.add('no-scroll'); // <-- TRAVA A TELA
-
+  document.body.classList.add('no-scroll'); 
 
   clearUIForLoading();
 
-  // Limpa os dados antigos
   MEMBROS = [];
   SOCIO = [];
   CONFIG = [];
@@ -1407,22 +1369,18 @@ function reloadData() {
   chartInstances = {};
   socioChartsReady = false;
 
-  // Buscar novos dados
   fetchData();
 }
 
 function initApp() {
-  // Fecha o modal ao clicar fora dele
   document.getElementById('socio-modal').addEventListener('click', function(e) {
     if (e.target === this) closeModal();
   });
 
-  // Fecha o modal de opções de PDF ao clicar fora dele
   document.getElementById('pdf-options-modal').addEventListener('click', function(e) {
     if (e.target === this) closePdfOptionsModal();
   });
 
-  // Fecha o modal de presença
   const attendanceModal = document.getElementById('attendance-modal');
   if (attendanceModal) {
     attendanceModal.addEventListener('click', function(e) {
@@ -1430,12 +1388,10 @@ function initApp() {
     });
   }
 
-
   if (window.innerWidth <= 860) {
     document.querySelector('.sidebar').classList.remove('expanded');
   }
 
-  // Fecha a barra lateral ao clicar fora dela (em modo mobile)
   document.addEventListener('click', function(event) {
     const sidebar = document.querySelector('.sidebar');
     const isClickInsideSidebar = sidebar.contains(event.target);
@@ -1446,7 +1402,7 @@ function initApp() {
     }
   });
 
-  fetchData(); // Carrega os dados na inicialização
+  fetchData(); 
 }
 
 async function saveConfigChanges() {
@@ -1465,7 +1421,6 @@ async function saveConfigChanges() {
     });
   });
 
-  // Exibe um feedback visual para o usuário
   const saveButton = document.querySelector('#panel-config .btn-primary');
   if (!saveButton.dataset.originalText) {
     saveButton.dataset.originalText = saveButton.innerHTML;
@@ -1477,12 +1432,10 @@ async function saveConfigChanges() {
   try {
     const response = await fetch(API_BASE, {
       method: 'POST',
-      headers: { 'Content-Type': 'text/plain' }, // Required for Apps Script POST
+      headers: { 'Content-Type': 'text/plain' }, 
       body: JSON.stringify({ endpoint: 'config', data: newConfigData })
-      // mode: 'no-cors' // 'no-cors' pode ser necessário em alguns cenários, mas impede a leitura da resposta.
     });
 
-    // Idealmente, verificaríamos a resposta, mas por simplicidade, assumimos sucesso.
     alert('Alterações salvas com sucesso! Os dados serão recarregados.');
     saveButton.innerHTML = saveButton.dataset.originalText;
     saveButton.classList.remove('btn-loading');
@@ -1497,9 +1450,6 @@ async function saveConfigChanges() {
   }
 }
 
-/**
- * Configura o marquee de patrocinadores duplicando os logotipos para criar um efeito de rolagem infinita.
- */
 function setupSponsorMarquee() {
   const logosContainer = document.querySelector('.sponsors-logos');
   if (!logosContainer) return;
@@ -1521,7 +1471,6 @@ if (typeof module !== 'undefined' && module.exports) {
     countBy,
     initials,
     mergeDataSources,
-    // Exportamos também as variáveis globais para permitir a injeção de dados nos testes
     setGlobals: (membros, socio, config, log) => {
       MEMBROS = membros;
       SOCIO = socio;
