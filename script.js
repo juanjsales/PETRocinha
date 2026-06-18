@@ -972,102 +972,85 @@ async function sendQuizLogToBackend(isCorrect, quizPergunta) {
         return;
     }
 
+    // 1. Prepara os dados básicos
     const nome = currentData.nome.split(" ")[0];
     const cpf = currentData.cpf;
     const acao = isCorrect ? "acerto" : "erro";
     const pontos = isCorrect ? 1 : 0;
     
-    // Lógica de e-mail prioritário: localStorage da Circle
     const circleUserEmail = safeStorage('get', 'pet_user_email');
     const email = circleUserEmail ? circleUserEmail : (currentData.email || "");
 
-    // 🔹 Resgata os IDs da Circle da memória (ou do banco de dados)
-    const circleMemberId = safeStorage('get', 'circle_member_id') || currentData.community_member_id || "";
-    const circleCommunityId = safeStorage('get', 'circle_community_id') || currentData.community_id || "";
+    // 2. Tenta capturar os IDs da Circle (Com fallback para "SEM_ID" para o Make reconhecer o campo)
+    const circleMemberId = safeStorage('get', 'circle_member_id') || currentData.community_member_id || "SEM_ID";
+    const circleCommunityId = safeStorage('get', 'circle_community_id') || currentData.community_id || "SEM_ID";
 
-    // 🚀 --- INÍCIO: DISPARO DO WEBHOOK PARA O MAKE.COM --- 🚀
+    // 3. Monta a carga (Payload) exclusiva para o Make
+    const webhookMake = "https://hook.eu1.make.com/353otbpmuqpb299gksel464kxi853bqr";
+    const payloadMake = {
+        nome: nome,
+        cpf: cpf,
+        email: email,
+        status: acao,
+        pontos: pontos,
+        pergunta: quizPergunta,
+        community_member_id: circleMemberId,
+        community_id: circleCommunityId,
+        timestamp: new Date().toISOString()
+    };
+
+    // Mostra o loading no botão
+    const loaderQuiz = document.getElementById("loader-quiz");
+    if(loaderQuiz) loaderQuiz.style.display = "flex";
+
     try {
-        const webhookMake = "https://hook.eu1.make.com/353otbpmuqpb299gksel464kxi853bqr";
-        const payloadMake = {
-            nome: nome,
-            cpf: cpf,
-            email: email,
-            status: acao,           // "acerto" ou "erro"
-            pontos: pontos,         // 1 ou 0
-            pergunta: quizPergunta, // A pergunta que ela respondeu
-            community_member_id: circleMemberId, // 🔹 ID do Membro na Circle
-            community_id: circleCommunityId,     // 🔹 ID da Comunidade na Circle
-            timestamp: new Date().toISOString() // Hora exata da resposta
-        };
-
-        // Dispara em segundo plano (sem travar a tela da aluna)
-        fetch(webhookMake, {
+        // 🚀 4. DISPARA SOMENTE PARA O MAKE 
+        await fetch(webhookMake, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payloadMake)
-        }).then(res => console.log("📡 Webhook enviado para o Make com sucesso! (Incluindo IDs da Circle)"))
-          .catch(err => console.error("⚠️ Erro ao enviar webhook para o Make:", err));
-
-    } catch (e) {
-        console.error("Erro ao estruturar webhook do Make", e);
-    }
-    // 🚀 --- FIM: DISPARO DO WEBHOOK PARA O MAKE.COM --- 🚀
-
-    try {
-        const result = await jsonpRequest({
-            action: "logAcertoQuiz",
-            nome: nome,
-            cpf: cpf,
-            email: email,
-            status: acao,
-            pontos: pontos, 
-            pergunta: quizPergunta
         });
+        
+        console.log("📡 Payload enviado com sucesso SÓ para o Make:", payloadMake);
 
-        if (result.erro) {
-            document.getElementById("quiz-result").innerHTML = `⏳ ${result.erro}`;
-            document.getElementById("quiz-result").style.display = "block";
-            document.getElementById("quiz-result").style.color = "#ef4444";
-            document.getElementById("quiz-result").style.fontSize = "18px";
-            document.getElementById("quiz-result").style.padding = "15px";
-            document.getElementById("quiz-result").style.background = "#fee2e2";
-            document.getElementById("quiz-result").style.borderRadius = "12px";
-            document.getElementById("opcoes-quiz").style.display = "none";
-            return;
+        // 5. ATUALIZA A TELA DA ALUNA INSTANTANEAMENTE (Feedback Visual)
+        if(loaderQuiz) loaderQuiz.style.display = "none";
+        
+        const quizResult = document.getElementById("quiz-result");
+        const opcoesQuizElement = document.getElementById("opcoes-quiz");
+        
+        // Esconde os botões e trava o quiz para ela não responder de novo hoje
+        opcoesQuizElement.style.display = "none";
+        currentData.jaRespondeuQuiz = true;
+
+        if (isCorrect) {
+            quizResult.style.color = "var(--pet-green)";
+            quizResult.innerHTML = "🎉 Resposta Correta! O sistema processou seu +1 Arrasa!";
+            quizResult.style.display = "block";
+            
+            // Atualiza os dados locais para a interface reagir na hora
+            currentData.arrasas += 1;
+            
+            if (!currentData.historico) currentData.historico = [];
+            currentData.historico.unshift({
+                data: new Date().toLocaleDateString('pt-BR'),
+                acao: "Quiz Diário - Acerto",
+                pontos: 1 
+            });
+            
+            // Renderiza o dashboard novamente para o número pular e os confetes caírem
+            renderDashboard(); 
+            notificarWidget(); 
+            
+        } else {
+            quizResult.style.color = "#ef4444";
+            quizResult.innerHTML = `❌ Resposta Incorreta. A resposta certa era: "${quizData.respostaCorreta}"`;
+            quizResult.style.display = "block";
         }
 
-        if (result.encontrado) {
-            if (isCorrect) {
-                document.getElementById("quiz-result").style.color = "var(--pet-green)";
-                document.getElementById("quiz-result").innerHTML = "🎉 Resposta Correta! Você ganhou 1 Arrasa!";
-                document.getElementById("quiz-result").style.display = "block";
-                
-                if (currentData) {
-                    currentData.arrasas = (currentData.arrasas || 0) + 1; // Saldo cresce livremente
-                    notificarWidget(); // Dispara a animação no widget na hora do acerto!
-                    
-                    // Adiciona uma linha ao Log (Console) e também ao Extrato (Histórico visual)
-                    console.log("✅ Log: A aluna respondeu o quiz corretamente e ganhou +1 Arrasa!");
-                    if (!currentData.historico) currentData.historico = [];
-                    currentData.historico.unshift({
-                        data: new Date().toLocaleDateString('pt-BR'),
-                        acao: "Quiz Diário - Acerto",
-                        pontos: 1 
-                    });
-                    renderDashboard(); // Atualiza a tela para exibir a nova linha no Extrato imediatamente
-                }
-            } else {
-                document.getElementById("quiz-result").style.color = "#ef4444";
-                document.getElementById("quiz-result").innerHTML = `❌ Resposta Incorreta. A resposta certa era: "${quizData.respostaCorreta}"`;
-                document.getElementById("quiz-result").style.display = "block";
-            }
-
-            // Aguarda 10 segundos antes de puxar os dados do banco novamente.
-            setTimeout(() => {
-                refreshDadosSilencioso(cpf);
-            }, 10000);
-        }
     } catch (error) {
-        console.error("Erro na comunicação com o backend para registrar log do quiz:", error);
+        console.error("⚠️ Erro fatal ao comunicar com o Make:", error);
+        if(loaderQuiz) loaderQuiz.style.display = "none";
+        alert("Ocorreu um erro ao validar sua resposta. Tente novamente.");
     }
 }
