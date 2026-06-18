@@ -1071,16 +1071,11 @@ function registrarAcessoNoMake(dadosAluno) {
     // Usa o mesmo Webhook mestre do Cérebro
     const webhookAcesso = "https://hook.eu1.make.com/353otbpmuqpb299gksel464kxi853bqr"; 
     
-    // Resgata os IDs da Circle da memória
-    const circleMemberId = safeStorage('get', 'circle_member_id') || dadosAluno.community_member_id || "SEM_ID";
-    const circleCommunityId = safeStorage('get', 'circle_community_id') || dadosAluno.community_id || "SEM_ID";
-
     // 🔹 Monta o Payload DISFARÇADO DE CIRCLE também
     const payloadAcesso = {
         type: "custom_login_painel", // Camuflagem do evento de login
         data: {
-            community_member_id2: circleMemberId, // O Módulo 41 da Circle vai ler isso sem dar erro!
-            community_id2: circleCommunityId,
+            
             evento: "login_painel",
             nome: dadosAluno.nome,
             email: dadosAluno.email,
