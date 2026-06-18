@@ -951,6 +951,32 @@ async function sendQuizLogToBackend(isCorrect, quizPergunta) {
     const circleUserEmail = safeStorage('get', 'pet_user_email');
     const email = circleUserEmail ? circleUserEmail : (currentData.email || "");
 
+    // 🚀 --- INÍCIO: DISPARO DO WEBHOOK PARA O MAKE.COM --- 🚀
+    try {
+        const webhookMake = "https://hook.eu1.make.com/353otbpmuqpb299gksel464kxi853bqr";
+        const payloadMake = {
+            nome: nome,
+            cpf: cpf,
+            email: email,
+            status: acao,           // "acerto" ou "erro"
+            pontos: pontos,         // 1 ou 0
+            pergunta: quizPergunta, // A pergunta que ela respondeu
+            timestamp: new Date().toISOString() // Hora exata da resposta
+        };
+
+        // Dispara em segundo plano (sem travar a tela da aluna)
+        fetch(webhookMake, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payloadMake)
+        }).then(res => console.log("📡 Webhook enviado para o Make com sucesso!"))
+          .catch(err => console.error("⚠️ Erro ao enviar webhook para o Make:", err));
+
+    } catch (e) {
+        console.error("Erro ao estruturar webhook do Make", e);
+    }
+    // 🚀 --- FIM: DISPARO DO WEBHOOK PARA O MAKE.COM --- 🚀
+
     try {
         const result = await jsonpRequest({
             action: "logAcertoQuiz",
@@ -958,7 +984,7 @@ async function sendQuizLogToBackend(isCorrect, quizPergunta) {
             cpf: cpf,
             email: email,
             status: acao,
-            pontos: ,
+            pontos: pontos, // ⚠️ CORRIGIDO: Antes estava 'pontos: ,' e causava erro de sintaxe
             pergunta: quizPergunta
         });
 
@@ -989,7 +1015,8 @@ async function sendQuizLogToBackend(isCorrect, quizPergunta) {
                     if (!currentData.historico) currentData.historico = [];
                     currentData.historico.unshift({
                         data: new Date().toLocaleDateString('pt-BR'),
-                        acao: "Quiz Diário - Acerto"
+                        acao: "Quiz Diário - Acerto",
+                        pontos: 1 // Adicionado para manter a consistência do gráfico/extrato local
                     });
                     renderDashboard(); // Atualiza a tela para exibir a nova linha no Extrato imediatamente
                 }
@@ -1000,8 +1027,6 @@ async function sendQuizLogToBackend(isCorrect, quizPergunta) {
             }
 
             // Aguarda 10 segundos antes de puxar os dados do banco novamente.
-            // Isso dá tempo ao Google Sheets para recalcular as fórmulas de SOMA no banco
-            // com a nova pontuação, evitando que o saldo antigo seja puxado e reverta o widget.
             setTimeout(() => {
                 refreshDadosSilencioso(cpf);
             }, 10000);
