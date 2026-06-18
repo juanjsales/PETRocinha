@@ -184,9 +184,10 @@ function executePdfExport() {
           card.style.transform = 'none';
       });
 
-      // 4. Substituir os canvas por imagens no clone
+     // 4. Substituir os canvas por imagens no clone e limpar elementos residuais
       const originalCanvases = mainElement.querySelectorAll('canvas');
       const clonedCanvases = elementToPrint.querySelectorAll('canvas');
+      
       originalCanvases.forEach((canvas, index) => {
           if (clonedCanvases[index]) {
               const dataURL = canvas.toDataURL('image/png');
@@ -195,10 +196,29 @@ function executePdfExport() {
               img.style.width = '100%'; 
               img.style.height = 'auto';
               img.style.display = 'block';
+              img.style.margin = '0 auto';
               img.style.pageBreakInside = 'avoid';
               img.style.breakInside = 'avoid';
-              clonedCanvases[index].parentNode.replaceChild(img, clonedCanvases[index]);
+              
+              // Garante que o contêiner pai do gráfico não tente usar flex/sobreposição herdada
+              const parentContainer = clonedCanvases[index].parentNode;
+              if (parentContainer) {
+                  parentContainer.style.display = 'block';
+                  parentContainer.style.position = 'relative';
+                  parentContainer.style.overflow = 'hidden';
+                  parentContainer.style.height = 'auto';
+                  parentContainer.style.width = '100%';
+                  // Substitui o canvas pela imagem limpa
+                  parentContainer.replaceChild(img, clonedCanvases[index]);
+              }
           }
+      });
+
+      // 🔹 Ajuste extra de segurança: Evita que gráficos fiquem muito colados ou encavalados
+      elementToPrint.querySelectorAll('.chart-card').forEach(card => {
+          card.style.position = 'relative' !important;
+          card.style.overflow = 'hidden' !important;
+          card.style.height = 'auto' !important;
       });
 
       // 5. Gerar o PDF a partir do clone preparado com as correções
@@ -207,12 +227,9 @@ function executePdfExport() {
           document.title = originalTitle;
           Chart.defaults.animation = true;
           document.querySelectorAll('.panel').forEach(p => {
-              // Reverte a visibilidade para o estado original (apenas o ativo é 'block')
               p.style.display = (p.id === activePanelId) ? 'block' : 'none';
           });
       });
-  }, 150); // Aumentado levemente o delay para garantir a estabilização do DOM
-}
 
 // ── GRÁFICOS ──────────────────────────────────────────────────────────────
 function donutChart(id, labels, data, colors) {
