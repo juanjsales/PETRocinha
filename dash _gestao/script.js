@@ -458,7 +458,7 @@ function initGeraisCharts(membros) {
     'chartTop5',
     top5.map(m => m.nome.split(' ')[0]),
     top5.map(m => m.arrasas),
-    #003366'
+    '#003366'
   );
 
   const total = membros.length;
