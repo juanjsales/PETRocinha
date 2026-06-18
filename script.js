@@ -993,18 +993,21 @@ async function sendQuizLogToBackend(isCorrect, quizPergunta) {
     const circleMemberId = safeStorage('get', 'circle_member_id') || currentData.community_member_id || "SEM_ID";
     const circleCommunityId = safeStorage('get', 'circle_community_id') || currentData.community_id || "SEM_ID";
 
-    // 3. Monta a carga (Payload) exclusiva para o Make
+    // 🔹 3. Monta a carga (Payload) DISFARÇADA DE CIRCLE
     const webhookMake = "https://hook.eu1.make.com/353otbpmuqpb299gksel464kxi853bqr";
     const payloadMake = {
-        nome: nome,
-        cpf: cpf,
-        email: email,
-        status: acao,
-        pontos: pontos,
-        pergunta: quizPergunta,
-        community_member_id: circleMemberId,
-        community_id: circleCommunityId,
-        timestamp: new Date().toISOString()
+        type: "custom_quiz_answered", // Camuflagem do evento
+        data: {
+            community_member_id: circleMemberId, // O Módulo 41 da Circle vai ler isso sem dar erro!
+            community_id: circleCommunityId,
+            nome: nome,
+            cpf: cpf,
+            email: email,
+            status: acao,
+            pontos: pontos,
+            pergunta: quizPergunta,
+            timestamp: new Date().toISOString()
+        }
     };
 
     // Mostra o loading no botão
@@ -1019,7 +1022,7 @@ async function sendQuizLogToBackend(isCorrect, quizPergunta) {
             body: JSON.stringify(payloadMake)
         });
         
-        console.log("📡 Payload enviado com sucesso SÓ para o Make:", payloadMake);
+        console.log("📡 Payload de Quiz enviado disfarçado de Circle para o Make:", payloadMake);
 
         // 5. ATUALIZA A TELA DA ALUNA INSTANTANEAMENTE (Feedback Visual)
         if(loaderQuiz) loaderQuiz.style.display = "none";
@@ -1065,22 +1068,26 @@ async function sendQuizLogToBackend(isCorrect, quizPergunta) {
 
 // 🚀 --- INÍCIO: TELEMETRIA DE ACESSO AO MAKE --- 🚀
 function registrarAcessoNoMake(dadosAluno) {
-    // ⚠️ ATENÇÃO: Substitua pelo seu Webhook NOVO do Make configurado só para receber os Acessos
+    // Usa o mesmo Webhook mestre do Cérebro
     const webhookAcesso = "https://hook.eu1.make.com/353otbpmuqpb299gksel464kxi853bqr"; 
     
     // Resgata os IDs da Circle da memória
     const circleMemberId = safeStorage('get', 'circle_member_id') || dadosAluno.community_member_id || "SEM_ID";
     const circleCommunityId = safeStorage('get', 'circle_community_id') || dadosAluno.community_id || "SEM_ID";
 
+    // 🔹 Monta o Payload DISFARÇADO DE CIRCLE também
     const payloadAcesso = {
-        evento: "login_painel",
-        nome: dadosAluno.nome,
-        email: dadosAluno.email,
-        cpf: dadosAluno.cpf,
-        badge: dadosAluno.badge, // Útil para você saber o nível de quem está logando
-        community_member_id: circleMemberId,
-        community_id: circleCommunityId,
-        timestamp: new Date().toISOString()
+        type: "custom_login_painel", // Camuflagem do evento de login
+        data: {
+            community_member_id: circleMemberId, // O Módulo 41 da Circle vai ler isso sem dar erro!
+            community_id: circleCommunityId,
+            evento: "login_painel",
+            nome: dadosAluno.nome,
+            email: dadosAluno.email,
+            cpf: dadosAluno.cpf,
+            badge: dadosAluno.badge,
+            timestamp: new Date().toISOString()
+        }
     };
 
     // Dispara em segundo plano (Fetch assíncrono sem travar a tela)
@@ -1088,7 +1095,7 @@ function registrarAcessoNoMake(dadosAluno) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payloadAcesso)
-    }).then(() => console.log(`📡 Telemetria de login enviada ao Make! (ID: ${circleMemberId})`))
+    }).then(() => console.log(`📡 Telemetria enviada disfarçada de Circle para o Make! (ID: ${circleMemberId})`))
       .catch(err => console.error("⚠️ Erro na telemetria:", err));
 }
 // 🚀 --- FIM: TELEMETRIA DE ACESSO AO MAKE --- 🚀
