@@ -813,7 +813,7 @@ tr:hover td {
 
 
 /* ════════════════════════════════════════════════════════════════════════
-   6. RESPONSIVE & PRINT STYLES (PDF BLINDADO)
+   6. RESPONSIVE & PRINT STYLES (PDF BLINDADO PARA IFRAMES - MODELO SAGICAD)
    ════════════════════════════════════════════════════════════════════════ */
 
 @media (max-width: 1100px) {
@@ -871,62 +871,66 @@ tr:hover td {
   }
 }
 
-/* 🖨️ ESTILOS DE IMPRESSÃO - CORREÇÃO DE QUEBRA DE PÁGINA (SAGICAD COMPLIANT) */
+/* 🖨️ ESTILOS DE IMPRESSÃO BLINDADOS PARA EXECUÇÃO EM IFRAMES */
 @media print {
   @page {
     size: A4 portrait;
-    margin: 15mm 12mm !important; /* Respiro obrigatório para margens do papel */
+    margin: 15mm 15mm !important; /* Margem interna de segurança da folha */
   }
 
-  body { 
-    background: #ffffff !important; 
+  /* Reset global de background e largura para o iframe respirar */
+  html, body {
+    background: #ffffff !important;
     color: #000000 !important;
-    -webkit-print-color-adjust: exact !important; /* Preserva as cores dos gráficos */
+    width: 100% !important;
+    height: auto !important;
+    font-size: 12pt !important;
+    -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
 
-  .sidebar, .btn, .filter-sel, .menu-toggle, .topbar-actions { 
-    display: none !important; /* Oculta controles operacionais da web */
+  /* Remove menus, barras e botões operacionais */
+  .sidebar, .btn, .filter-sel, .menu-toggle, .topbar-actions, .sidebar-brand, .sidebar-footer { 
+    display: none !important; 
   }
 
+  /* Estica a área de conteúdo para ocupar a folha inteira */
   .main { 
-    margin-left: 0 !important; 
+    margin: 0 !important; 
     padding: 0 !important; 
+    width: 100% !important;
+    max-width: 100% !important;
   }
 
   .panel { 
     display: block !important; 
+    width: 100% !important;
   }
 
-  /* 🚫 EVITA QUE O MOTOR FAÇA CORTES NO MEIO DOS ELEMENTOS */
-  .chart-card, .table-card, .mcard, .event-card, .detail-item, tr, td { 
+  /* 🚫 DESTRÓI LAYOUTS DE COLUNA LATERAIS QUE CAUSAM O ESMAGAMENTO */
+  .metrics-grid, .socio-metrics, .charts-2col, .charts-3col {
+    display: block !important; /* Desativa o flex/grid que quebra no iframe */
+    width: 100% !important;
+  }
+
+  /* 📦 ISOLA OS CARTÕES - Se não couber, joga para a próxima folha sem fatiar */
+  .chart-card, .table-card, .mcard, .event-card, .detail-item, tr { 
+    display: block !important;
+    width: 100% !important;
+    margin-bottom: 25px !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
     box-shadow: none !important;
     transform: none !important;
+    border: 1px solid #cbd5e1 !important; /* Linha sutil para separar no papel */
   }
 
-  /* Força tabelas longas a quebrarem de forma limpa entre linhas */
-  table {
-    page-break-inside: auto !important;
-  }
-
-  /* Impede títulos de ficarem isolados no fim da página (Títulos Órfãos) */
+  /* Impede títulos de ficarem isolados sozinhos na base das páginas */
   h1, h2, h3, h4, .page-title, .chart-title {
     page-break-after: avoid !important;
     break-after: avoid !important;
-  }
-
-  /* Ajuste de GRID para impressão para evitar colapso de largura */
-  .metrics-grid, .socio-metrics, .charts-2col {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr !important; /* Força 2 colunas rígidas no papel */
-    gap: 12px !important;
-  }
-  
-  .charts-3col {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
+    color: #000000 !important;
+    margin-bottom: 12px !important;
   }
 }
 
