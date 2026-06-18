@@ -145,12 +145,14 @@ function executePdfExport() {
       const dd = String(today.getDate()).padStart(2, '0');
       const formattedDate = `${yyyy}-${mm}-${dd}`;
 
+      // 🔹 Configurações Otimizadas: adicionado controle estrito de quebra de página
       const opt = {
-          margin:       [10, 10, 10, 10], // topo, esquerda, baixo, direita em mm
+          margin:       [15, 12, 15, 12], // topo, esquerda, baixo, direita em mm (Margem SAGICAD)
           filename:     `relatorio-profissao-pet-rocinha-${formattedDate}.pdf`,
           image:        { type: 'jpeg', quality: 0.98 },
           html2canvas:  { scale: 2, useCORS: true, logging: false },
-          jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+          jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+          pagebreak:    { mode: ['avoid-all', 'css'] } // 🚫 Força o motor a respeitar CSS de quebra
       };
 
       // 2. Clonar o elemento principal para a geração do PDF
@@ -159,6 +161,29 @@ function executePdfExport() {
       // 3. Limpar o clone (remover botões, etc.)
       elementToPrint.querySelectorAll('.btn, .filter-sel, .modal-backdrop, .menu-toggle').forEach(el => el.remove());
 
+      // 🔥 MÁGICA DO TECH LEAD: Reset de Layout para o Clone ignorar o Iframe da Circle
+      elementToPrint.style.margin = '0';
+      elementToPrint.style.padding = '0';
+      elementToPrint.style.width = '100%';
+      elementToPrint.style.maxWidth = '100%';
+
+      // Localiza todas as grades de layouts no clone e força o empilhamento vertical limpo de 100%
+      elementToPrint.querySelectorAll('.metrics-grid, .socio-metrics, .charts-2col, .charts-3col').forEach(grid => {
+          grid.style.display = 'block';
+          grid.style.width = '100%';
+      });
+
+      // Aplica regras anti-fatiamento diretamente nos cartões clonados
+      elementToPrint.querySelectorAll('.chart-card, .table-card, .mcard, .event-card').forEach(card => {
+          card.style.display = 'block';
+          card.style.width = '100%';
+          card.style.marginBottom = '20px';
+          card.style.pageBreakInside = 'avoid'; // Evita cortes no meio do cartão 
+          card.style.breakInside = 'avoid';
+          card.style.boxShadow = 'none';
+          card.style.transform = 'none';
+      });
+
       // 4. Substituir os canvas por imagens no clone
       const originalCanvases = mainElement.querySelectorAll('canvas');
       const clonedCanvases = elementToPrint.querySelectorAll('canvas');
@@ -166,12 +191,17 @@ function executePdfExport() {
           if (clonedCanvases[index]) {
               const dataURL = canvas.toDataURL('image/png');
               const img = document.createElement('img');
-              img.src = dataURL; img.style.width = '100%'; img.style.height = 'auto';
+              img.src = dataURL; 
+              img.style.width = '100%'; 
+              img.style.height = 'auto';
+              img.style.display = 'block';
+              img.style.pageBreakInside = 'avoid';
+              img.style.breakInside = 'avoid';
               clonedCanvases[index].parentNode.replaceChild(img, clonedCanvases[index]);
           }
       });
 
-      // 5. Gerar o PDF a partir do clone preparado
+      // 5. Gerar o PDF a partir do clone preparado com as correções
       html2pdf().from(elementToPrint).set(opt).save().then(() => {
           // 6. Restaurar o estado original após salvar
           document.title = originalTitle;
@@ -181,7 +211,7 @@ function executePdfExport() {
               p.style.display = (p.id === activePanelId) ? 'block' : 'none';
           });
       });
-  }, 100); // Atraso crucial para a renderização
+  }, 150); // Aumentado levemente o delay para garantir a estabilização do DOM
 }
 
 // ── GRÁFICOS ──────────────────────────────────────────────────────────────
