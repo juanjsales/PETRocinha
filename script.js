@@ -958,7 +958,7 @@ async function sendQuizLogToBackend(isCorrect, quizPergunta) {
             cpf: cpf,
             email: email,
             status: acao,
-            pontos: pontos,
+            pontos: ,
             pergunta: quizPergunta
         });
 
