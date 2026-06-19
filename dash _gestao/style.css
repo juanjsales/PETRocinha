@@ -821,23 +821,36 @@ tr:hover td {
 }
 
 @media (max-width: 860px) {
-.sidebar { 
+
+  /* 📱 GAVETA MOBILE BLINDADA (IGNORA QUEBRA DO IFRAME) */
+  .sidebar { 
     width: 0; 
-    padding: 28px 0; 
-    position: fixed; /* Mantém a gaveta flutuante no mobile */
-    top: 60px; /* Alinha exatamente abaixo do topo verde da Circle */
-    height: calc(100vh - 60px) !important;
-    overflow-y: auto !important; /* 💡 Ativa scroll interno se o menu for maior que a tela do celular */
+    padding: 24px 0; 
+    position: fixed; 
+    top: 0; 
+    left: 0;
+    height: 100% !important; /* Ocupa a janela de ponta a ponta */
+    z-index: 9999 !important; /* Fica acima de qualquer cabeçalho da Circle */
     box-shadow: none;
     transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 1000;
+    
+    /* 💡 Permite scroll se a tela for pequena, mas esconde a barra cinza feia */
+    overflow-y: auto !important;
+    scrollbar-width: none; /* Oculta no Firefox */
   }
   
+  /* Esconde a barra de rolagem no Chrome, Safari e Edge */
+  .sidebar::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* Estado Aberto (Gaveta expandida sobre o app) */
   .sidebar.expanded { 
     width: 280px;
-    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.25);
+    box-shadow: 6px 0 30px rgba(0, 0, 0, 0.3); /* Sombra elegante de sobreposição */
   }
-  
+
+ 
   /* Garante que os textos apareçam de forma limpa e sem quebras feias ao expandir */
   .sidebar-brand, .nav-section, .sidebar-footer, .nav-item span { 
     display: none; 
