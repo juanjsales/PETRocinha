@@ -719,3 +719,84 @@
         }
     }, 45000);
 })();
+
+/* ════════════════════════════════════════════════════════════════════════
+   🚀 ADICIONE ESTE BLOCO NO FINAL DO SEU widget-pet.js NO GITHUB
+   TRAVA DE CONVERSÃO: POP-UP SOCIOECONÔMICO VIA CODE INJECTION
+   ════════════════════════════════════════════════════════════════════════ */
+
+(function() {
+    // Aguarda o objeto global da Circle estar pronto na página
+    function iniciarVerificacaoPopup() {
+        const usuarioCircle = window.Circle?.currentUser;
+        
+        // Se não tiver usuário logado na Circle (visitante), ignora
+        if (!usuarioCircle) return;
+
+        const emailAluna = usuarioCircle.email;
+        
+        // 🔍 Consulta o seu Painel BI na Vercel passando o e-mail logado na Circle
+        fetch(`https://pet-rocinha.vercel.app/api/checar-medalha?email=${encodeURIComponent(emailAluna)}`)
+            .then(response => response.json())
+            .then(data => {
+                // Se a sua API validar que ela está zerada (sem medalhas)
+                if (data && data.temMedalha === false) {
+                    criarEExibirPopupSocioeconomico();
+                }
+            })
+            .catch(err => console.error("⚠️ Erro ao validar medalhas no widget-pet:", err));
+    }
+
+    // Função interna para construir o HTML e injetar os estilos na Circle
+    function criarEExibirPopupSocioeconomico() {
+        if (document.getElementById("circle-popup-socoeco")) return;
+
+        const modalHtml = `
+            <div id="circle-popup-socoeco" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 999999; display: flex; align-items: center; justify-content: center; font-family: 'Plus Jakarta Sans', sans-serif, Arial;">
+                <div style="background: white; width: 90%; max-width: 500px; border-radius: 16px; padding: 32px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.3); position: relative; animation: widgetPopUpAnimation 0.3s cubic-bezier(0.16, 1, 0.3, 1);">
+                    
+                    <h3 style="margin: 0 0 16px; font-size: 20px; font-weight: 700; color: #003366; line-height: 1.3;">🚀 Ative suas Medalhas e Prêmios, Mulher!</h3>
+                    
+                    <p style="font-size: 14px; color: #4a5568; margin: 0 0 24px; line-height: 1.6; text-align: center;">
+                        O nosso novo curso de <strong>Pet Sitter</strong> já está liberado pra você decolar! Mas se você quer entrar no jogo pra vencer, acumular <strong>Arrasas</strong> e **botar no bolso o seu auxílio de R$ 100,00 em dinheiro**, falta só preencher o formulário socioeconômico!
+                    </p>
+                    
+                    <a href="[COLE_O_LINK_DO_SEU_FORMULARIO_AQUI]" target="_blank" style="display: block; background: #003366; color: white; text-decoration: none; padding: 14px; border-radius: 10px; font-weight: 600; font-size: 14px; margin-bottom: 16px; text-align: center; transition: background 0.2s;">
+                        Preencher e Ativar Meu Saldo 🐾
+                    </a>
+                    
+                    <button id="close-widget-popup-btn" style="background: none; border: none; color: #64748b; font-size: 12px; cursor: pointer; text-decoration: underline;">
+                        Vou preencher mais tarde
+                    </button>
+                </div>
+            </div>
+            <style>
+                @keyframes widgetPopUpAnimation {
+                    from { transform: scale(0.95); opacity: 0; }
+                    to { transform: scale(1); opacity: 1; }
+                }
+                body.modal-open-circle { overflow: hidden !important; }
+            </style>
+        `;
+
+        // Injeta o modal no DOM da Circle
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        document.body.classList.add('modal-open-circle');
+
+        // Configura o botão de fechar
+        document.getElementById("close-widget-popup-btn").addEventListener("click", function() {
+            const modal = document.getElementById("circle-popup-socoeco");
+            if (modal) {
+                modal.remove();
+                document.body.classList.remove('modal-open-circle');
+            }
+        });
+    }
+
+    // Executa a validação respeitando o tempo de carregamento da Circle
+    if (document.readyState === "complete" || document.readyState === "interactive") {
+        setTimeout(iniciarVerificacaoPopup, 1000);
+    } else {
+        window.addEventListener("load", () => setTimeout(iniciarVerificacaoPopup, 1000));
+    }
+})();
