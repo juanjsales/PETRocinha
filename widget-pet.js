@@ -2,7 +2,7 @@
     // ⚠️ URL DO SEU APP SCRIPT
     var urlApp = "https://script.google.com/macros/s/AKfycbyCtBQ_wVDEpyKybzHgo9eFswc6tczQuFs53VLzg3t9HuoFbLOVVY_zrVScPxIwG2b0/exec";
 
-    // ⚠️ DOMÍNIO CONFIÁVEL DO SEU DASHBOARD (Ajuste para a URL real do seu Vercel)
+    // ⚠️ DOMÍNIO CONFIÁVEL DO SEU DASHBOARD
     var TRUSTED_ORIGIN = "https://map-rocinha.vercel.app";
 
     // --- SISTEMA DE ARMAZENAMENTO SEGURO (Para Aba Anônima) ---
@@ -19,7 +19,6 @@
                 delete memoryStorage[key];
             }
         } catch (e) {
-            // Se o localStorage estiver bloqueado (Aba Anônima), usa a memória RAM
             if (action === 'get') return memoryStorage[key];
             if (action === 'set') memoryStorage[key] = value;
             if (action === 'remove') delete memoryStorage[key];
@@ -28,7 +27,9 @@
 
     // --- INJETAR ESTILOS DO WIDGET (CSS + ANIMAÇÕES) ---
     function injectWidgetStyles() {
+        if (document.getElementById("pet-widget-combined-styles")) return;
         const style = document.createElement('style');
+        style.id = "pet-widget-combined-styles";
         style.innerHTML = `
             /* --- Animações Base --- */
             @keyframes pet-tada {
@@ -38,9 +39,7 @@
               40%, 60%, 80% { transform: scale3d(1.1, 1.1, 1.1) rotate3d(0, 0, 1, -3deg); }
               to { transform: scale3d(1, 1, 1); }
             }
-            .pet-celebrate {
-              animation: pet-tada 1s ease-in-out;
-            }
+            .pet-celebrate { animation: pet-tada 1s ease-in-out; }
             @keyframes pet-float-up {
               0% { transform: translate(-50%, 0) scale(1); opacity: 1; }
               100% { transform: translate(-50%, -50px) scale(1.5); opacity: 0; }
@@ -53,20 +52,23 @@
             .pet-widget-first-show {
               animation: pet-widget-enter 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
             }
+            @keyframes circleModalPop {
+                from { transform: scale(0.95); opacity: 0; }
+                to { transform: scale(1); opacity: 1; }
+            }
+            body.modal-open-circle { overflow: hidden !important; }
 
-            /* --- Estilos do Widget (antigo widget-pet.css) --- */
+            /* --- Estilos do Widget --- */
             #pet-floating-widget {
                 position: fixed !important;
                 z-index: 2147483647 !important;
-                touch-action: none; /* Melhora performance mobile */
+                touch-action: none;
                 user-select: none;
                 display: flex;
                 flex-direction: column;
                 align-items: flex-end;
                 gap: 8px;
             }
-
-            /* Estrutura do Widget (Modo Aberto) */
             .pet-widget-container {
                 display: flex !important;
                 align-items: center !important;
@@ -78,8 +80,6 @@
                 border: 2px solid #6366f1 !important;
                 transition: transform 0.2s ease;
             }
-
-            /* Área de Arraste (Alça) */
             .pet-drag-handle {
                 cursor: grab !important;
                 padding: 0 8px 0 10px !important;
@@ -91,8 +91,6 @@
                 margin-right: 4px;
             }
             .pet-drag-handle:active { cursor: grabbing !important; }
-
-            /* Conteúdo Clicável (Leva ao Painel) */
             .pet-widget-main-content {
                 display: flex !important;
                 align-items: center !important;
@@ -100,191 +98,88 @@
                 cursor: pointer !important;
                 padding-right: 10px;
             }
-
-            .pet-widget-badge {
-                width: 44px !important;
-                height: 44px !important;
-                border-radius: 50% !important;
-                pointer-events: none; /* Evita que a imagem atrapalhe o clique */
-            }
-
-            .pet-widget-info {
-                display: flex !important;
-                flex-direction: column !important;
-            }
-
-            .pet-widget-label {
-                font-size: 9px !important;
-                color: #94a3b8 !important;
-                text-transform: uppercase !important;
-                font-weight: 800 !important;
-                line-height: 1 !important;
-            }
-
-            .pet-widget-value {
-                font-size: 18px !important;
-                color: #6366f1 !important;
-                font-weight: 800 !important;
-                line-height: 1.2 !important;
-            }
-
-            /* Botão Minimizar (X) */
+            .pet-widget-badge { width: 44px !important; height: 44px !important; border-radius: 50% !important; pointer-events: none; }
+            .pet-widget-info { display: flex !important; flex-direction: column !important; }
+            .pet-widget-label { font-size: 9px !important; color: #94a3b8 !important; text-transform: uppercase !important; font-weight: 800 !important; line-height: 1 !important; }
+            .pet-widget-value { font-size: 18px !important; color: #6366f1 !important; font-weight: 800 !important; line-height: 1.2 !important; }
             .pet-btn-minimize {
-                width: 24px !important;
-                height: 24px !important;
-                background: #f1f5f9 !important;
-                border: none !important;
-                border-radius: 50% !important;
-                color: #64748b !important;
-                font-size: 12px !important;
-                cursor: pointer !important;
-                display: flex !important;
-                align-items: center !important;
-                justify-content: center !important;
-                margin-right: 6px !important;
-                transition: background 0.2s;
+                width: 24px !important; height: 24px !important; background: #f1f5f9 !important; border: none !important; border-radius: 50% !important;
+                color: #64748b !important; font-size: 12px !important; cursor: pointer !important; display: flex !important; align-items: center !important; justify-content: center !important; margin-right: 6px !important; transition: background 0.2s;
             }
             .pet-btn-minimize:hover { background: #e2e8f0 !important; }
-
-            /* Estado Minimizado (Patinha flutuante) */
             .pet-minimized-icon {
-                width: 50px !important;
-                height: 50px !important;
-                background: #6366f1 !important;
-                border-radius: 50% !important;
-                display: flex !important;
-                align-items: center !important;
-                justify-content: center !important;
-                cursor: pointer !important;
-                box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4) !important;
-                color: white !important;
-                font-size: 22px !important;
-                transition: transform 0.3s;
+                width: 50px !important; height: 50px !important; background: #6366f1 !important; border-radius: 50% !important; display: flex !important; align-items: center !important; justify-content: center !important; cursor: pointer !important; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4) !important; color: white !important; font-size: 22px !important; transition: transform 0.3s;
             }
             .pet-minimized-icon:hover { transform: scale(1.1); }
-
-            /* Notificação de Ganhos (Pop-up) */
-            .pet-notificacao {
-                position: absolute;
-                bottom: 70px;
-                left: 50%;
-                transform: translateX(-50%);
-                background: #22c55e !important;
-                color: white !important;
-                padding: 6px 14px !important;
-                border-radius: 20px !important;
-                font-size: 12px !important;
-                font-weight: bold !important;
-                white-space: nowrap !important;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
-                animation: pet-slideUp 0.4s ease-out;
-                z-index: 2147483646;
-            }
-
-            @keyframes pet-slideUp {
-                from { opacity: 0; transform: translate(-50%, 20px); }
-                to { opacity: 1; transform: translate(-50%, 0); }
-            }
-
             @keyframes pet-float-up-dynamic {
                 0% { transform: translate(-50%, 0) scale(0.5); opacity: 0; }
                 20% { transform: translate(-50%, -25px) scale(1.2); opacity: 1; }
                 80% { transform: translate(-50%, -45px) scale(1); opacity: 1; }
                 100% { transform: translate(-50%, -60px) scale(0.8); opacity: 0; }
             }
-
             @keyframes pet-glow-pulse {
                 0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.6); border-color: #22c55e; }
                 50% { box-shadow: 0 0 25px 10px rgba(34, 197, 94, 0); border-color: #4ade80; }
                 100% { box-shadow: 0 10px 30px rgba(0,0,0,0.2); border-color: #6366f1; }
             }
-            .pet-celebration-glow {
-                animation: pet-glow-pulse 1.2s ease-out;
-            }
-
-            /* Spinner de Carregamento */
-            .pet-spinner {
-                width: 24px;
-                height: 24px;
-                border: 3px solid #f3f3f3;
-                border-top: 3px solid #6366f1;
-                border-radius: 50%;
-                animation: pet-spin 1s linear infinite;
-                margin: 10px;
-            }
-
-            @keyframes pet-spin {
-                0% { transform: rotate(0deg); }
-                100% { transform: rotate(360deg); }
-            }
-
-            @keyframes pet-gentle-bounce {
-                0%, 100% { transform: translateY(0); }
-                50% { transform: translateY(-3px); }
-            }
-
-            .pet-widget-alert-text {
-                animation: pet-gentle-bounce 2s ease-in-out infinite;
-            }
-
+            .pet-celebration-glow { animation: pet-glow-pulse 1.2s ease-out; }
+            @keyframes pet-gentle-bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+            .pet-widget-alert-text { animation: pet-gentle-bounce 2s ease-in-out infinite; }
             .pet-hidden { display: none !important; }
         `;
         document.head.appendChild(style);
     }
 
-    // 1. CAPTURA DE E-MAIL COM PERSISTÊNCIA
+    // 1. CAPTURA DE E-MAIL GLOBAL DA PLATAFORMA (CIRCLE INTEGRADA)
     function getEmail() {
         let userEmail = safeStorage('get', 'pet_user_email');
         let currentSystemEmail = null;
         let currentSource = null;
 
         try {
-            // 1. Tenta pegar da chave do Pundit (Circle)
-            let punditContext = localStorage.getItem('V1-PunditUserContext');
-            if (punditContext) {
-                try {
-                    let parsedContext = JSON.parse(punditContext);
-                    if (parsedContext && parsedContext.current_user && parsedContext.current_user.email) {
-                        currentSystemEmail = parsedContext.current_user.email.toLowerCase().trim();
-                        currentSource = 'circle_pundit';
-                    }
-                } catch(e) {}
+            // 💡 ESTRATÉGIA SUPREMA: Captura nativa do objeto logado da Circle em qualquer página
+            if (window.Circle?.currentUser?.email) {
+                currentSystemEmail = window.Circle.currentUser.email.toLowerCase().trim();
+                currentSource = 'circle_native';
             }
 
-            // 2. Fallbacks antigos
+            // Fallback 1: LocalStorage Context do IIC
             if (!currentSystemEmail) {
-                if (window.circleUser && window.circleUser.email) {
-                    currentSystemEmail = window.circleUser.email.toLowerCase().trim();
-                    currentSource = 'circle';
-                } else {
-                    let liquidEmail = "{{ user.email }}";
-                    if (liquidEmail && liquidEmail.indexOf('{{') === -1 && liquidEmail.trim() !== "") {
-                        currentSystemEmail = liquidEmail.toLowerCase().trim();
-                        currentSource = 'liquid';
+                let punditContext = localStorage.getItem('V1-PunditUserContext');
+                if (punditContext) {
+                    let parsedContext = JSON.parse(punditContext);
+                    if (parsedContext?.current_user?.email) {
+                        currentSystemEmail = parsedContext.current_user.email.toLowerCase().trim();
+                        currentSource = 'circle_pundit';
                     }
                 }
             }
 
-            // Detecta se houve troca de conta em relação ao cache salvo
+            // Fallback 2: Chaves Legadas
+            if (!currentSystemEmail && window.circleUser?.email) {
+                currentSystemEmail = window.circleUser.email.toLowerCase().trim();
+                currentSource = 'circle_legacy';
+            }
+
             if (currentSystemEmail && userEmail && currentSystemEmail !== userEmail) {
                 safeStorage('remove', 'userSaldo');
                 safeStorage('remove', 'userBadge');
+                safeStorage('remove', 'userSocioeconomico');
                 userEmail = currentSystemEmail;
                 safeStorage('set', 'pet_user_email', userEmail);
-                if (currentSource) safeStorage('set', 'pet_login_source', currentSource);
+                safeStorage('set', 'pet_login_source', currentSource);
             } 
-            // Se não tinha cache, mas tem usuário ativo no sistema
             else if (currentSystemEmail && (!userEmail || userEmail === "undefined" || userEmail === "null")) {
                 userEmail = currentSystemEmail;
                 safeStorage('set', 'pet_user_email', userEmail);
-                if (currentSource) safeStorage('set', 'pet_login_source', currentSource);
+                safeStorage('set', 'pet_login_source', currentSource);
             }
-        } catch (e) { console.warn("Erro ao capturar e-mail."); }
+        } catch (e) { console.warn("Erro ao processar e-mail."); }
         
         return (userEmail && userEmail !== "null") ? userEmail : null;
     }
 
-    // 2. SISTEMA DE ARRASTE
+    // 2. SISTEMA DE ARRASTE DO WIDGET
     function setupDraggable(elmnt) {
         var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
         const savedX = safeStorage('get', 'petX'), savedY = safeStorage('get', 'petY');
@@ -320,7 +215,6 @@
             pos1 = pos3 - cx; pos2 = pos4 - cy;
             pos3 = cx; pos4 = cy;
             
-            // Impede que o widget seja arrastado para fora da tela
             let newTop = elmnt.offsetTop - pos2;
             let newLeft = elmnt.offsetLeft - pos1;
             newTop = Math.max(0, Math.min(newTop, window.innerHeight - elmnt.offsetHeight));
@@ -339,7 +233,6 @@
         }
     }
 
-    // 3. MINIMIZAR
     function togglePetWidget(e) {
         if (e) e.stopPropagation();
         const isMin = safeStorage('get', 'petMinimized') === 'true';
@@ -353,7 +246,6 @@
         });
     }
 
-    // 4. ANIMAÇÃO
     function animateValue(obj, start, end, duration) {
         let startTimestamp = null;
         const step = (timestamp) => {
@@ -365,49 +257,35 @@
         window.requestAnimationFrame(step);
     }
 
-    // 4.1 CELEBRAÇÃO (Confetes, Som e +Pontos)
     function showCelebration(widget, amount) {
-        // 1. Som de "Ding" gerado nativamente (sem depender de arquivos externos)
         try {
             const AudioContext = window.AudioContext || window.webkitAudioContext;
             if (AudioContext) {
                 const ctx = new AudioContext();
-                if (ctx.state === 'suspended') {
-                    ctx.resume(); // Tenta destravar o áudio caso as políticas de Autoplay do navegador o bloqueiem
-                }
-                // Cria duas frequências rápidas para simular um som de "moeda/mágica"
+                if (ctx.state === 'suspended') ctx.resume();
                 const osc1 = ctx.createOscillator();
                 const gain = ctx.createGain();
                 osc1.connect(gain); gain.connect(ctx.destination);
-                osc1.type = 'triangle'; // Timbre mais "gamer"
-                
-                // Nota 1
-                osc1.frequency.setValueAtTime(987.77, ctx.currentTime); // B5
-                // Nota 2 (salto rápido)
-                osc1.frequency.setValueAtTime(1318.51, ctx.currentTime + 0.08); // E6
-                
-                gain.gain.setValueAtTime(0.1, ctx.currentTime); // Volume inicial baixo
-                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4); // Fade out
-                
+                osc1.type = 'triangle';
+                osc1.frequency.setValueAtTime(987.77, ctx.currentTime);
+                osc1.frequency.setValueAtTime(1318.51, ctx.currentTime + 0.08);
+                gain.gain.setValueAtTime(0.1, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
                 osc1.start(ctx.currentTime); 
                 osc1.stop(ctx.currentTime + 0.4);
             }
         } catch(e) {}
 
-        // 2. Texto Flutuante (+X)
         const floatText = document.createElement('div');
         floatText.innerText = '+' + amount;
-        // Usando a nova física realista
         floatText.style.cssText = 'position:absolute; top:-10px; left:50%; color:#22c55e; font-weight:900; font-size:28px; text-shadow: 0 2px 10px rgba(34,197,94,0.5), 0 3px 6px rgba(0,0,0,0.3); pointer-events:none; z-index:2147483647; animation: pet-float-up-dynamic 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;';
         widget.appendChild(floatText);
         setTimeout(() => { if (floatText.parentNode) floatText.parentNode.removeChild(floatText); }, 1500);
 
-        // 3. Mini Confetes
         const colors = ['#f8a5c2', '#6366f1', '#22c55e', '#FFD700', '#ff2a7a'];
         for (let i = 0; i < 20; i++) {
             const conf = document.createElement('div');
-            const isLarge = Math.random() > 0.5;
-            const size = isLarge ? '8px' : '5px';
+            const size = Math.random() > 0.5 ? '8px' : '5px';
             const isCircle = Math.random() > 0.4 ? '50%' : '2px';
             conf.style.cssText = `position:absolute; width:${size}; height:${size}; background-color:${colors[Math.floor(Math.random() * colors.length)]}; top:30px; left:50%; border-radius:${isCircle}; pointer-events:none; z-index:2147483646;`;
             
@@ -422,7 +300,6 @@
         }
     }
 
-    // 4.2 SOM DE ENTRADA (POP LEVE)
     function playPopSound() {
         try {
             const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -433,22 +310,59 @@
                 const gain = ctx.createGain();
                 osc.connect(gain); gain.connect(ctx.destination);
                 osc.type = 'sine';
-                osc.frequency.setValueAtTime(600, ctx.currentTime); // Tom inicial
-                osc.frequency.exponentialRampToValueAtTime(300, ctx.currentTime + 0.15); // Queda rápida simulando bolha/pop
-                gain.gain.setValueAtTime(0.05, ctx.currentTime); // Volume bem suave (5%)
-                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15); // Fade out
+                osc.frequency.setValueAtTime(600, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(300, ctx.currentTime + 0.15);
+                gain.gain.setValueAtTime(0.05, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
                 osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.15);
             }
         } catch(e) {}
     }
 
-    // 5. RENDERIZAÇÃO
+    // 🚀 EXIBIÇÃO DA TRAVA SOCIOECONÔMICA (POP-UP GLOBAL)
+    function exibirTravaSocioeconomicoPopup() {
+        if (document.getElementById("circle-popup-socoeco")) return;
+
+        const modalHtml = `
+            <div id="circle-popup-socoeco" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 99999999 !important; display: flex; align-items: center; justify-content: center; font-family: 'Plus Jakarta Sans', sans-serif, Arial;">
+                <div style="background: white; width: 90%; max-width: 500px; border-radius: 16px; padding: 32px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.3); position: relative; animation: circleModalPop 0.3s cubic-bezier(0.16, 1, 0.3, 1);">
+                    
+                    <h3 style="margin: 0 0 16px; font-size: 20px; font-weight: 700; color: #003366; line-height: 1.3;">🚀 Ative suas Medalhas e Prêmios, Mulher!</h3>
+                    
+                    <p style="font-size: 14px; color: #4a5568; margin: 0 0 24px; line-height: 1.6; text-align: center;">
+                        O nosso novo curso de <strong>Pet Sitter</strong> já está liberado pra você decolar! Mas se você quer entrar no jogo pra vencer, acumular <strong>Arrasas</strong> e **botar no bolso o seu auxílio de R$ 100,00 em dinheiro**, falta só preencher o formulário socioeconômico!
+                    </p>
+                    
+                    <a href="https://comunidade.aprenderecuidar.com.br/c/formulario-socioeconomico" target="_blank" style="display: block; background: #003366; color: white; text-decoration: none; padding: 14px; border-radius: 10px; font-weight: 600; font-size: 14px; margin-bottom: 16px; text-align: center; transition: background 0.2s;">
+                        Preencher e Ativar Meu Saldo 🐾
+                    </a>
+                    
+                    <button id="close-circle-popup-btn" style="background: none; border: none; color: #64748b; font-size: 12px; cursor: pointer; text-decoration: underline;">
+                        Vou preencher mais tarde
+                    </button>
+                </div>
+            </div>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        document.body.classList.add('modal-open-circle');
+
+        document.getElementById("close-circle-popup-btn").addEventListener("click", function() {
+            const modal = document.getElementById("circle-popup-socoeco");
+            if (modal) {
+                modal.remove();
+                document.body.classList.remove('modal-open-circle');
+            }
+        });
+    }
+
+    // 5. RENDERIZAÇÃO DO FLAVOR WIDGET
     function renderizar(data) {
         let widget = document.getElementById('pet-floating-widget');
 
         const isMinimized = safeStorage('get', 'petMinimized') === 'true';
         const isAluna = data && data.encontrado;
-        const valorNovo = isAluna ? parseInt(data.arrasas || 0) : 0; // Saldo livre (backend controla o resgate)
+        const valorNovo = isAluna ? parseInt(data.arrasas || 0) : 0;
         const valorAnterior = parseInt(safeStorage('get', 'userSaldo') || 0);
 
         if (isAluna && !data.isCache) {
@@ -468,7 +382,7 @@
         const currentBadge = safeStorage('get', 'userBadge');
         const hasBadge = isAluna && currentBadge && String(currentBadge).trim() !== "";
 
-        // Interrompe e esconde o widget caso não tenha a tag de socioeconômico OU falte a badge
+        // Se faltar o socioeconômico ou badge, oculta o widget flutuante, mas a lógica do pop-up já rodou no backend!
         if (!hasSocioeconomico || !hasBadge) {
             if (widget) widget.style.display = 'none';
             return;
@@ -480,17 +394,11 @@
             widget.classList.add('pet-widget-first-show');
             document.body.appendChild(widget);
             setupDraggable(widget);
-            
-            // Toca o som suave de aparição
             playPopSound();
-
-            // Remove a classe de animação após o fim (evita bugs no arraste)
-            setTimeout(() => {
-                if (widget) widget.classList.remove('pet-widget-first-show');
-            }, 800);
+            setTimeout(() => { if (widget) widget.classList.remove('pet-widget-first-show'); }, 800);
         }
         
-        widget.style.display = 'flex'; // Garante visibilidade
+        widget.style.display = 'flex';
 
         if (isMinimized) {
             widget.innerHTML = `<div class="pet-minimized-icon" id="pet-btn-maximize">🐾</div>`;
@@ -519,7 +427,7 @@
             const contentVisitante = `
                 <div class="pet-widget-badge" style="display: flex; align-items: center; justify-content: center; font-size: 24px; background: rgba(0,0,0,0.05); border-radius: 50%;">👋</div>
                 <div class="pet-widget-info" style="display: flex; flex-direction: column; justify-content: center; width: 100%;">
-                    <span class="pet-widget-value pet-widget-alert-text" style="font-size: 10px; font-weight: bold; white-space: normal; line-height: 1.2; text-align: left; color: var(--pet-text-main, #333);">Cadastre-se ou<br>Faça Login</span>
+                    <span class="pet-widget-value pet-widget-alert-text" style="font-size: 10px; font-weight: bold; white-space: normal; line-height: 1.2; text-align: left; color: #333;">Cadastre-se ou<br>Faça Login</span>
                 </div>
             `;
 
@@ -537,26 +445,17 @@
             if (valEl) {
                 if (valorNovo !== valorAnterior) {
                     animateValue(valEl, valorAnterior, valorNovo, 1500);
-
-                    // ✨ Animação de celebração ao ganhar pontos!
                     if (valorNovo > valorAnterior && !isMinimized) {
-                        widget.classList.add('pet-celebrate');
-                        widget.classList.add('pet-celebration-glow'); // Adiciona o pulso verde
-                        const pontosGanhos = valorNovo - valorAnterior;
-                        showCelebration(widget, pontosGanhos);
-                        setTimeout(() => {
-                            widget.classList.remove('pet-celebrate');
-                            widget.classList.remove('pet-celebration-glow');
-                        }, 1000); // Duração da animação em ms
+                        widget.classList.add('pet-celebrate', 'pet-celebration-glow');
+                        showCelebration(widget, valorNovo - valorAnterior);
+                        setTimeout(() => { widget.classList.remove('pet-celebrate', 'pet-celebration-glow'); }, 1000);
                     }
-
                 } else {
                     valEl.innerText = valorNovo + " Arrasas";
                 }
             }
         }
 
-        // Adicionando os event listeners programaticamente (Evita uso do Window/escopo global)
         const btnMinimize = document.getElementById('pet-btn-minimize');
         const btnMaximize = document.getElementById('pet-btn-maximize');
         const mainContent = document.getElementById('pet-main-content');
@@ -564,17 +463,14 @@
         if (btnMinimize) btnMinimize.addEventListener('click', togglePetWidget);
         if (btnMaximize) btnMaximize.addEventListener('click', togglePetWidget);
         if (mainContent) {
-            mainContent.style.cursor = "pointer";
             mainContent.addEventListener('click', () => window.open(isAluna ? "/dash_aluna" : "/sign_up", '_self'));
         }
     }
 
-    // 6. BACKEND
+    // 6. CONTROLADOR CENTRAL DE CONSULTA
     function iniciarWidget() {
-        // --- DETECÇÃO DE LOGOUT SEGURA ---
         const cachedEmail = safeStorage('get', 'pet_user_email');
         const loginSource = safeStorage('get', 'pet_login_source');
-        
         let isLoggedOut = false;
         
         let punditContext = localStorage.getItem('V1-PunditUserContext');
@@ -582,59 +478,46 @@
         if (punditContext) {
             try {
                 let parsedContext = JSON.parse(punditContext);
-                if (parsedContext && parsedContext.current_user && parsedContext.current_user.email) {
-                    hasPunditUser = true;
-                }
+                if (parsedContext?.current_user?.email) hasPunditUser = true;
             } catch(e) {}
         }
 
-        if (loginSource === 'circle_pundit' && !hasPunditUser) {
-            isLoggedOut = true; // Estava logado via Pundit e a chave sumiu (Logout)
-        } else if (loginSource === 'circle' && !hasPunditUser && (!window.circleUser || !window.circleUser.email)) {
-            isLoggedOut = true; // Fallback
-        } else if (loginSource === 'liquid') {
-            let liquidEmail = "{{ user.email }}";
-            if (!liquidEmail || liquidEmail.indexOf('{{') !== -1 || liquidEmail.trim() === "") {
-                isLoggedOut = true;
-            }
-        }
+        if (loginSource === 'circle_pundit' && !hasPunditUser) isLoggedOut = true;
+        else if (loginSource === 'circle_native' && !window.Circle?.currentUser?.email) isLoggedOut = true;
 
-        // Se tínhamos um e-mail salvo, mas ocorreu logout na plataforma origem
         if (cachedEmail && isLoggedOut) {
             safeStorage('remove', 'pet_user_email');
             safeStorage('remove', 'userSaldo');
             safeStorage('remove', 'userBadge');
             safeStorage('remove', 'userSocioeconomico');
             safeStorage('remove', 'pet_login_source');
-            
             renderizar({ encontrado: false, arrasas: 0, badge: null, isCache: true });
             return;
         }
 
         var email = getEmail();
 
-        // --- INÍCIO: MODO SANDBOX NO WIDGET ---
+        // Modo Sandbox
         const isSandbox = window.location.search.includes('sandbox') || email === "teste@sandbox.com";
         if (isSandbox) {
-            console.log("🛠️ [WIDGET] Modo Sandbox ativado. Ignorando backend real.");
             email = "teste@sandbox.com";
             safeStorage('set', 'pet_user_email', email);
             window.receberDadosPet({
                 encontrado: true,
                 email: email,
-                arrasas: safeStorage('get', 'userSaldo') || 0,
+                arrasas: safeStorage('get', 'userSaldo') || 10,
                 badge: safeStorage('get', 'userBadge') || "Aprendiz Curiosa 🐾",
-                socioeconomico: true
+                socioeconomico: false // Abre o pop-up no sandbox
             });
             return;
         }
-        // --- FIM: MODO SANDBOX NO WIDGET ---
 
         if (!email) {
             renderizar({ encontrado: false, arrasas: 0, badge: null, isCache: true });
             return;
         }
 
+        // Executa a requisição JSONP para capturar os dados do Google Sheets
         var script = document.createElement('script');
         var ts = new Date().getTime();
         script.src = urlApp + "?email=" + encodeURIComponent(email) + 
@@ -644,26 +527,24 @@
 
         document.body.appendChild(script);
         script.onload = function() { if(this.parentNode) this.parentNode.removeChild(this); };
-        script.onerror = function() { if(this.parentNode) this.parentNode.removeChild(this); }; // Limpeza em caso de falha de rede
+        script.onerror = function() { if(this.parentNode) this.parentNode.removeChild(this); };
     }
 
-// 6. BACKEND
     window.receberDadosPet = function(data) {
         if (data.encontrado) {
             if (data.email) safeStorage('set', 'pet_user_email', data.email.toLowerCase().trim());
             data.isCache = false;
             
-            // 🔥 MÁGICA DO TECH LEAD: Intercepta para verificar se precisa exibir a trava/pop-up
+            // 💡 CAPTURA E TRAVA GLOBAL DA BUSCA ATIVA:
             const isSocioValido = data.socioeconomico === true || data.socioeconomico === 'true' || data.socioeconomico === 'Sim' || data.socioeconomico === 1;
-            
+            safeStorage('set', 'userSocioeconomico', isSocioValido ? 'true' : 'false');
+
             if (!isSocioValido) {
-                // Se não respondeu ao socioeconômico, faz o Pop-up brotar na Circle!
                 exibirTravaSocioeconomicoPopup();
             }
 
             renderizar(data); 
         } else {
-            // Resposta do servidor: E-mail não está cadastrado (Visitante)
             safeStorage('remove', 'pet_user_email');
             safeStorage('remove', 'userSaldo');
             safeStorage('remove', 'userBadge');
@@ -673,61 +554,7 @@
         }
     };
 
-    // 🚀 NOVA FUNÇÃO: Constrói e injeta o Pop-up direto na interface da Circle de forma limpa
-    function exibirTravaSocioeconomicoPopup() {
-        if (document.getElementById("circle-popup-socoeco")) return;
-
-        // Injeta os estilos de animação do pop-up no cabeçalho se não existirem
-        if (!document.getElementById("pet-popup-animation-style")) {
-            const popupStyle = document.createElement('style');
-            popupStyle.id = "pet-popup-animation-style";
-            popupStyle.innerHTML = `
-                @keyframes circleModalPop {
-                    from { transform: scale(0.95); opacity: 0; }
-                    to { transform: scale(1); opacity: 1; }
-                }
-                body.modal-open-circle { overflow: hidden !important; }
-            `;
-            document.head.appendChild(popupStyle);
-        }
-
-        const modalHtml = `
-            <div id="circle-popup-socoeco" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 99999999 !important; display: flex; align-items: center; justify-content: center; font-family: 'Plus Jakarta Sans', sans-serif, Arial;">
-                <div style="background: white; width: 90%; max-width: 500px; border-radius: 16px; padding: 32px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.3); position: relative; animation: circleModalPop 0.3s cubic-bezier(0.16, 1, 0.3, 1);">
-                    
-                    <h3 style="margin: 0 0 16px; font-size: 20px; font-weight: 700; color: #003366; line-height: 1.3;">🚀 Ative suas Medalhas e Prêmios, Mulher!</h3>
-                    
-                    <p style="font-size: 14px; color: #4a5568; margin: 0 0 24px; line-height: 1.6; text-align: center;">
-                        O nosso novo curso de <strong>Pet Sitter</strong> já está liberado pra você decolar! Mas se você quer entrar no jogo pra vencer, acumular <strong>Arrasas</strong> e **botar no bolso o seu auxílio de R$ 100,00 em dinheiro**, falta só preencher o formulário socioeconômico!
-                    </p>
-                    
-                    <a href="COLE_O_LINK_DO_SEU_FORMULARIO_AQUI" target="_blank" style="display: block; background: #003366; color: white; text-decoration: none; padding: 14px; border-radius: 10px; font-weight: 600; font-size: 14px; margin-bottom: 16px; text-align: center; transition: background 0.2s;">
-                        Preencher e Ativar Meu Saldo 🐾
-                    </a>
-                    
-                    <button id="close-circle-popup-btn" style="background: none; border: none; color: #64748b; font-size: 12px; cursor: pointer; text-decoration: underline;">
-                        Vou preencher mais tarde
-                    </button>
-                </div>
-            </div>
-        `;
-
-        // Injeta o modal no DOM da Circle
-        document.body.insertAdjacentHTML('beforeend', modalHtml);
-        document.body.classList.add('modal-open-circle');
-
-        // Configura o evento do botão de fechar para remover o elemento e reativar o scroll
-        document.getElementById("close-circle-popup-btn").addEventListener("click", function() {
-            const modal = document.getElementById("circle-popup-socoeco");
-            if (modal) {
-                modal.remove();
-                document.body.classList.remove('modal-open-circle');
-            }
-        });
-    }
-
-
-    // 7. LISTENER PARA VERCEL (O que você precisa para o Dashboard!)
+    // 7. LISTENER DE COMUNICAÇÃO (IFRAMES DASHBOARD VERCEL)
     window.addEventListener('message', (event) => {
         const isSandbox = window.location.search.includes('sandbox');
         if (!isSandbox && event.origin !== TRUSTED_ORIGIN && event.origin !== "http://localhost:3000") return;
@@ -737,130 +564,43 @@
             if (email) event.source.postMessage({ email: email }, event.origin);
         }
 
-        // Recebe atualizações instantâneas do dashboard (Vercel)
         if (event.data && event.data.type === 'PET_UPDATE') {
             const updatePayload = event.data.payload;
             const currentUserEmail = getEmail();
-
-            // Garante que a atualização é para o usuário logado no widget
-            if (updatePayload && updatePayload.email && updatePayload.email.toLowerCase().trim() === currentUserEmail) {
-                updatePayload.isCache = false; // Força a animação e atualização do cache
+            if (updatePayload?.email && updatePayload.email.toLowerCase().trim() === currentUserEmail) {
+                updatePayload.isCache = false;
                 renderizar(updatePayload);
             }
         }
     });
 
-    // 8. START
+    // 8. CONEXÃO DE STARTUP
     injectWidgetStyles();
 
-    // Define que o widget começa minimizado por padrão se não houver preferência salva
     if (safeStorage('get', 'petMinimized') == null) {
         safeStorage('set', 'petMinimized', 'true');
     }
 
     const cEmail = safeStorage('get', 'pet_user_email');
     const cS = safeStorage('get', 'userSaldo');
-    
-    // Evita que a string "0" seja interpretada como 'true' sem um e-mail salvo no cache
     const isProvavelAluna = !!cEmail && cS !== null && cS !== undefined;
     
     renderizar({ 
         encontrado: isProvavelAluna, arrasas: cS || 0, badge: safeStorage('get', 'userBadge'), isCache: true 
     });
 
-    setTimeout(iniciarWidget, 1500);
+    // Inicialização segura respeitando o ciclo de vida do DOM da Circle
+    if (document.readyState === "complete" || document.readyState === "interactive") {
+        setTimeout(iniciarWidget, 1000);
+    } else {
+        window.addEventListener("load", () => setTimeout(iniciarWidget, 1000));
+    }
     
-    // Otimização: Apenas faz o polling no servidor se a aba do navegador estiver visível e ativa
     document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible') {
-            iniciarWidget();
-        }
+        if (document.visibilityState === 'visible') iniciarWidget();
     });
 
     setInterval(() => {
-        if (document.visibilityState === 'visible') {
-            iniciarWidget();
-        }
+        if (document.visibilityState === 'visible') iniciarWidget();
     }, 45000);
-})();
-
-/* ════════════════════════════════════════════════════════════════════════
-   🚀 ADICIONE ESTE BLOCO NO FINAL DO SEU widget-pet.js NO GITHUB
-   TRAVA DE CONVERSÃO: POP-UP SOCIOECONÔMICO VIA CODE INJECTION
-   ════════════════════════════════════════════════════════════════════════ */
-
-(function() {
-    // Aguarda o objeto global da Circle estar pronto na página
-    function iniciarVerificacaoPopup() {
-        const usuarioCircle = window.Circle?.currentUser;
-        
-        // Se não tiver usuário logado na Circle (visitante), ignora
-        if (!usuarioCircle) return;
-
-        const emailAluna = usuarioCircle.email;
-        
-        // 🔍 Consulta o seu Painel BI na Vercel passando o e-mail logado na Circle
-        fetch(`https://pet-rocinha.vercel.app/api/checar-medalha?email=${encodeURIComponent(emailAluna)}`)
-            .then(response => response.json())
-            .then(data => {
-                // Se a sua API validar que ela está zerada (sem medalhas)
-                if (data && data.temMedalha === false) {
-                    criarEExibirPopupSocioeconomico();
-                }
-            })
-            .catch(err => console.error("⚠️ Erro ao validar medalhas no widget-pet:", err));
-    }
-
-    // Função interna para construir o HTML e injetar os estilos na Circle
-    function criarEExibirPopupSocioeconomico() {
-        if (document.getElementById("circle-popup-socoeco")) return;
-
-        const modalHtml = `
-            <div id="circle-popup-socoeco" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 999999; display: flex; align-items: center; justify-content: center; font-family: 'Plus Jakarta Sans', sans-serif, Arial;">
-                <div style="background: white; width: 90%; max-width: 500px; border-radius: 16px; padding: 32px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.3); position: relative; animation: widgetPopUpAnimation 0.3s cubic-bezier(0.16, 1, 0.3, 1);">
-                    
-                    <h3 style="margin: 0 0 16px; font-size: 20px; font-weight: 700; color: #003366; line-height: 1.3;">🚀 Ative suas Medalhas e Prêmios, Mulher!</h3>
-                    
-                    <p style="font-size: 14px; color: #4a5568; margin: 0 0 24px; line-height: 1.6; text-align: center;">
-                        O nosso novo curso de <strong>Pet Sitter</strong> já está liberado pra você decolar! Mas se você quer entrar no jogo pra vencer, acumular <strong>Arrasas</strong> e **botar no bolso o seu auxílio de R$ 100,00 em dinheiro**, falta só preencher o formulário socioeconômico!
-                    </p>
-                    
-                    <a href="[COLE_O_LINK_DO_SEU_FORMULARIO_AQUI]" target="_blank" style="display: block; background: #003366; color: white; text-decoration: none; padding: 14px; border-radius: 10px; font-weight: 600; font-size: 14px; margin-bottom: 16px; text-align: center; transition: background 0.2s;">
-                        Preencher e Ativar Meu Saldo 🐾
-                    </a>
-                    
-                    <button id="close-widget-popup-btn" style="background: none; border: none; color: #64748b; font-size: 12px; cursor: pointer; text-decoration: underline;">
-                        Vou preencher mais tarde
-                    </button>
-                </div>
-            </div>
-            <style>
-                @keyframes widgetPopUpAnimation {
-                    from { transform: scale(0.95); opacity: 0; }
-                    to { transform: scale(1); opacity: 1; }
-                }
-                body.modal-open-circle { overflow: hidden !important; }
-            </style>
-        `;
-
-        // Injeta o modal no DOM da Circle
-        document.body.insertAdjacentHTML('beforeend', modalHtml);
-        document.body.classList.add('modal-open-circle');
-
-        // Configura o botão de fechar
-        document.getElementById("close-widget-popup-btn").addEventListener("click", function() {
-            const modal = document.getElementById("circle-popup-socoeco");
-            if (modal) {
-                modal.remove();
-                document.body.classList.remove('modal-open-circle');
-            }
-        });
-    }
-
-    // Executa a validação respeitando o tempo de carregamento da Circle
-    if (document.readyState === "complete" || document.readyState === "interactive") {
-        setTimeout(iniciarVerificacaoPopup, 1000);
-    } else {
-        window.addEventListener("load", () => setTimeout(iniciarVerificacaoPopup, 1000));
-    }
 })();
