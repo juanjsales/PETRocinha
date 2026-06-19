@@ -824,15 +824,18 @@ tr:hover td {
 .sidebar { 
     width: 0; 
     padding: 28px 0; 
-    overflow: hidden;
+    position: fixed; /* Mantém a gaveta flutuante no mobile */
+    top: 60px; /* Alinha exatamente abaixo do topo verde da Circle */
+    height: calc(100vh - 60px) !important;
+    overflow-y: auto !important; /* 💡 Ativa scroll interno se o menu for maior que a tela do celular */
     box-shadow: none;
-    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* Transição mais suave e nativa */
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1000;
   }
   
-  /* Quando a sidebar estiver aberta no mobile */
   .sidebar.expanded { 
-    width: 280px; /* Aumentamos de 240px para 280px para dar mais presença e leitura */
-    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.25); /* Sombra marcante para dar efeito de profundidade (Z-Index) */
+    width: 280px;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.25);
   }
   
   /* Garante que os textos apareçam de forma limpa e sem quebras feias ao expandir */
