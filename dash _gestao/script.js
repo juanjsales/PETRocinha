@@ -145,14 +145,13 @@ function executePdfExport() {
       const dd = String(today.getDate()).padStart(2, '0');
       const formattedDate = `${yyyy}-${mm}-${dd}`;
 
-      // 🔹 Configurações Otimizadas: adicionado controle estrito de quebra de página
       const opt = {
-          margin:       [15, 12, 15, 12], // topo, esquerda, baixo, direita em mm (Margem SAGICAD)
+          margin:       [15, 12, 15, 12], // topo, esquerda, baixo, direita em mm
           filename:     `relatorio-profissao-pet-rocinha-${formattedDate}.pdf`,
           image:        { type: 'jpeg', quality: 0.98 },
           html2canvas:  { scale: 2, useCORS: true, logging: false },
           jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-          pagebreak:    { mode: ['avoid-all', 'css'] } // 🚫 Força o motor a respeitar CSS de quebra
+          pagebreak:    { mode: ['avoid-all', 'css'] }
       };
 
       // 2. Clonar o elemento principal para a geração do PDF
@@ -161,7 +160,7 @@ function executePdfExport() {
       // 3. Limpar o clone (remover botões, etc.)
       elementToPrint.querySelectorAll('.btn, .filter-sel, .modal-backdrop, .menu-toggle').forEach(el => el.remove());
 
-      // 🔥 MÁGICA DO TECH LEAD: Reset de Layout para o Clone ignorar o Iframe da Circle
+      // Reset de Layout para o Clone ignorar o Iframe da Circle
       elementToPrint.style.margin = '0';
       elementToPrint.style.padding = '0';
       elementToPrint.style.width = '100%';
@@ -178,13 +177,13 @@ function executePdfExport() {
           card.style.display = 'block';
           card.style.width = '100%';
           card.style.marginBottom = '20px';
-          card.style.pageBreakInside = 'avoid'; // Evita cortes no meio do cartão 
+          card.style.pageBreakInside = 'avoid';
           card.style.breakInside = 'avoid';
           card.style.boxShadow = 'none';
           card.style.transform = 'none';
       });
 
-     // 4. Substituir os canvas por imagens no clone e limpar elementos residuais
+      // 4. Substituir os canvas por imagens no clone e limpar elementos residuais
       const originalCanvases = mainElement.querySelectorAll('canvas');
       const clonedCanvases = elementToPrint.querySelectorAll('canvas');
       
@@ -200,7 +199,6 @@ function executePdfExport() {
               img.style.pageBreakInside = 'avoid';
               img.style.breakInside = 'avoid';
               
-              // Garante que o contêiner pai do gráfico não tente usar flex/sobreposição herdada
               const parentContainer = clonedCanvases[index].parentNode;
               if (parentContainer) {
                   parentContainer.style.display = 'block';
@@ -208,17 +206,16 @@ function executePdfExport() {
                   parentContainer.style.overflow = 'hidden';
                   parentContainer.style.height = 'auto';
                   parentContainer.style.width = '100%';
-                  // Substitui o canvas pela imagem limpa
                   parentContainer.replaceChild(img, clonedCanvases[index]);
               }
           }
       });
 
-      // 🔹 Ajuste extra de segurança: Evita que gráficos fiquem muito colados ou encavalados
+      // 🔹 FIX DA LINHA 219: Sintaxe corrigida usando setProperty para injetar o !important de forma válida
       elementToPrint.querySelectorAll('.chart-card').forEach(card => {
-          card.style.position = 'relative' !important;
-          card.style.overflow = 'hidden' !important;
-          card.style.height = 'auto' !important;
+          card.style.setProperty('position', 'relative', 'important');
+          card.style.setProperty('overflow', 'hidden', 'important');
+          card.style.setProperty('height', 'auto', 'important');
       });
 
       // 5. Gerar o PDF a partir do clone preparado com as correções
@@ -230,6 +227,8 @@ function executePdfExport() {
               p.style.display = (p.id === activePanelId) ? 'block' : 'none';
           });
       });
+  }, 150);
+}
 
 // ── GRÁFICOS ──────────────────────────────────────────────────────────────
 function donutChart(id, labels, data, colors) {
