@@ -821,23 +821,38 @@ tr:hover td {
 }
 
 @media (max-width: 860px) {
-  .sidebar { 
+.sidebar { 
     width: 0; 
     padding: 28px 0; 
+    overflow: hidden;
+    box-shadow: none;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* Transição mais suave e nativa */
   }
+  
+  /* Quando a sidebar estiver aberta no mobile */
   .sidebar.expanded { 
-    width: 240px; 
+    width: 280px; /* Aumentamos de 240px para 280px para dar mais presença e leitura */
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.25); /* Sombra marcante para dar efeito de profundidade (Z-Index) */
   }
+  
+  /* Garante que os textos apareçam de forma limpa e sem quebras feias ao expandir */
   .sidebar-brand, .nav-section, .sidebar-footer, .nav-item span { 
     display: none; 
+    opacity: 0;
+    transition: opacity 0.2s ease;
   }
-  .sidebar.expanded .sidebar-brand, .sidebar.expanded .nav-section,
-  .sidebar.expanded .sidebar-footer, .sidebar.expanded .nav-item span { 
+  
+  .sidebar.expanded .sidebar-brand, 
+  .sidebar.expanded .nav-section,
+  .sidebar.expanded .sidebar-footer, 
+  .sidebar.expanded .nav-item span { 
     display: block; 
+    opacity: 1;
   }
+  
   .nav-item { 
     justify-content: center; 
-    padding: 14px; 
+    padding: 14px 20px; 
   }
   .sidebar.expanded .nav-item { 
     justify-content: flex-start; 
