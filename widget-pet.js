@@ -647,10 +647,20 @@
         script.onerror = function() { if(this.parentNode) this.parentNode.removeChild(this); }; // Limpeza em caso de falha de rede
     }
 
+// 6. BACKEND
     window.receberDadosPet = function(data) {
         if (data.encontrado) {
             if (data.email) safeStorage('set', 'pet_user_email', data.email.toLowerCase().trim());
             data.isCache = false;
+            
+            // 🔥 MÁGICA DO TECH LEAD: Intercepta para verificar se precisa exibir a trava/pop-up
+            const isSocioValido = data.socioeconomico === true || data.socioeconomico === 'true' || data.socioeconomico === 'Sim' || data.socioeconomico === 1;
+            
+            if (!isSocioValido) {
+                // Se não respondeu ao socioeconômico, faz o Pop-up brotar na Circle!
+                exibirTravaSocioeconomicoPopup();
+            }
+
             renderizar(data); 
         } else {
             // Resposta do servidor: E-mail não está cadastrado (Visitante)
@@ -662,6 +672,60 @@
             renderizar({ encontrado: false, arrasas: 0, badge: null, isCache: false });
         }
     };
+
+    // 🚀 NOVA FUNÇÃO: Constrói e injeta o Pop-up direto na interface da Circle de forma limpa
+    function exibirTravaSocioeconomicoPopup() {
+        if (document.getElementById("circle-popup-socoeco")) return;
+
+        // Injeta os estilos de animação do pop-up no cabeçalho se não existirem
+        if (!document.getElementById("pet-popup-animation-style")) {
+            const popupStyle = document.createElement('style');
+            popupStyle.id = "pet-popup-animation-style";
+            popupStyle.innerHTML = `
+                @keyframes circleModalPop {
+                    from { transform: scale(0.95); opacity: 0; }
+                    to { transform: scale(1); opacity: 1; }
+                }
+                body.modal-open-circle { overflow: hidden !important; }
+            `;
+            document.head.appendChild(popupStyle);
+        }
+
+        const modalHtml = `
+            <div id="circle-popup-socoeco" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 99999999 !important; display: flex; align-items: center; justify-content: center; font-family: 'Plus Jakarta Sans', sans-serif, Arial;">
+                <div style="background: white; width: 90%; max-width: 500px; border-radius: 16px; padding: 32px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.3); position: relative; animation: circleModalPop 0.3s cubic-bezier(0.16, 1, 0.3, 1);">
+                    
+                    <h3 style="margin: 0 0 16px; font-size: 20px; font-weight: 700; color: #003366; line-height: 1.3;">🚀 Ative suas Medalhas e Prêmios, Mulher!</h3>
+                    
+                    <p style="font-size: 14px; color: #4a5568; margin: 0 0 24px; line-height: 1.6; text-align: center;">
+                        O nosso novo curso de <strong>Pet Sitter</strong> já está liberado pra você decolar! Mas se você quer entrar no jogo pra vencer, acumular <strong>Arrasas</strong> e **botar no bolso o seu auxílio de R$ 100,00 em dinheiro**, falta só preencher o formulário socioeconômico!
+                    </p>
+                    
+                    <a href="COLE_O_LINK_DO_SEU_FORMULARIO_AQUI" target="_blank" style="display: block; background: #003366; color: white; text-decoration: none; padding: 14px; border-radius: 10px; font-weight: 600; font-size: 14px; margin-bottom: 16px; text-align: center; transition: background 0.2s;">
+                        Preencher e Ativar Meu Saldo 🐾
+                    </a>
+                    
+                    <button id="close-circle-popup-btn" style="background: none; border: none; color: #64748b; font-size: 12px; cursor: pointer; text-decoration: underline;">
+                        Vou preencher mais tarde
+                    </button>
+                </div>
+            </div>
+        `;
+
+        // Injeta o modal no DOM da Circle
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        document.body.classList.add('modal-open-circle');
+
+        // Configura o evento do botão de fechar para remover o elemento e reativar o scroll
+        document.getElementById("close-circle-popup-btn").addEventListener("click", function() {
+            const modal = document.getElementById("circle-popup-socoeco");
+            if (modal) {
+                modal.remove();
+                document.body.classList.remove('modal-open-circle');
+            }
+        });
+    }
+
 
     // 7. LISTENER PARA VERCEL (O que você precisa para o Dashboard!)
     window.addEventListener('message', (event) => {
