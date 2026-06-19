@@ -119,26 +119,33 @@
         document.head.appendChild(style);
     }
 
+    // 💡 CAPTURA CORRIGIDA: Agora busca no LocalStorage Pundit Context que roda na Circle toda!
     function getEmail() {
         let userEmail = safeStorage('get', 'pet_user_email');
         let currentSystemEmail = null;
         let currentSource = null;
 
         try {
-            if (window.Circle?.currentUser?.email) {
+            // Rota 1: Pundit Token (Presente em TODAS as páginas da Circle)
+            let punditContext = localStorage.getItem('V1-PunditUserContext');
+            if (punditContext) {
+                let parsedContext = JSON.parse(punditContext);
+                if (parsedContext?.current_user?.email) {
+                    currentSystemEmail = parsedContext.current_user.email.toLowerCase().trim();
+                    currentSource = 'circle_pundit';
+                }
+            }
+            // Rota 2: Objeto Nativo (Garante funcionamento no painel BI)
+            if (!currentSystemEmail && window.Circle?.currentUser?.email) {
                 currentSystemEmail = window.Circle.currentUser.email.toLowerCase().trim();
                 currentSource = 'circle_native';
             }
-            if (!currentSystemEmail) {
-                let punditContext = localStorage.getItem('V1-PunditUserContext');
-                if (punditContext) {
-                    let parsedContext = JSON.parse(punditContext);
-                    if (parsedContext?.current_user?.email) {
-                        currentSystemEmail = parsedContext.current_user.email.toLowerCase().trim();
-                        currentSource = 'circle_pundit';
-                    }
-                }
+            // Rota 3: Fallback Legado
+            if (!currentSystemEmail && window.circleUser?.email) {
+                currentSystemEmail = window.circleUser.email.toLowerCase().trim();
+                currentSource = 'circle_legacy';
             }
+
             if (currentSystemEmail && userEmail && currentSystemEmail !== userEmail) {
                 safeStorage('remove', 'userSaldo');
                 safeStorage('remove', 'userBadge');
@@ -216,7 +223,6 @@
         setTimeout(() => { if (floatText.parentNode) floatText.parentNode.removeChild(floatText); }, 1500);
     }
 
-    // 🚀 EXIBIÇÃO DA TRAVA SOCIOECONÔMICA (POP-UP GLOBAL)
     function exibirTravaSocioeconomicoPopup() {
         if (document.getElementById("circle-popup-socoeco")) return;
         if (sessionStorage.getItem('pet_popup_ignorado_sessao') === 'true') return;
@@ -269,7 +275,6 @@
         const hasSocioeconomico = isAluna && safeStorage('get', 'userSocioeconomico') === 'true';
         const hasBadge = isAluna && safeStorage('get', 'userBadge');
 
-        // Se faltar preenchimento, esconde a PATINHA lateral, mas a lógica do pop-up continua ativa abaixo!
         if (!hasSocioeconomico || !hasBadge) {
             if (widget) widget.style.display = 'none';
             return;
@@ -317,11 +322,6 @@
             const valEl = document.getElementById('pet-val');
             if (valEl && valorNovo !== valorAnterior) {
                 animateValue(valEl, valorAnterior, valorNovo, 1500);
-                if (valorNovo > valorAnterior && !isMinimized) {
-                    widget.classList.add('pet-celebrate', 'pet-celebration-glow');
-                    showCelebration(widget, valorNovo - valorAnterior);
-                    setTimeout(() => { widget.classList.remove('pet-celebrate', 'pet-celebration-glow'); }, 1000);
-                }
             }
         }
 
@@ -332,10 +332,7 @@
 
     function iniciarWidget() {
         var email = getEmail();
-        if (!email) {
-            renderizar({ encontrado: false, arrasas: 0, badge: null, isCache: true });
-            return;
-        }
+        if (!email) return;
 
         var script = document.createElement('script');
         var ts = new Date().getTime();
@@ -349,11 +346,10 @@
         script.onerror = function() { if(this.parentNode) this.parentNode.removeChild(this); };
     }
 
-    // 🔥 O SEGREDO DO TECH LEAD AQUI: O pop-up intercepta a resposta ANTES de testar a trava "data.encontrado"
     window.receberDadosPet = function(data) {
         const isSocioValido = data && data.encontrado && (data.socioeconomico === true || data.socioeconomico === 'true' || data.socioeconomico === 'Sim' || data.socioeconomico === 1);
         
-        // Se ela tem e-mail ativo na Circle mas não está válida no Sheets, abre a trava em qualquer página!
+        // 💡 DESTRANCADO: Ativa o pop-up usando o e-mail descriptografado do LocalStorage Pundit
         if (!isSocioValido && getEmail()) {
             exibirTravaSocioeconomicoPopup();
         }
