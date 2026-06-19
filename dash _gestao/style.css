@@ -86,10 +86,10 @@ body.no-scroll {
   display: flex; 
   flex-direction: column;
   transition: width 0.3s ease;
-  position: fixed; 
+  position: sticky; 
   top: 0; 
   left: 0; 
-  height: 100vh; 
+  height: calc(100vh - 4px);
   z-index: 100;
   padding: 28px 0;
 }
