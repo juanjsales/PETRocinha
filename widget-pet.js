@@ -322,6 +322,7 @@
     // 🚀 EXIBIÇÃO DA TRAVA SOCIOECONÔMICA (POP-UP GLOBAL)
     function exibirTravaSocioeconomicoPopup() {
         if (document.getElementById("circle-popup-socoeco")) return;
+        if (sessionStorage.getItem('pet_popup_ignorado_sessao') === 'true') return; // Respeita a navegação na sessão atual
 
         const modalHtml = `
             <div id="circle-popup-socoeco" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 99999999 !important; display: flex; align-items: center; justify-content: center; font-family: 'Plus Jakarta Sans', sans-serif, Arial;">
@@ -352,11 +353,12 @@
             if (modal) {
                 modal.remove();
                 document.body.classList.remove('modal-open-circle');
+                sessionStorage.setItem('pet_popup_ignorado_sessao', 'true'); // Silencia apenas nesta aba aberta para não cansar
             }
         });
     }
 
-    // 5. RENDERIZAÇÃO DO FLAVOR WIDGET
+    // 5. RENDERIZAÇÃO DO WIDGET FLUTUANTE
     function renderizar(data) {
         let widget = document.getElementById('pet-floating-widget');
 
@@ -382,7 +384,7 @@
         const currentBadge = safeStorage('get', 'userBadge');
         const hasBadge = isAluna && currentBadge && String(currentBadge).trim() !== "";
 
-        // Se faltar o socioeconômico ou badge, oculta o widget flutuante, mas a lógica do pop-up já rodou no backend!
+        // O widget flutuante lateral some se não houver medalhas, mas a trava global do pop-up continua ativa!
         if (!hasSocioeconomico || !hasBadge) {
             if (widget) widget.style.display = 'none';
             return;
@@ -530,19 +532,20 @@
         script.onerror = function() { if(this.parentNode) this.parentNode.removeChild(this); };
     }
 
+    // 🔥 FIX COMPLETO DA INTERCEPTAÇÃO: O pop-up agora ignora a trava de "encontrado" do banco
     window.receberDadosPet = function(data) {
-        if (data.encontrado) {
+        // Verifica de ponta a ponta se o formulário está preenchido
+        const isSocioValido = data && data.encontrado && (data.socioeconomico === true || data.socioeconomico === 'true' || data.socioeconomico === 'Sim' || data.socioeconomico === 1);
+        
+        // Se a usuária está logada na Circle mas o socioeconômico não está válido (ou não foi achado no banco), sobe o pop-up!
+        if (!isSocioValido && getEmail()) {
+            exibirTravaSocioeconomicoPopup();
+        }
+
+        if (data && data.encontrado) {
             if (data.email) safeStorage('set', 'pet_user_email', data.email.toLowerCase().trim());
             data.isCache = false;
-            
-            // 💡 CAPTURA E TRAVA GLOBAL DA BUSCA ATIVA:
-            const isSocioValido = data.socioeconomico === true || data.socioeconomico === 'true' || data.socioeconomico === 'Sim' || data.socioeconomico === 1;
             safeStorage('set', 'userSocioeconomico', isSocioValido ? 'true' : 'false');
-
-            if (!isSocioValido) {
-                exibirTravaSocioeconomicoPopup();
-            }
-
             renderizar(data); 
         } else {
             safeStorage('remove', 'pet_user_email');
