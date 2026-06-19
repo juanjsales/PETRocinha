@@ -1,7 +1,6 @@
 /*
   File: style.css
   Project: Painel de Impacto | Profissão Pet Rocinha
-  Author: Gemini Agent (Refactored)
 */
 
 /* ════════════════════════════════════════════════════════════════════════
@@ -813,7 +812,7 @@ tr:hover td {
 
 
 /* ════════════════════════════════════════════════════════════════════════
-   6. RESPONSIVE & PRINT STYLES (PDF BLINDADO PARA IFRAMES - MODELO SAGICAD)
+   6. RESPONSIVE & PRINT STYLES (MOBILE & PDF BLINDADO)
    ════════════════════════════════════════════════════════════════════════ */
 
 @media (max-width: 1100px) {
@@ -843,10 +842,13 @@ tr:hover td {
   .sidebar.expanded .nav-item { 
     justify-content: flex-start; 
   }
+  
+  /* 📱 MOBILE REFINADO: Mais espaço lateral para os cartões respirarem */
   .main { 
     margin-left: 0; 
-    padding: 24px; 
+    padding: 16px; 
   }
+  
   .charts-2col, .charts-3col { 
     grid-template-columns: 1fr; 
   }
@@ -856,26 +858,48 @@ tr:hover td {
   .menu-toggle { 
     display: block; 
   }
+  
+  /* 📱 ALINHAMENTO DE BOTÕES MOBILE: Grid 50/50 harmônico e simétrico */
   .topbar { 
-    align-items: center; 
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .topbar-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    width: 100%;
+    justify-content: stretch;
+  }
+  .btn {
+    width: 100%;
+    justify-content: center;
+    padding: 12px 16px;
+    font-size: 13px;
   }
 }
 
 @media (max-width: 600px) {
   .metrics-grid, .socio-metrics { 
     grid-template-columns: 1fr; 
+    gap: 12px;
   }
-  .topbar { 
-    flex-direction: column; 
-    align-items: flex-start; 
+  .mcard {
+    padding: 16px;
+  }
+  .mcard-val {
+    font-size: 22px; /* Protege contra quebras de números longos */
   }
 }
 
-/* 🖨️ ESTILOS DE IMPRESSÃO BLINDADOS PARA EXECUÇÃO EM IFRAMES */
+/* 🖨️ ESTILOS DE IMPRESSÃO BLINDADOS PARA EXECUÇÃO EM IFRAMES (SAGICAD MODEL) */
 @media print {
   @page {
     size: A4 portrait;
-    margin: 20mm 15mm !important; /* Margem padrão institucional da folha */
+    margin: 20mm 15mm !important; 
   }
 
   html, body {
@@ -886,10 +910,9 @@ tr:hover td {
     font-size: 11pt !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
-    overflow: visible !important; /* Impede que o corte do iframe mascare o conteúdo */
+    overflow: visible !important; 
   }
 
-  /* Oculta menus laterais, botões e barras de controle do painel web */
   .sidebar, .btn, .filter-sel, .menu-toggle, .topbar-actions, .sidebar-brand, .sidebar-footer { 
     display: none !important; 
   }
@@ -908,20 +931,18 @@ tr:hover td {
     height: auto !important;
   }
 
-  /* 📊 FORCE THE VERTICAL FLOW - Transforma o layout em blocos sequenciais no papel */
   .metrics-grid, .socio-metrics, .charts-2col, .charts-3col {
-    display: block !important; /* Destrói o grid/flex que pira o motor do iframe */
+    display: block !important; 
     width: 100% !important;
     height: auto !important;
   }
 
-  /* 📦 ISOLAMENTO COMPLETO DE COMPONENTES - Impede cortes transversais e horizontais */
   .chart-card, .table-card, .mcard, .event-card, .detail-item, tr { 
-    display: block !important; /* Garante empilhamento vertical puro */
+    display: block !important; 
     width: 100% !important;
     height: auto !important;
     margin-bottom: 24px !important;
-    page-break-inside: avoid !important; /* 🚫 PROIBIDO CORTAR O CARTÃO NO MEIO */
+    page-break-inside: avoid !important; 
     break-inside: avoid !important;
     box-shadow: none !important;
     transform: none !important;
@@ -929,7 +950,6 @@ tr:hover td {
     background: #ffffff !important;
   }
 
-  /* Redimensiona os canvas de gráficos (Chart.js) para se adaptarem à nova largura real do papel */
   canvas, .chart-container {
     max-width: 100% !important;
     height: auto !important;
@@ -937,7 +957,6 @@ tr:hover td {
     break-inside: avoid !important;
   }
 
-  /* Impede títulos de ficarem isolados sozinhos na base das páginas (Títulos Órfãos) */
   h1, h2, h3, h4, .page-title, .chart-title {
     page-break-after: avoid !important;
     break-after: avoid !important;
