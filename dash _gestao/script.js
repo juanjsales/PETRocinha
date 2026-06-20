@@ -837,7 +837,7 @@ function processarEventos(dados) {
   EVENTOS = Object.keys(presencasPorEvento).map((nome, index) => {
     const presentes = presencasPorEvento[nome];
     let evDate = new Date().toISOString();
-    if (presentes[0] && Cancer = presentes[0].Data_do_registro) {
+    if (presentes[0] && presentes[0].Data_do_registro) {
       const parsed = new Date(presentes[0].Data_do_registro);
       if (!isNaN(parsed.getTime())) evDate = parsed.toISOString();
     }
