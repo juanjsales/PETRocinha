@@ -131,22 +131,20 @@ function executePdfExport() {
   const originalTitle = document.title;
   const mainElement = document.querySelector('.main');
 
-  // 1. Preparar para captura: desativar animações, mostrar painéis SELECIONADOS
   Chart.defaults.animation = false;
   document.querySelectorAll('.panel').forEach(p => {
     p.style.display = selectedPanelIds.includes(p.id) ? 'block' : 'none';
   });
 
-  // Pequeno atraso para permitir que o navegador renderize os painéis
   setTimeout(() => {
       const today = new Date();
       const yyyy = today.getFullYear();
-      const mm = String(today.getMonth() + 1).padStart(2, '0'); // Meses são base 0
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
       const dd = String(today.getDate()).padStart(2, '0');
       const formattedDate = `${yyyy}-${mm}-${dd}`;
 
       const opt = {
-          margin:       [15, 12, 15, 12], // topo, esquerda, baixo, direita em mm
+          margin:       [15, 12, 15, 12],
           filename:     `relatorio-profissao-pet-rocinha-${formattedDate}.pdf`,
           image:        { type: 'jpeg', quality: 0.98 },
           html2canvas:  { scale: 2, useCORS: true, logging: false },
@@ -154,25 +152,19 @@ function executePdfExport() {
           pagebreak:    { mode: ['avoid-all', 'css'] }
       };
 
-      // 2. Clonar o elemento principal para a geração do PDF
       const elementToPrint = mainElement.cloneNode(true);
-
-      // 3. Limpar o clone (remover botões, etc.)
       elementToPrint.querySelectorAll('.btn, .filter-sel, .modal-backdrop, .menu-toggle').forEach(el => el.remove());
 
-      // Reset de Layout para o Clone ignorar o Iframe da Circle
       elementToPrint.style.margin = '0';
       elementToPrint.style.padding = '0';
       elementToPrint.style.width = '100%';
       elementToPrint.style.maxWidth = '100%';
 
-      // Localiza todas as grades de layouts no clone e força o empilhamento vertical limpo de 100%
       elementToPrint.querySelectorAll('.metrics-grid, .socio-metrics, .charts-2col, .charts-3col').forEach(grid => {
           grid.style.display = 'block';
           grid.style.width = '100%';
       });
 
-      // Aplica regras anti-fatiamento diretamente nos cartões clonados
       elementToPrint.querySelectorAll('.chart-card, .table-card, .mcard, .event-card').forEach(card => {
           card.style.display = 'block';
           card.style.width = '100%';
@@ -183,7 +175,6 @@ function executePdfExport() {
           card.style.transform = 'none';
       });
 
-      // 4. Substituir os canvas por imagens no clone e limpar elementos residuais
       const originalCanvases = mainElement.querySelectorAll('canvas');
       const clonedCanvases = elementToPrint.querySelectorAll('canvas');
       
@@ -211,16 +202,13 @@ function executePdfExport() {
           }
       });
 
-      // 🔹 FIX DA LINHA 219: Sintaxe corrigida usando setProperty para injetar o !important de forma válida
       elementToPrint.querySelectorAll('.chart-card').forEach(card => {
           card.style.setProperty('position', 'relative', 'important');
           card.style.setProperty('overflow', 'hidden', 'important');
           card.style.setProperty('height', 'auto', 'important');
       });
 
-      // 5. Gerar o PDF a partir do clone preparado com as correções
       html2pdf().from(elementToPrint).set(opt).save().then(() => {
-          // 6. Restaurar o estado original após salvar
           document.title = originalTitle;
           Chart.defaults.animation = true;
           document.querySelectorAll('.panel').forEach(p => {
@@ -331,27 +319,21 @@ function groupedBarChart(id, labels, datasets) {
 function initLeafletMap() {
   const container = document.getElementById('mapa-calor-leaflet');
   if (!container || typeof L === 'undefined') return;
-
-  // Evita erro de Canvas "source width is 0" se a aba do mapa estiver oculta
   if (container.clientWidth === 0 || container.clientHeight === 0) return;
 
-  // Inicializa o mapa apenas na primeira vez
   if (!leafletMap) {
-    leafletMap = L.map('mapa-calor-leaflet').setView([-22.9886, -43.2486], 15); // Centralizado na Rocinha
-    
-    // Adiciona as "texturas" de mapa gratuitas do OpenStreetMap
+    leafletMap = L.map('mapa-calor-leaflet').setView([-22.9886, -43.2486], 15);
     leafletTileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '© OpenStreetMap contributors'
     }).addTo(leafletMap);
   }
 
-  // Camada de Marcadores Interativos
   if (!leafletMarkers) {
     leafletMarkers = L.markerClusterGroup({
       maxClusterRadius: 40,
       spiderfyOnMaxZoom: true,
-      disableClusteringAtZoom: 18 // No zoom máximo, mostra a "teia" para endereços idênticos
+      disableClusteringAtZoom: 18
     });
   } else {
     leafletMarkers.clearLayers();
@@ -363,17 +345,13 @@ function initLeafletMap() {
     const lng = m.lng || (m.dadosSocio && m.dadosSocio.lng);
     
     if (lat && lng) {
-      // Sem dados falsos: usamos as coordenadas exatas da API de conversão.
       const pLat = parseFloat(lat);
       const pLng = parseFloat(lng);
+      heatData.push([pLat, pLng, 1]);
 
-      heatData.push([pLat, pLng, 1]); // Array formato: [lat, lng, intensidade]
-
-      // Define a cor da bolinha baseada na medalha da aluna
       const badgeIdx = BADGE_LABELS.indexOf(m.badge);
       const mColor = badgeIdx >= 0 ? BADGE_COLORS[badgeIdx] : '#378add';
 
-      // Cria o marcador interativo (círculo) no mapa
       const circle = L.circleMarker([pLat, pLng], {
         radius: 7,
         fillColor: mColor,
@@ -383,12 +361,10 @@ function initLeafletMap() {
         fillOpacity: 0.85
       });
 
-      // Adiciona a tooltip (hover) e o evento de clique para abrir o perfil
       circle.bindTooltip(`<b>${m.nome}</b><br><span style="font-size:11px">${m.badge || 'Sem medalha'}</span>`, { direction: 'top' });
       if (m.cpf) {
         circle.on('click', () => showSocioModal(m.cpf));
       }
-      
       circle.addTo(leafletMarkers);
     }
   });
@@ -416,13 +392,10 @@ function initLeafletMap() {
     leafletMap.removeLayer(leafletMarkers);
   }
 
-  changeLeafletStyle(); // Aplica o estilo caso já tenha sido mudado no select
-
-  // Força o mapa a se ajustar ao tamanho da div (corrige bugs de mapa cinza no Leaflet)
+  changeLeafletStyle();
   leafletMap.invalidateSize();
 }
 
-// ── CONTROLES DO MAPA LEAFLET ─────────────────────────────────────────────
 function toggleLeafletHeat() {
   if (!leafletMap || !leafletHeat) return;
   const isChecked = document.getElementById('ctrl-leaflet-heat').checked;
@@ -446,8 +419,6 @@ function changeLeafletStyle() {
     'dark': 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
     'light': 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'
   };
-  
-  // Usa o repositório gratuito e belíssimo do CartoDB para os modos claro e escuro
   leafletTileLayer.setUrl(tileUrls[style] || tileUrls['standard']);
 }
 
@@ -468,7 +439,7 @@ async function geocodeSocioDataBackground() {
         updated = true;
       } else {
         try {
-          await new Promise(resolve => setTimeout(resolve, 1500)); // Rate limit ético do Nominatim
+          await new Promise(resolve => setTimeout(resolve, 1500));
           let query = cleanCep.length === 8 ? `${cleanCep}, Rio de Janeiro, Brasil` : `${cepStr}, Rio de Janeiro, Brasil`;
           
           const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`;
@@ -494,57 +465,44 @@ function initGeraisCharts(membros) {
   const badgeCounts = countBy(membros, m => m.badge);
   const bData = BADGE_LABELS.map(l => badgeCounts[l] || 0);
   donutChart('chartBadge', BADGE_LABELS, bData, BADGE_COLORS);
-  makeLegend('legend-badge',
-    BADGE_LABELS.map((l, i) => `${l} (${bData[i]})`),
-    BADGE_COLORS
-  );
+  makeLegend('legend-badge', BADGE_LABELS.map((l, i) => `${l} (${bData[i]})`), BADGE_COLORS);
 
   const top5 = [...membros].sort((a, b) => b.arrasas - a.arrasas).slice(0, 5);
-  barChart(
-    'chartTop5',
-    top5.map(m => m.nome.split(' ')[0]),
-    top5.map(m => m.arrasas),
-    '#003366'
-  );
+  barChart('chartTop5', top5.map(m => m.nome.split(' ')[0]), top5.map(m => m.arrasas), '#003366');
 
   const total = membros.length;
   const prog = document.getElementById('progress-badges');
   prog.innerHTML = BADGE_LABELS.map((l, i) => {
     const pct = total ? Math.round((bData[i] / total) * 100) : 0;
     return `<div class="progress-item">
-      <div class="progress-top">
-        <span>${l}</span>
-        <span class="progress-pct">${bData[i]} alunas · ${pct}%</span>
-      </div>
-      <div class="progress-track">
-        <div class="progress-fill" style="width:${pct}%;background:${BADGE_COLORS[i]}"></div>
-      </div>
+      <div class="progress-top"><span>${l}</span><span class="progress-pct">${bData[i]} alunas · ${pct}%</span></div>
+      <div class="progress-track"><div class="progress-fill" style="width:${pct}%;background:${BADGE_COLORS[i]}"></div></div>
     </div>`;
   }).join('');
 
-  // Gráfico de Média de Horas por Fase
+  // 💡 RECALIBRADO: Gráfico de Média de Horas por Fase (Minutos convertidos para Horas Decimais)
   if (LOG.length > 0 && CONFIG.length > 0 && membros.length > 0) {
-    const configMap = new Map(CONFIG.map(item => [item.Codigo, { horas: Number(item.Horas) || 0, fase: item['Fase pedagogica'] }]));
+    const configMap = new Map(CONFIG.map(item => [
+      item.Codigo, 
+      { minutos: Number(item.Horas) || 0, fase: item['Fase pedagogica'] }
+    ]));
     
-    const totalHorasPorFase = LOG.reduce((acc, logEntry) => {
+    const totalMinutosPorFase = LOG.reduce((acc, logEntry) => {
       const configItem = configMap.get(logEntry.codigo_evento);
       if (configItem && configItem.fase) {
-        acc[configItem.fase] = (acc[configItem.fase] || 0) + configItem.horas;
+        acc[configItem.fase] = (acc[configItem.fase] || 0) + configItem.minutos;
       }
       return acc;
     }, {});
 
     const fases = ['Acreditar', 'Aprender', 'Agir'];
     const avgHorasData = fases.map(fase => {
-      const totalHoras = totalHorasPorFase[fase] || 0;
-      return totalHoras / membros.length;
+      const totalMinutos = totalMinutosPorFase[fase] || 0;
+      const totalHorasLíquidas = totalMinutos / 60; // 🎯 Conversão explícita de Minutos para Horas
+      return totalHorasLíquidas / membros.length;
     });
 
-    barChart('chartAvgHorasFase', fases, avgHorasData, [
-      '#378add', // Cor para Acreditar
-      '#1d9e75', // Cor para Aprender
-      '#ef9f27'  // Cor para Agir
-    ]);
+    barChart('chartAvgHorasFase', fases, avgHorasData, ['#378add', '#1d9e75', '#ef9f27']);
   }
 }
 
@@ -573,10 +531,7 @@ function initSocioCharts() {
   donutChart('chartCivil', civL, civD, PIE_PALETTE.slice(0, civL.length));
   makeLegend('legend-civil', civL.map((l, i) => `${l} (${civD[i]})`), PIE_PALETTE.slice(0, civL.length));
 
-  const emprego = countBy(s, r => {
-    if (!r.trabalhando) return 'Sem vínculo';
-    return r.ocupacao || 'Com vínculo';
-  });
+  const emprego = countBy(s, r => r.trabalhando ? (r.ocupacao || 'Com vínculo') : 'Sem vínculo');
   const empL = Object.keys(emprego), empD = Object.values(emprego);
   donutChart('chartEmprego', empL, empD, PIE_PALETTE.slice(0, empL.length));
   makeLegend('legend-emprego', empL.map((l, i) => `${l} (${empD[i]})`), PIE_PALETTE.slice(0, empL.length));
@@ -602,24 +557,19 @@ function initSocioCharts() {
   const idadeD = idadeL.map(k => idade[k] || 0);
   hBarChart('chartIdade', idadeL, idadeD, '#d4537e');
 
-
   const comFilhos = s.filter(r => r.filhos === 'Sim').length;
   const comTrabalho = s.filter(r => r.trabalhando).length;
   const baixaRenda = s.filter(r => r.ganhos && (r.ganhos.includes('500') || r.ganhos.includes('1.413') || r.ganhos.includes('1413'))).length;
-  const pf = s.length ? ` (${Math.round(comFilhos / s.length * 100)}%)` : '';
-  const pt = s.length ? ` (${Math.round(comTrabalho / s.length * 100)}%)` : '';
-  const pb = s.length ? ` (${Math.round(baixaRenda / s.length * 100)}%)` : '';
-
-  document.getElementById('s-filhos').textContent = comFilhos + pf;
-  document.getElementById('s-trabalho').textContent = comTrabalho + pt;
-  document.getElementById('s-baixa-renda').textContent = baixaRenda + pb;
+  
+  document.getElementById('s-filhos').textContent = comFilhos + (s.length ? ` (${Math.round(comFilhos / s.length * 100)}%)` : '');
+  document.getElementById('s-trabalho').textContent = comTrabalho + (s.length ? ` (${Math.round(comTrabalho / s.length * 100)}%)` : '');
+  document.getElementById('s-baixa-renda').textContent = baixaRenda + (s.length ? ` (${Math.round(baixaRenda / s.length * 100)}%)` : '');
 }
 
 // ── GRÁFICOS: ODS & SROI ──────────────────────────────────────────────────
 function initImpactoCharts() {
   if (SOCIO.length === 0) return;
 
-  // --- ODS Cards ---
   const ods1 = SOCIO.filter(s => s.ganhos && (s.ganhos.includes('500') || s.ganhos.includes('1.413') || s.ganhos.includes('1413'))).length;
   const ods4 = MEMBROS.length;
   const ods5 = SOCIO.filter(s => s.filhos === 'Sim').length;
@@ -630,19 +580,12 @@ function initImpactoCharts() {
   document.getElementById('ods-5-val').textContent = `${ods5} alunas`;
   document.getElementById('ods-8-val').textContent = `${ods8} alunas`;
 
-  // Gráfico de Cobertura ODS
   const totalAlunas = MEMBROS.length;
-  const odsCoberturaData = [
-    (ods1 / totalAlunas) * 100,
-    (ods4 / totalAlunas) * 100,
-    (ods5 / totalAlunas) * 100,
-    (ods8 / totalAlunas) * 100,
-  ];
+  const odsCoberturaData = [(ods1 / totalAlunas) * 100, (ods4 / totalAlunas) * 100, (ods5 / totalAlunas) * 100, (ods8 / totalAlunas) * 100];
   const odsCoberturaLabels = ["ODS 1", "ODS 4", "ODS 5", "ODS 8"];
   const odsCoberturaColors = ['#e5243b', '#c59b2e', '#ef402b', '#a21942'];
   hBarChart('chartOdsCobertura', odsCoberturaLabels, odsCoberturaData, odsCoberturaColors);
 
-  // Gráfico de Perfil do Público ODS 8
   const alunasSemVinculoSocio = SOCIO.filter(s => !s.trabalhando);
   const escolaridadeOds8 = countBy(alunasSemVinculoSocio, s => s.escolaridade);
   const escOds8Labels = Object.keys(escolaridadeOds8);
@@ -650,46 +593,34 @@ function initImpactoCharts() {
   donutChart('chartOds8Escolaridade', escOds8Labels, escOds8Data, PIE_PALETTE);
   makeLegend('legend-ods8-escolaridade', escOds8Labels.map((l, i) => `${l} (${escOds8Data[i]})`), PIE_PALETTE);
 
-
-  // --- sROI ---
   const alunasSemVinculo = SOCIO.filter(s => !s.trabalhando).length;
   const potencialRenda = alunasSemVinculo * SALARIO_MINIMO;
 
-  const sroiRendaEl = document.getElementById('sroi-renda-potencial');
-  const sroiRendaSubEl = document.getElementById('sroi-renda-sub');
+  document.getElementById('sroi-renda-potencial').textContent = potencialRenda.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  document.getElementById('sroi-renda-sub').textContent = `Considerando ${alunasSemVinculo} alunas sem vínculo empregatício empregadas com 1 S.M.`;
 
-  sroiRendaEl.textContent = potencialRenda.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-  sroiRendaSubEl.textContent = `Considerando ${alunasSemVinculo} alunas sem vínculo empregatício empregadas com 1 S.M.`;
-
-  // Métrica de Valor Social da Educação (Proxy)
-  const totalHorasCurso = CONFIG
+  // 💡 RECALIBRADO: Métrica do sROI de Valor Social da Educação (Proxy baseada em minutos convertidos)
+  const totalMinutosCurso = CONFIG
     .filter(item => item.Tipo === 'Curso')
     .reduce((sum, curso) => sum + (Number(curso.Horas) || 0), 0);
-  const valorEducacao = totalHorasCurso * MEMBROS.length * VALOR_HORA_AULA_SOCIAL;
+  
+  const totalHorasLíquidasCurso = totalMinutosCurso / 60; // 🎯 Converte a base de minutos da configuração
+  const valorEducacao = totalHorasLíquidasCurso * MEMBROS.length * VALOR_HORA_AULA_SOCIAL;
   document.getElementById('sroi-valor-educacao').textContent = valorEducacao.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-  // sROI Chart 1: Situação Profissional
   const situacaoProf = countBy(SOCIO, s => s.ocupacao);
   const sitLabels = Object.keys(situacaoProf);
   const sitData = Object.values(situacaoProf);
   donutChart('chartSroiSituacao', sitLabels, sitData, PIE_PALETTE);
   makeLegend('legend-sroi-situacao', sitLabels.map((l, i) => `${l} (${sitData[i]})`), PIE_PALETTE);
 
-  // sROI Chart 2: Potencial de Renda
   const faixasDeRenda = {
-    'Até R$ 500': { sum: 250, count: 0 }, // Usando valor médio para cálculo
+    'Até R$ 500': { sum: 250, count: 0 },
     'De R$ 501 a R$ 1.412': { sum: 956, count: 0 },
     'De R$ 1.413 a R$ 2.000': { sum: 1700, count: 0 },
     'Acima de R$ 2.001': { sum: 2500, count: 0 }
   };
-
-  // Mapeamento de substrings para chaves do objeto faixasDeRenda
-  const rendaMap = {
-    '500': 'Até R$ 500',
-    '1.412': 'De R$ 501 a R$ 1.412',
-    '2.000': 'De R$ 1.413 a R$ 2.000',
-    '2.001': 'Acima de R$ 2.001'
-  };
+  const rendaMap = { '500': 'Até R$ 500', '1.412': 'De R$ 501 a R$ 1.412', '2.000': 'De R$ 1.413 a R$ 2.000', '2.001': 'Acima de R$ 2.001' };
 
   SOCIO.forEach(s => {
     const ganhoStr = s.ganhos || '';
@@ -702,54 +633,39 @@ function initImpactoCharts() {
   const rendaPotencialData = potLabels.map(key => faixasDeRenda[key].count > 0 ? SALARIO_MINIMO : 0);
 
   groupedBarChart('chartSroiPotencial', potLabels, [
-    {
-      label: 'Renda Média Atual (Estimada)',
-      data: rendaAtualData,
-      backgroundColor: '#a8a29e',
-      borderRadius: 4,
-    },
-    {
-      label: 'Renda Potencial (1 S.M.)',
-      data: rendaPotencialData,
-      backgroundColor: '#166534',
-      borderRadius: 4,
-    }
+    { label: 'Renda Média Atual (Estimada)', data: rendaAtualData, backgroundColor: '#a8a29e', borderRadius: 4 },
+    { label: 'Renda Potencial (1 S.M.)', data: rendaPotencialData, backgroundColor: '#166534', borderRadius: 4 }
   ]);
 
-  // sROI Chart 3: Distribuição de Incentivos
   const pontosPorFase = CONFIG.reduce((acc, item) => {
     const fase = item['Fase pedagogica'] || 'Não Definida';
     const valor = Number(item.Valor) || 0;
-    if (valor > 0) {
-      acc[fase] = (acc[fase] || 0) + valor;
-    }
+    if (valor > 0) acc[fase] = (acc[fase] || 0) + valor;
     return acc;
   }, {});
-  const incentivoLabels = Object.keys(pontosPorFase);
-  const incentivoData = Object.values(pontosPorFase);
-  barChart('chartSroiIncentivos', incentivoLabels, incentivoData, '#003366');
+  barChart('chartSroiIncentivos', Object.keys(pontosPorFase), Object.values(pontosPorFase), '#003366');
 }
 
 // ── GRÁFICOS E TABELA: CONFIGURAÇÕES ───────────────────────────────────────────────
 function initConfigCharts() {
   if (CONFIG.length === 0) return;
 
+  // 💡 RECALIBRADO: Gráfico de Carga Horária (Minutos convertidos para Horas na exibição gráfica)
   const horasPorFase = CONFIG.reduce((acc, item) => {
     const fase = item['Fase pedagogica'] || 'Não Definida';
-    const horas = Number(item.Horas) || 0;
-    if (horas > 0) {
-      acc[fase] = (acc[fase] || 0) + horas;
+    const minutos = Number(item.Horas) || 0;
+    if (minutos > 0) {
+      acc[fase] = (acc[fase] || 0) + (minutos / 60); // 🎯 Converte minutos para horas decimais
     }
     return acc;
   }, {});
 
   const faseLabels = Object.keys(horasPorFase);
-  const faseData = Object.values(horasPorFase);
+  const faseData = Object.values(horasPorFase).map(h => parseFloat(h.toFixed(1))); // Limita a 1 casa decimal
 
   donutChart('chartConfigFase', faseLabels, faseData, PIE_PALETTE);
   makeLegend('legend-config-fase', faseLabels.map((l, i) => `${l} (${faseData[i]}h)`), PIE_PALETTE);
 
-  // Gráfico de Tipos de Atividade
   const tipos = countBy(CONFIG, item => item.Tipo);
   const tipoLabels = Object.keys(tipos);
   const tipoData = Object.values(tipos);
@@ -759,10 +675,8 @@ function initConfigCharts() {
 
 function populateConfigFilter() {
   const filterSelect = document.getElementById('filter-config-tipo');
-  // Previne a duplicação de opções ao recarregar
   filterSelect.innerHTML = '<option value="">Todos os Tipos</option>';
-
-  const tipos = [...new Set(CONFIG.map(item => item.Tipo).filter(Boolean))]; // Pega tipos únicos e remove vazios
+  const tipos = [...new Set(CONFIG.map(item => item.Tipo).filter(Boolean))];
   tipos.sort().forEach(tipo => {
     const option = document.createElement('option');
     option.value = tipo;
@@ -783,17 +697,14 @@ function renderConfigTabela() {
   tbody.innerHTML = filteredConfig.map(c => {
     return `<tr>
       <td><input type="text" class="table-input" value="${c.Codigo}" readonly style="background:#eee; border:none; font-family:monospace;"></td>
-      <td>
-        <input type="text" class="table-input" value="${c['Descrição'] || ''}">
-      </td>
+      <td><input type="text" class="table-input" value="${c['Descrição'] || ''}"></td>
       <td><input type="text" class="table-input" value="${c.Tipo || ''}"></td>
       <td><input type="text" class="table-input" value="${c['Fase pedagogica'] || ''}"></td>
-      <td><input type="number" class="table-input" value="${c.Horas || 0}" style="width: 70px;"></td>
+      <td><input type="number" class="table-input" value="${c.Horas || 0}" style="width: 70px;"> <small style="color:var(--muted); font-size:10px;">min</small></td>
       <td><input type="number" class="table-input" value="${c.Valor || 0}" style="width: 70px;"></td>
     </tr>`;
   }).join('');
 }
-
 
 // ── TABELA: ALUNAS ───────────────────────────────────────────────────────────────
 function renderTabela() {
@@ -813,6 +724,10 @@ function renderTabela() {
   tbody.innerHTML = lista.map(m => {
     const badgeIdx = BADGE_LABELS.indexOf(m.badge);
     const bClass = badgeIdx >= 0 ? BADGE_CLASS[badgeIdx] : 'b-curiosa';
+    
+    // 💡 FORMATADO: Exibe com precisão matemática em formato de horas decimais líquidas (Ex: 1.5h em vez de 90h)
+    const horasExibidas = m.horasConcluidas ? m.horasConcluidas.toFixed(1) : 0;
+
     return `<tr>
       <td data-label="Nome">
         <div class="name-cell">
@@ -822,15 +737,10 @@ function renderTabela() {
       </td>
       <td data-label="E-mail" style="color:var(--muted);font-size:12px">${m.email}</td>
       <td data-label="Medalha"><span class="pill ${bClass}">${m.badge}</span></td>
-      <td data-label="Horas"><strong>${m.horasConcluidas || 0}h</strong></td>
+      <td data-label="Horas"><strong>${horasExibidas}h</strong></td>
       <td data-label="Arrasas"><strong>${m.arrasas.toLocaleString('pt-BR')} AS</strong></td>
       <td data-label="XP">${m.xp.toLocaleString('pt-BR')} XP</td>
-      <td data-label="Socioecon.">
-        ${m.dadosSocio
-          ? `<span class="status-ok"><i class="fa-solid fa-circle-check"></i> Concluído</span>`
-          : `<span class="status-pend"><i class="fa-regular fa-clock"></i> Pendente</span>`
-        }
-      </td>
+      <td data-label="Socioecon.">${m.dadosSocio ? `<span class="status-ok"><i class="fa-solid fa-circle-check"></i> Concluído</span>` : `<span class="status-pend"><i class="fa-regular fa-clock"></i> Pendente</span>`}</td>
     </tr>`;
   }).join('');
 }
@@ -838,7 +748,6 @@ function renderTabela() {
 // ── EVENTOS E PRESENÇA ───────────────────────────────────────────────────────────
 function renderEventos() {
   if (isLoadingEventos) return;
-
   const container = document.getElementById('events-container');
   if (!container) return;
   
@@ -854,18 +763,14 @@ function renderEventos() {
     
     const avaliacoes = (ev.presentes || []).filter(p => p.Classificacao);
     const media = avaliacoes.length ? (avaliacoes.reduce((acc, curr) => acc + Number(curr.Classificacao), 0) / avaliacoes.length).toFixed(1) : '-';
-    
     const conteudos = avaliacoes.map(p => Number(p.Conteudo)).filter(n => !isNaN(n) && n > 0);
     const mediaConteudo = conteudos.length ? (conteudos.reduce((a, b) => a + b, 0) / conteudos.length).toFixed(1) : '-';
-
     const estruturas = avaliacoes.map(p => Number(p.Estrutura)).filter(n => !isNaN(n) && n > 0);
-    const mediaEstrutura = estruturas.length ? (estrutures.reduce((a, b) => a + b, 0) / estruturas.length).toFixed(1) : '-';
+    const mediaEstrutura = estruturas.length ? (estruturas.reduce((a, b) => a + b, 0) / estruturas.length).toFixed(1) : '-';
 
     const perfis = countBy(ev.presentes || [], p => p.Perfil);
     const perfilComum = Object.keys(perfis).length ? Object.keys(perfis).reduce((a, b) => perfis[a] > perfis[b] ? a : b) : '-';
-
     const comentariosCount = avaliacoes.filter(p => p.Comentario_Geral && String(p.Comentario_Geral).trim().length > 0).length;
-
     const linkUrl = `${API_BASE}?evento=${encodeURIComponent(ev.title)}`;
 
     return `
@@ -873,40 +778,31 @@ function renderEventos() {
         <div class="event-date"><i class="fa-regular fa-clock"></i> ${dateStr}</div>
         <div class="event-title">${ev.title}</div>
         <div class="event-desc">${ev.desc || ''}</div>
-        
         <div class="event-insights" style="background: var(--surface2); padding: 16px; border-radius: 12px; margin-bottom: 16px; border: 1px solid var(--border);">
            <div style="font-size: 11px; text-transform: uppercase; color: var(--navy); font-weight: 700; margin-bottom: 12px; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;"><i class="fa-solid fa-chart-simple"></i> Insights do Evento</div>
            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-             <div title="Total de presenças" style="background: white; padding: 10px; border-radius: 8px; border: 1px solid var(--border);"><span style="font-size: 11px; color: var(--muted); display: block; margin-bottom: 4px;"><i class="fa-solid fa-users"></i> Presenças</span><strong style="font-size: 16px; color: var(--navy);">${count}</strong></div>
-             <div title="Média de avaliação geral" style="background: white; padding: 10px; border-radius: 8px; border: 1px solid var(--border);"><span style="font-size: 11px; color: var(--muted); display: block; margin-bottom: 4px;"><i class="fa-solid fa-star" style="color:var(--gold)"></i> Aval. Geral</span><strong style="font-size: 16px; color: var(--navy);">${media}</strong></div>
-             <div title="Média de avaliação do conteúdo" style="background: white; padding: 10px; border-radius: 8px; border: 1px solid var(--border);"><span style="font-size: 11px; color: var(--muted); display: block; margin-bottom: 4px;"><i class="fa-solid fa-book-open" style="color:var(--purple)"></i> Conteúdo</span><strong style="font-size: 16px; color: var(--navy);">${mediaConteudo}</strong></div>
-             <div title="Média de avaliação da infraestrutura" style="background: white; padding: 10px; border-radius: 8px; border: 1px solid var(--border);"><span style="font-size: 11px; color: var(--muted); display: block; margin-bottom: 4px;"><i class="fa-solid fa-building" style="color:var(--green)"></i> Estrutura</span><strong style="font-size: 16px; color: var(--navy);">${mediaEstrutura}</strong></div>
-             <div style="grid-column: 1 / -1; background: white; padding: 10px; border-radius: 8px; border: 1px solid var(--border);" title="Perfil mais frequente entre os presentes"><span style="font-size: 11px; color: var(--muted); display: block; margin-bottom: 4px;"><i class="fa-solid fa-id-badge" style="color:var(--orange)"></i> Perfil Dominante</span><strong style="font-size: 13px; color: var(--navy);">${perfilComum}</strong></div>
+             <div style="background: white; padding: 10px; border-radius: 8px; border: 1px solid var(--border);"><span style="font-size: 11px; color: var(--muted); display: block; margin-bottom: 4px;"><i class="fa-solid fa-users"></i> Presenças</span><strong style="font-size: 16px; color: var(--navy);">${count}</strong></div>
+             <div style="background: white; padding: 10px; border-radius: 8px; border: 1px solid var(--border);"><span style="font-size: 11px; color: var(--muted); display: block; margin-bottom: 4px;"><i class="fa-solid fa-star" style="color:var(--gold)"></i> Aval. Geral</span><strong style="font-size: 16px; color: var(--navy);">${media}</strong></div>
+             <div style="background: white; padding: 10px; border-radius: 8px; border: 1px solid var(--border);"><span style="font-size: 11px; color: var(--muted); display: block; margin-bottom: 4px;"><i class="fa-solid fa-book-open" style="color:var(--purple)"></i> Conteúdo</span><strong style="font-size: 16px; color: var(--navy);">${mediaConteudo}</strong></div>
+             <div style="background: white; padding: 10px; border-radius: 8px; border: 1px solid var(--border);"><span style="font-size: 11px; color: var(--muted); display: block; margin-bottom: 4px;"><i class="fa-solid fa-building" style="color:var(--green)"></i> Estrutura</span><strong style="font-size: 16px; color: var(--navy);">${mediaEstrutura}</strong></div>
+             <div style="grid-column: 1 / -1; background: white; padding: 10px; border-radius: 8px; border: 1px solid var(--border);"><span style="font-size: 11px; color: var(--muted); display: block; margin-bottom: 4px;"><i class="fa-solid fa-id-badge" style="color:var(--orange)"></i> Perfil Dominante</span><strong style="font-size: 13px; color: var(--navy);">${perfilComum}</strong></div>
            </div>
            ${comentariosCount > 0 ? `<div style="margin-top: 12px; font-size: 12px; color: var(--navy); font-weight: 500; text-align: center;"><i class="fa-regular fa-comments"></i> ${comentariosCount} comentários recebidos</div>` : ''}
         </div>
-        
         <div class="event-footer" style="flex-wrap: wrap; gap: 10px;">
-          <button class="btn btn-outline" style="padding: 6px 12px; font-size: 12px; flex: 1;" onclick="navigator.clipboard.writeText('${linkUrl}'); alert('Link de presença copiado!');">
-            <i class="fa-solid fa-link"></i> Link
-          </button>
-          <button class="btn btn-outline" style="padding: 6px 12px; font-size: 12px;" onclick="openAttendanceModal('${ev.id}')">
-            Gerenciar
-          </button>
+          <button class="btn btn-outline" style="padding: 6px 12px; font-size: 12px; flex: 1;" onclick="navigator.clipboard.writeText('${linkUrl}'); alert('Link de presença copiado!');"><i class="fa-solid fa-link"></i> Link</button>
+          <button class="btn btn-outline" style="padding: 6px 12px; font-size: 12px;" onclick="openAttendanceModal('${ev.id}')">Gerenciar</button>
         </div>
       </div>
     `;
   }).join('');
 }
 
-// --- LÓGICA DE CARREGAMENTO SOB DEMANDA (LAZY LOAD) ---
 function loadEventosData() {
-  // Se os dados já foram carregados ou estão carregando, não baixa de novo
   if (PRESENCAS.length > 0 || isLoadingEventos) {
     renderEventos();
     return;
   }
-  
   isLoadingEventos = true;
   const container = document.getElementById('events-container');
   if (container) container.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1;"><i class="fa-solid fa-spinner fa-spin"></i> Baixando presenças da planilha...</div>`;
@@ -941,22 +837,14 @@ function processarEventos(dados) {
   EVENTOS = Object.keys(presencasPorEvento).map((nome, index) => {
     const presentes = presencasPorEvento[nome];
     let evDate = new Date().toISOString();
-    if (presentes[0] && presentes[0].Data_do_registro) {
+    if (presentes[0] && Cancer = presentes[0].Data_do_registro) {
       const parsed = new Date(presentes[0].Data_do_registro);
       if (!isNaN(parsed.getTime())) evDate = parsed.toISOString();
     }
-    return {
-      id: 'ev_' + index,
-      title: nome,
-      date: evDate,
-      desc: 'Registros extraídos da aba Lista de Presença.',
-      presentes: presentes
-    };
+    return { id: 'ev_' + index, title: nome, date: evDate, desc: 'Registros extraídos da aba Lista de Presença.', presentes: presentes };
   });
-
   renderEventos();
 }
-// ----------------------------------------------------
 
 function openAttendanceModal(eventId) {
   currentEventId = eventId;
@@ -964,19 +852,17 @@ function openAttendanceModal(eventId) {
   if (!ev) return;
   
   document.getElementById('attendance-modal-title').textContent = `Presença: ${ev.title}`;
-  
   document.getElementById('event-title-input').value = ev.title || '';
 
   const datetimeInput = document.getElementById('event-datetime');
   if (ev.date) {
     const d = new Date(ev.date);
-    const tzoffset = d.getTimezoneOffset() * 60000; // Offset em milissegundos
+    const tzoffset = d.getTimezoneOffset() * 60000;
     const localISOTime = (new Date(d.getTime() - tzoffset)).toISOString().slice(0, 16);
     datetimeInput.value = localISOTime;
   } else {
     datetimeInput.value = '';
   }
-
   renderAttendanceList();
   document.getElementById('attendance-modal').style.display = 'flex';
 }
@@ -989,7 +875,6 @@ function closeAttendanceModal() {
 function removePresence(cpf) {
   const ev = EVENTOS.find(e => e.id === currentEventId);
   if (!ev || !ev.presentes) return;
-
   ev.presentes = ev.presentes.filter(p => p.CPF !== cpf && p.cpf !== cpf);
   renderAttendanceList();
   renderEventos();
@@ -1011,19 +896,14 @@ function renderAttendanceList() {
     <div class="attendance-item" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: var(--surface2); border-radius: 8px; border: 1px solid var(--border); font-size: 13px;">
       <div>
         <strong style="color: var(--navy);">${p.Nome || p.nome || 'Sem Nome'}</strong><br>
-        <span style="font-size: 11px; color: var(--muted);">CPF: ${p.CPF || p.cpf} | Perfil: ${p.Perfil || '-'} | Celular: ${p.Celular || '-'} | Localidade: ${p.Localidade || '-'}</span>
+        <span style="font-size: 11px; color: var(--muted);">CPF: ${p.CPF || p.cpf} | Perfil: ${p.Perfil || '-'}</span>
         <div style="margin-top: 6px; display: flex; gap: 12px; font-size: 11px; font-weight: 500;">
           ${p.Classificacao ? `<span style="color: var(--gold);"><i class="fa-solid fa-star"></i> Geral: ${p.Classificacao}</span>` : ''}
           ${p.Conteudo ? `<span style="color: var(--purple);"><i class="fa-solid fa-book-open"></i> Conteúdo: ${p.Conteudo}</span>` : ''}
           ${p.Estrutura ? `<span style="color: var(--green);"><i class="fa-solid fa-building"></i> Estrutura: ${p.Estrutura}</span>` : ''}
         </div>
-        ${p.Comentario_Geral ? `<div style="font-size: 11px; color: var(--text-light); margin-top: 4px; font-style: italic;"><strong>Geral:</strong> "${p.Comentario_Geral}"</div>` : ''}
-        ${p.Comentario_conteudo ? `<div style="font-size: 11px; color: var(--text-light); margin-top: 4px; font-style: italic;"><strong>Conteúdo:</strong> "${p.Comentario_conteudo}"</div>` : ''}
-        ${p.Comentario_estrutura ? `<div style="font-size: 11px; color: var(--text-light); margin-top: 4px; font-style: italic;"><strong>Estrutura:</strong> "${p.Comentario_estrutura}"</div>` : ''}
       </div>
-      <button class="attendance-remove" onclick="removePresence('${p.CPF || p.cpf}')" title="Remover presença" style="color: var(--pink); background: none; border: none; cursor: pointer; font-size: 14px; padding: 4px;">
-        <i class="fa-solid fa-trash-can"></i>
-      </button>
+      <button class="attendance-remove" onclick="removePresence('${p.CPF || p.cpf}')" style="color: var(--pink); background: none; border: none; cursor: pointer; font-size: 14px; padding: 4px;"><i class="fa-solid fa-trash-can"></i></button>
     </div>
   `).join('');
 }
@@ -1039,32 +919,15 @@ async function saveEventAndAttendance() {
     if (!ev) throw new Error("Evento não encontrado!");
 
     const newDateValue = document.getElementById('event-datetime').value;
-    if (newDateValue) {
-      ev.date = new Date(newDateValue).toISOString();
-    }
+    if (newDateValue) ev.date = new Date(newDateValue).toISOString();
 
     const newTitleValue = document.getElementById('event-title-input').value;
-    if (newTitleValue && newTitleValue.trim() !== '') {
-      ev.title = newTitleValue.trim();
-    }
+    if (newTitleValue && newTitleValue.trim() !== '') ev.title = newTitleValue.trim();
 
     const novasPresencas = ev.presentes.filter(p => p.novo);
     if (novasPresencas.length > 0) {
       const payload = novasPresencas.map(p => ({
-        'Data do registro': p.Data_do_registro,
-        'Evento': p.Evento,
-        'Nome': p.Nome,
-        'Email': p.Email,
-        'CPF': p.CPF,
-        'Celular': p.Celular,
-        'Localidade': p.Localidade,
-        'Perfil': p.Perfil,
-        'Classificação': p.Classificacao,
-        'Comentario Geral': p.Comentario_Geral,
-        'Conteudo': p.Conteudo,
-        'Comentario conteudo': p.Comentario_conteudo,
-        'Estrutura': p.Estrutura,
-        'Comentario estrutura': p.Comentario_estrutura
+        'Data do registro': p.Data_do_registro, 'Evento': p.Evento, 'Nome': p.Nome, 'Email': p.Email, 'CPF': p.CPF, 'Celular': p.Celular, 'Localidade': p.Localidade, 'Perfil': p.Perfil, 'Classificação': p.Classificacao, 'Comentario Geral': p.Comentario_Geral, 'Conteudo': p.Conteudo, 'Comentario conteudo': p.Comentario_conteudo, 'Estrutura': p.Estrutura, 'Comentario estrutura': p.Comentario_estrutura
       }));
 
       await fetch(API_BASE, {
@@ -1072,23 +935,20 @@ async function saveEventAndAttendance() {
         headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify({ endpoint: 'presencas', data: payload })
       });
-      
       novasPresencas.forEach(p => delete p.novo);
     }
-
     renderEventos(); 
     alert('Alterações salvas com sucesso!');
     closeAttendanceModal();
-
   } catch (error) {
-    alert('Erro ao salvar as alterações. Verifique sua conexão e tente novamente. Detalhe: ' + error.message);
+    alert('Erro ao salvar as alterações: ' + error.message);
   } finally {
     btn.innerHTML = originalText;
     btn.disabled = false;
   }
 }
 
-// ── LÓGICA DO MODAL ─────────────────────────────────────────────────────────
+// ── LÓGICA DO MODAL DE PERFIL ────────────────────────────────────────────────
 function showSocioModal(cpf) {
   const aluna = MEMBROS.find(m => m.cpf === cpf);
   if (!aluna) return;
@@ -1108,10 +968,14 @@ function showSocioModal(cpf) {
     };
     const endId = 'end-' + Date.now(); 
 
+    // 💡 FORMATADO: Exibição unificada das horas decimais em vez de minutos no modal individual
+    const horasLíquidasAluna = aluna.horasConcluidas ? aluna.horasConcluidas.toFixed(1) + 'h' : '0h';
+
     const programDetails = [
       { label: 'E-mail', value: aluna.email },
       { label: 'Telefone (WPP)', value: aluna.wpp },
       { label: 'Medalha Atual', value: aluna.badge },
+      { label: 'Horas Concluídas', value: horasLíquidasAluna },
       { label: 'Arrasas (AS)', value: aluna.arrasas.toLocaleString('pt-BR') },
       { label: 'Experiência (XP)', value: aluna.xp.toLocaleString('pt-BR') },
       { label: 'Tags', value: aluna.tags },
@@ -1125,26 +989,7 @@ function showSocioModal(cpf) {
 
     const socioDetails = [
       { label: 'Idade', value: aluna.idade ? `${aluna.idade} anos` : 'Não informado' },
-      { label: 'CPF', value: s.cpf },
-      { label: 'NIS', value: s.nis },
-      { label: 'Gênero', value: s.genero },
-      { label: 'Raça/Cor', value: s.raca },
-      { label: 'Orientação Sexual', value: s.orientacao },
-      { label: 'Estado Civil', value: s.estadoCivil },
-      { label: 'Filhos', value: `${s.filhos}${s.quantosFilhos > 0 ? ` (${s.quantosFilhos})` : ''}` },
-      { label: 'Escolaridade', value: s.escolaridade },
-      { label: 'Situação Profissional', value: s.situacaoProf },
-      { label: 'Trabalhando Hoje?', value: s.trabalhando ? 'Sim' : 'Não' },
-      { label: 'Ocupação', value: s.ocupacao },
-      { label: 'Renda Familiar', value: s.ganhos },
-      { label: 'Pessoas no Domicílio', value: s.pessoasDomicilio },
-      { label: 'Organização Financeira', value: s.orgFinanceira },
-      { label: 'Renda Extra', value: `${s.rendaExtra}${s.rendaExtraOque ? ` (${s.rendaExtraOque})` : ''}` },
-      { label: 'Maiores Gastos', value: s.maioresGastos },
-      { label: 'Interesse no Curso', value: s.interesse },
-      { label: 'Melhor Horário', value: s.horario },
-      { label: 'Indicação', value: s.indicacao },
-      { label: 'Motivação', value: s.motivacao },
+      { label: 'CPF', value: s.cpf }, { label: 'NIS', value: s.nis }, { label: 'Gênero', value: s.genero }, { label: 'Raça/Cor', value: s.raca }, { label: 'Orientação Sexual', value: s.orientacao }, { label: 'Estado Civil', value: s.estadoCivil }, { label: 'Filhos', value: `${s.filhos}${s.quantosFilhos > 0 ? ` (${s.quantosFilhos})` : ''}` }, { label: 'Escolaridade', value: s.escolaridade }, { label: 'Situação Profissional', value: s.situacaoProf }, { label: 'Trabalhando Hoje?', value: s.trabalhando ? 'Sim' : 'Não' }, { label: 'Ocupação', value: s.ocupacao }, { label: 'Renda Familiar', value: s.ganhos }, { label: 'Pessoas no Domicílio', value: s.pessoasDomicilio }, { label: 'Organização Financeira', value: s.orgFinanceira }, { label: 'Renda Extra', value: `${s.rendaExtra}${s.rendaExtraOque ? ` (${s.rendaExtraOque})` : ''}` }, { label: 'Maiores Gastos', value: s.maioresGastos }, { label: 'Interesse no Curso', value: s.interesse }, { label: 'Melhor Horário', value: s.horario }, { label: 'Indicação', value: s.indicacao }, { label: 'Motivação', value: s.motivacao },
     ];
 
     const renderGrid = (details) => details.map(d => `
@@ -1156,66 +1001,48 @@ function showSocioModal(cpf) {
 
     body.innerHTML = `
       <div class="modal-profile-header">
-        <img src="${aluna.imgUrl || 'https://github.com/juanjsales/PETRocinha/blob/main/pet%20(1).png?raw=true'}" alt="Foto de ${aluna.nome}" class="modal-profile-img">
-        <div>
-          <h3 style="font-size:18px; color:var(--navy);">${aluna.nome}</h3>
-          <p style="font-size:12px; color:var(--muted);">${aluna.email}</p>
-        </div>
+        <img src="${aluna.imgUrl || 'https://github.com/juanjsales/PETRocinha/blob/main/pet%20(1).png?raw=true'}" class="modal-profile-img">
+        <div><h3>${aluna.nome}</h3><p>${aluna.email}</p></div>
       </div>
       <h4><i class="fa-solid fa-award"></i> Perfil do Programa</h4>
-      <div class="detail-grid">
-        ${renderGrid(programDetails)}
-      </div>
+      <div class="detail-grid">${renderGrid(programDetails)}</div>
       <div class="divider"></div>
       <h4><i class="fa-solid fa-users"></i> Perfil Socioeconômico</h4>
-      <div class="detail-grid">
-        ${renderGrid(socioDetails)}
-      </div>`;
+      <div class="detail-grid">${renderGrid(socioDetails)}</div>`;
 
-    const cepVal = aluna.cep || s.cep || s.CEP;
-    const cleanCep = cepVal ? String(cepVal).replace(/\D/g, '') : '';
-    
+    const cleanCep = String(aluna.cep || s.cep || s.CEP).replace(/\D/g, '');
     if (cleanCep.length === 8) {
       fetch(`https://viacep.com.br/ws/${cleanCep}/json/`)
         .then(res => res.json())
         .then(data => {
           const el = document.getElementById(endId);
-          if (el) {
-            if (data.erro) el.textContent = 'CEP não encontrado';
-            else el.textContent = data.logradouro ? `${data.logradouro}, ${data.bairro}` : `${data.localidade} - ${data.uf}`;
-          }
+          if (el) el.textContent = data.erro ? 'CEP não encontrado' : (data.logradouro ? `${data.logradouro}, ${data.bairro}` : `${data.localidade} - ${data.uf}`);
         })
-        .catch(() => {
-          const el = document.getElementById(endId);
-          if (el) el.textContent = 'Erro ao buscar endereço';
-        });
+        .catch(() => { const el = document.getElementById(endId); if (el) el.textContent = 'Erro ao buscar endereço'; });
     } else {
-      const el = document.getElementById(endId);
-      if (el) el.textContent = cleanCep ? 'CEP inválido' : 'Não informado';
+      const el = document.getElementById(endId); if (el) el.textContent = cleanCep ? 'CEP inválido' : 'Não informado';
     }
   }
   document.getElementById('socio-modal').style.display = 'flex';
 }
 
+// ──💡 ALGORITMO CORE DE CONVERSÃO MATEMÁTICA (SINTONIA FINA) ──────────────────
 function mergeDataSources(socioMap) {
   MEMBROS.forEach(membro => {
     const dadosSocio = socioMap.get(membro.cpf);
-    if (dadosSocio) {
-      membro.dadosSocio = dadosSocio; 
-    }
+    if (dadosSocio) membro.dadosSocio = dadosSocio;
 
     if (membro.nascimento) {
       const birthDate = new Date(membro.nascimento);
       const today = new Date();
       let age = today.getFullYear() - birthDate.getFullYear();
       const m = today.getMonth() - birthDate.getMonth();
-      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-          age--;
-      }
+      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
       membro.idade = age;
     }
   });
 
+  // 🎯 O MAPA AGORA ARMAZENA CARGA HORÁRIA EM MINUTOS DIRETAMENTE DO SHEETS
   const configMap = new Map(CONFIG.map(item => [item.Codigo, Number(item.Horas) || 0]));
 
   const logPorAluna = LOG.reduce((acc, logEntry) => {
@@ -1229,7 +1056,13 @@ function mergeDataSources(socioMap) {
 
   MEMBROS.forEach(membro => {
     const alunaLogs = logPorAluna[membro.email] || [];
-    membro.horasConcluidas = alunaLogs.reduce((totalHoras, codigo) => totalHoras + (configMap.get(codigo) || 0), 0);
+    
+    // 🧠 SOMA DOS MINUTOS ACUMULADOS:
+    const acumuladoMinutos = alunaLogs.reduce((totalMinutos, codigo) => totalMinutos + (configMap.get(codigo) || 0), 0);
+    
+    // 🎯 TRANSFORMAÇÃO MATEMÁTICA: Minutos convertidos explicitamente para Horas Decimais Líquidas
+    membro.horasConcluidas = acumuladoMinutos / 60; 
+    
     membro.formada = alunaLogs.includes('course_completed');
   });
 }
@@ -1247,7 +1080,6 @@ function tentarMergeEProcessar() {
   }
 
   const socioMap = new Map(SOCIO.map(s => [s.cpf, s]));
-
   mergeDataSources(socioMap); 
 
   let totalAlunas = MEMBROS.length, totalAS = 0, totalXP = 0, socioOk = 0;
@@ -1275,32 +1107,29 @@ function updateDashboardUI(metrics) {
   document.getElementById('m-socio-pct').textContent = `${pct}% concluíram o formulário`;
   document.getElementById('m-xp').textContent = totalXP.toLocaleString('pt-BR') + ' XP';
 
-  const totalHorasCurso = CONFIG
+  // 💡 RECALIBRADO: Total de horas brutas da configuração de cursos convertidas de minutos para horas decimais
+  const totalMinutosCurso = CONFIG
     .filter(item => item.Tipo === 'Curso')
     .reduce((sum, curso) => sum + (Number(curso.Horas) || 0), 0);
   
-  document.getElementById('m-horas-curso').textContent = `${totalHorasCurso}h`;
+  const totalHorasLíquidasDisplay = totalMinutosCurso / 60;
+  document.getElementById('m-horas-curso').textContent = `${totalHorasLíquidasDisplay.toFixed(0)}h`;
 
   document.querySelectorAll('.mcard-diff').forEach(el => el.remove());
 
   const todayStr = new Date().toISOString().slice(0, 10);
   const storageKey = 'petRocinhaMetrics';
   const yesterdayMetrics = JSON.parse(localStorage.getItem(storageKey));
-
-  const currentMetrics = {
-    date: todayStr, totalAlunas, totalAS, socioOk, totalXP
-  };
+  const currentMetrics = { date: todayStr, totalAlunas, totalAS, socioOk, totalXP };
 
   if (!yesterdayMetrics || yesterdayMetrics.date !== todayStr) {
     localStorage.setItem(storageKey, JSON.stringify(currentMetrics));
   }
 
-  const renderDiff = (current, previous, elId) => {
+  const renderDiff = (current, previous) => {
     const diff = current - previous;
     if (isNaN(diff) || diff === 0) return '';
-    const sign = diff > 0 ? '+' : '';
-    const diffClass = diff > 0 ? 'pos' : 'neg';
-    return `<span class="mcard-diff ${diffClass}">${sign}${diff}</span>`;
+    return `<span class="mcard-diff ${diff > 0 ? 'pos' : 'neg'}">${diff > 0 ? '+' : ''}${diff}</span>`;
   };
 
   if (yesterdayMetrics && yesterdayMetrics.date !== todayStr) {
@@ -1315,7 +1144,7 @@ function updateDashboardUI(metrics) {
 function processarTudo(dados) {
   try {
     if (!dados || dados.erro) {
-      document.getElementById('tbody-alunas').innerHTML = `<tr><td colspan="6"><div class="empty-state"><i class="fa-solid fa-triangle-exclamation"></i>Erro ao carregar dados: ${dados && dados.erro ? dados.erro : 'Verifique o script.'}</div></td></tr>`;
+      document.getElementById('tbody-alunas').innerHTML = `<tr><td colspan="6"><div class="empty-state"><i class="fa-solid fa-triangle-exclamation"></i>Erro: ${dados?.erro || 'Desconhecido'}</div></td></tr>`;
       document.getElementById('loading-overlay').style.display = 'none';
       setReloadButtonState(false); 
       return;
@@ -1324,13 +1153,11 @@ function processarTudo(dados) {
     SOCIO   = dados.socio   || [];
     CONFIG  = dados.config  || [];
     LOG     = dados.log     || [];
-    
     tentarMergeEProcessar();
   } catch (erro) {
-    console.error("Erro fatal ao processar e desenhar os dados na tela:", erro);
     document.getElementById('loading-overlay').style.display = 'none';
     setReloadButtonState(false);
-    alert("Conseguimos baixar os dados, mas houve um erro ao desenhar os gráficos. Verifique o console.");
+    alert("Erro ao renderizar gráficos. Verifique o console.");
   }
 }
 
@@ -1350,31 +1177,22 @@ function renderAllCharts() {
 
 function fetchData() {
   document.querySelectorAll('.jsonp-script').forEach(el => el.remove());
-
   const s1 = document.createElement('script');
   s1.src = `${API_BASE}?callback=processarTudo&endpoint=all`;
   s1.className = 'jsonp-script';
-  
   s1.onerror = function() {
-    console.error("Falha na requisição: O banco de dados (Google Apps Script) não respondeu.");
     document.getElementById('loading-overlay').style.display = 'none';
     setReloadButtonState(false);
-    alert("Erro de conexão com o banco de dados. Verifique sua internet ou tente recarregar a página.");
+    alert("Erro de conexão com o banco de dados.");
   };
-
   document.body.appendChild(s1);
 }
 
 function clearUIForLoading() {
   document.getElementById('tbody-alunas').innerHTML = '';
   document.getElementById('tbody-config').innerHTML = '';
-  ['m-total', 'm-arrasas', 'm-socio', 'm-xp'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.textContent = '—';
-  });
-  ['m-horas-curso'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.textContent = '—';
+  ['m-total', 'm-arrasas', 'm-socio', 'm-xp', 'm-horas-curso'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.textContent = '—';
   });
 }
 
@@ -1383,16 +1201,12 @@ function setReloadButtonState(isLoading) {
   buttons.forEach(btn => {
     if (isLoading) {
       btn.disabled = true;
-      if (!btn.dataset.originalText) {
-        btn.dataset.originalText = btn.innerHTML; 
-      }
+      if (!btn.dataset.originalText) btn.dataset.originalText = btn.innerHTML;
       btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Pensando...';
       btn.classList.add('btn-loading'); 
     } else {
       btn.disabled = false;
-      if (btn.dataset.originalText) {
-        btn.innerHTML = btn.dataset.originalText;
-      }
+      if (btn.dataset.originalText) btn.innerHTML = btn.dataset.originalText;
       btn.classList.remove('btn-loading');
     }
   });
@@ -1401,53 +1215,29 @@ function setReloadButtonState(isLoading) {
 function reloadData() {
   setReloadButtonState(true);
   document.getElementById('loading-overlay').style.display = 'flex';
-  document.body.classList.add('no-scroll'); 
-
   clearUIForLoading();
-
-  MEMBROS = [];
-  SOCIO = [];
-  CONFIG = [];
-  LOG = [];
-  EVENTOS = [];
-  PRESENCAS = [];
-  isLoadingEventos = false;
-  chartInstances = {};
-  socioChartsReady = false;
-
+  MEMBROS = []; SOCIO = []; CONFIG = []; LOG = []; EVENTOS = []; PRESENCAS = [];
+  isLoadingEventos = false; chartInstances = {}; socioChartsReady = false;
   fetchData();
 }
 
 function initApp() {
-  document.getElementById('socio-modal').addEventListener('click', function(e) {
-    if (e.target === this) closeModal();
-  });
-
-  document.getElementById('pdf-options-modal').addEventListener('click', function(e) {
-    if (e.target === this) closePdfOptionsModal();
-  });
-
+  document.getElementById('socio-modal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
+  document.getElementById('pdf-options-modal').addEventListener('click', function(e) { if (e.target === this) closePdfOptionsModal(); });
+  
   const attendanceModal = document.getElementById('attendance-modal');
   if (attendanceModal) {
-    attendanceModal.addEventListener('click', function(e) {
-      if (e.target === this && typeof closeAttendanceModal === 'function') closeAttendanceModal();
-    });
+    attendanceModal.addEventListener('click', function(e) { if (e.target === this && typeof closeAttendanceModal === 'function') closeAttendanceModal(); });
   }
 
-  if (window.innerWidth <= 860) {
-    document.querySelector('.sidebar').classList.remove('expanded');
-  }
+  if (window.innerWidth <= 860) document.querySelector('.sidebar').classList.remove('expanded');
 
   document.addEventListener('click', function(event) {
     const sidebar = document.querySelector('.sidebar');
-    const isClickInsideSidebar = sidebar.contains(event.target);
-    const isMenuToggle = event.target.closest('.menu-toggle');
-
-    if (sidebar.classList.contains('expanded') && !isClickInsideSidebar && !isMenuToggle) {
+    if (sidebar.classList.contains('expanded') && !sidebar.contains(event.target) && !event.target.closest('.menu-toggle')) {
       sidebar.classList.remove('expanded');
     }
   });
-
   fetchData(); 
 }
 
@@ -1458,40 +1248,28 @@ async function saveConfigChanges() {
   tableRows.forEach(row => {
     const inputs = row.querySelectorAll('input');
     newConfigData.push({
-      'Codigo': inputs[0].value,
-      'Descrição': inputs[1].value,
-      'Tipo': inputs[2].value,
-      'Fase pedagogica': inputs[3].value,
-      'Horas': inputs[4].value,
-      'Valor': inputs[5].value
+      'Codigo': inputs[0].value, 'Descrição': inputs[1].value, 'Tipo': inputs[2].value, 'Fase pedagogica': inputs[3].value, 'Horas': inputs[4].value, 'Valor': inputs[5].value
     });
   });
 
   const saveButton = document.querySelector('#panel-config .btn-primary');
-  if (!saveButton.dataset.originalText) {
-    saveButton.dataset.originalText = saveButton.innerHTML;
-  }
+  if (!saveButton.dataset.originalText) saveButton.dataset.originalText = saveButton.innerHTML;
   saveButton.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Salvando...';
-  saveButton.classList.add('btn-loading');
   saveButton.disabled = true;
 
   try {
-    const response = await fetch(API_BASE, {
+    await fetch(API_BASE, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' }, 
       body: JSON.stringify({ endpoint: 'config', data: newConfigData })
     });
-
-    alert('Alterações salvas com sucesso! Os dados serão recarregados.');
+    alert('Alterações salvas com sucesso!');
     saveButton.innerHTML = saveButton.dataset.originalText;
-    saveButton.classList.remove('btn-loading');
     saveButton.disabled = false;
     reloadData();
-
   } catch (error) {
-    alert('Ocorreu um erro ao salvar as alterações. Verifique o console para mais detalhes.');
-    saveButton.innerHTML = saveButton.dataset.originalText || '<i class="fa-solid fa-save"></i> Salvar Alterações';
-    saveButton.classList.remove('btn-loading');
+    alert('Ocorreu um erro ao salvar as alterações.');
+    saveButton.innerHTML = saveButton.dataset.originalText;
     saveButton.disabled = false;
   }
 }
@@ -1499,30 +1277,15 @@ async function saveConfigChanges() {
 function setupSponsorMarquee() {
   const logosContainer = document.querySelector('.sponsors-logos');
   if (!logosContainer) return;
-
-  const logos = logosContainer.querySelectorAll('img');
-  logos.forEach(logo => {
-    logosContainer.appendChild(logo.cloneNode(true));
-  });
+  logosContainer.querySelectorAll('img').forEach(logo => { logosContainer.appendChild(logo.cloneNode(true)); });
 }
 
-window.addEventListener('load', () => {
-  initApp();
-  setupSponsorMarquee();
-});
+window.addEventListener('load', () => { initApp(); setupSponsorMarquee(); });
 
-// ── EXPORTS PARA TESTES (NODE.JS) ──────────────────────────────────────────
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
-    countBy,
-    initials,
-    mergeDataSources,
-    setGlobals: (membros, socio, config, log) => {
-      MEMBROS = membros;
-      SOCIO = socio;
-      CONFIG = config;
-      LOG = log;
-    },
+    countBy, initials, mergeDataSources,
+    setGlobals: (membros, socio, config, log) => { MEMBROS = membros; SOCIO = socio; CONFIG = config; LOG = log; },
     getGlobals: () => ({ MEMBROS, SOCIO, CONFIG, LOG })
   };
 }
