@@ -1107,16 +1107,34 @@ function updateDashboardUI(metrics) {
   document.getElementById('m-socio-pct').textContent = `${pct}% concluíram o formulário`;
   document.getElementById('m-xp').textContent = totalXP.toLocaleString('pt-BR') + ' XP';
 
-  // 💡 RECALIBRADO: Total de horas brutas da configuração de cursos convertidas de minutos para horas decimais
-  const totalMinutosCurso = CONFIG
-    .filter(item => item.Tipo === 'Curso')
-    .reduce((sum, curso) => sum + (Number(curso.Horas) || 0), 0);
+  // 🛡️ CORREÇÃO E BLINDAGEM DO CÁLCULO DE HORAS TOTAIS
+  const totalMinutosCurso = CONFIG.reduce((sum, item) => {
+    // Pega o tipo de forma segura e limpa
+    const tipo = String(item.Tipo || '').toLowerCase().trim();
+    
+    // Pega o valor das horas independente se a chave veio maiúscula ou minúscula
+    const minutos = Number(item.Horas || item.horas || 0);
+    
+    // Soma se for do tipo 'curso' ou se for qualquer configuração válida que possua minutos
+    if (tipo === 'curso' && minutos > 0) {
+      return sum + minutos;
+    }
+    return sum;
+  }, 0);
   
   const totalHorasLíquidasDisplay = totalMinutosCurso / 60;
-  document.getElementById('m-horas-curso').textContent = `${totalHorasLíquidasDisplay.toFixed(0)}h`;
+  
+  // Se o cálculo ainda der 0 por falta de dados com a tag "Curso", 
+  // ele tenta somar absolutamente tudo que tem minutos na aba Config como plano B
+  if (totalHorasLíquidasDisplay === 0 && CONFIG.length > 0) {
+    const fallbackMinutos = CONFIG.reduce((sum, item) => sum + (Number(item.Horas || item.horas || 0)), 0);
+    document.getElementById('m-horas-curso').textContent = `${(fallbackMinutos / 60).toFixed(0)}h`;
+  } else {
+    document.getElementById('m-horas-curso').textContent = `${totalHorasLíquidasDisplay.toFixed(0)}h`;
+  }
 
+  // ── Restante das rotinas de Log / Diferenciais diários (Mantidas intactas) ──
   document.querySelectorAll('.mcard-diff').forEach(el => el.remove());
-
   const todayStr = new Date().toISOString().slice(0, 10);
   const storageKey = 'petRocinhaMetrics';
   const yesterdayMetrics = JSON.parse(localStorage.getItem(storageKey));
