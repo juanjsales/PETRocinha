@@ -700,7 +700,7 @@ function renderConfigTabela() {
       <td><input type="text" class="table-input" value="${c['Descrição'] || ''}"></td>
       <td><input type="text" class="table-input" value="${c.Tipo || ''}"></td>
       <td><input type="text" class="table-input" value="${c['Fase pedagogica'] || ''}"></td>
-      <td><input type="number" class="table-input" value="${c.Horas || 0}" style="width: 70px;"> <small style="color:var(--muted); font-size:10px;">min</small></td>
+      <td><input type="number" class="table-input" value="${c.Horas || 0}" style="width: 70px;" placeholder="Ex: 60"> <small style="color:var(--muted); font-size:10px; font-weight:700;">minutos</small></td>
       <td><input type="number" class="table-input" value="${c.Valor || 0}" style="width: 70px;"></td>
     </tr>`;
   }).join('');
@@ -1244,13 +1244,33 @@ function initApp() {
 async function saveConfigChanges() {
   const tableRows = document.querySelectorAll('#tbody-config tr');
   const newConfigData = [];
+  let alertaMinutos = false;
 
   tableRows.forEach(row => {
     const inputs = row.querySelectorAll('input');
+    const codigo = inputs[0].value;
+    const horasEmMinutos = Number(inputs[4].value) || 0;
+
+    // Se for um tipo Curso e o valor for muito baixo (ex: menor que 5), pode indicar que digitaram em horas brutas
+    if (inputs[2].value === 'Curso' && horasEmMinutos > 0 && horasEmMinutos < 10) {
+      alertaMinutos = true;
+    }
+
     newConfigData.push({
-      'Codigo': inputs[0].value, 'Descrição': inputs[1].value, 'Tipo': inputs[2].value, 'Fase pedagogica': inputs[3].value, 'Horas': inputs[4].value, 'Valor': inputs[5].value
+      'Codigo': codigo, 
+      'Descrição': inputs[1].value, 
+      'Tipo': inputs[2].value, 
+      'Fase pedagogica': inputs[3].value, 
+      'Horas': horasEmMinutos, 
+      'Valor': inputs[5].value
     });
   });
+
+  // 🛡️ TRAVA DE SEGURANÇA INTERATIVA
+  if (alertaMinutos) {
+    const confirmar = confirm("⚠️ Atenção detectada!\n\nVocê inseriu valores de carga horária menores que 10 minutos em alguns cursos. Lembre-se de que a planilha armazena os dados em MINUTOS (ex: 2 horas = 120).\n\nDeseja salvar assim mesmo?");
+    if (!confirmar) return; // Cancela a operação de salvamento
+  }
 
   const saveButton = document.querySelector('#panel-config .btn-primary');
   if (!saveButton.dataset.originalText) saveButton.dataset.originalText = saveButton.innerHTML;
