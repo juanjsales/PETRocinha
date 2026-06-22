@@ -575,7 +575,7 @@ function initImpactoCharts() {
   const ods5 = SOCIO.filter(s => s.filhos === 'Sim').length;
   const ods8 = SOCIO.filter(s => !s.trabalhando).length;
 
-  const alunasSemVinculo = SOCIO.filter(s => !s.trabalhando).length;
+
   const potencialRenda = alunasSemVinculo * SALARIO_MINIMO;
   document.getElementById('sroi-renda-potencial').textContent = potencialRenda.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   document.getElementById('sroi-renda-sub').textContent = `Considerando ${alunasSemVinculo} alunas sem vínculo empregatício empregadas com 1 S.M.`;
