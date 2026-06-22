@@ -934,7 +934,7 @@ async function renderQuiz() {
     try {
         // 🚀 CHAMADA DIRETA AO WEBHOOK GERADOR DO MAKE
         // ⚠️ Substitua pela URL do novo webhook que você criou no Passo 1
-        const urlGeradorMake = "SUA_URL_DO_WEBHOOK_AQUI"; 
+        const urlGeradorMake = "https://hook.eu1.make.com/6q9gr99hgh5uoot2d2y3x4j78fbd7f44"; 
         
         const response = await fetch(urlGeradorMake, { method: "POST" });
         const perguntaIA = await response.json();
