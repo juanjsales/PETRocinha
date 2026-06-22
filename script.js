@@ -902,45 +902,59 @@ function renderQuiz() {
     const quizContent = document.getElementById("quiz-content");
 
     quizContent.innerHTML = `
-        <h4 style="color: var(--pet-purple);">🧠 Quiz Diário da Embaixadora <span style="font-size: 10px; background: #fef3c7; color: #b45309; padding: 2px 6px; border-radius: 8px; vertical-align: middle; font-weight: bold;">IA ✨</span></h4>
-        <div id="quiz-question-area">
-            <p id="pergunta-txt" style="font-size: 16px; font-weight: 700; margin-bottom: 15px;"></p>
-            <div id="opcoes-quiz" style="display: flex; flex-direction: column; gap: 10px;"></div>
+        <h4 style="color: var(--pet-purple); font-weight: 800; display: flex; align-items: center; gap: 6px;">
+            🧠 Quiz Diário da Embaixadora 
+            <span style="font-size: 10px; background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 8px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em;">IA ✨</span>
+        </h4>
+        <div id="quiz-question-area" style="margin-top: 15px;">
+            <p id="pergunta-txt" style="font-size: 16px; font-weight: 700; margin-bottom: 20px; color: var(--pet-indigo); line-height: 1.4;"></p>
+            <div id="opcoes-quiz" style="display: flex; flex-direction: column; gap: 12px;"></div>
         </div>
-        <div id="quiz-result" style="margin-top: 20px; font-weight: 700; text-align: center; display: none;"></div>
+        <div id="quiz-result" style="margin-top: 25px; font-weight: 700; text-align: center; padding: 16px; border-radius: 12px; display: none;"></div>
     `;
 
     const currentPerguntaTxt = document.getElementById("pergunta-txt");
     const currentOpcoesQuiz = document.getElementById("opcoes-quiz");
     const quizResult = document.getElementById("quiz-result");
 
+    // 1. Validação: Verifica se ela já respondeu o quiz hoje (Histórico gravado no Sheets)
     if (currentData.jaRespondeuQuiz) {
+        quizResult.style.background = "#f1f5f9";
         quizResult.style.color = "var(--pet-text-sub)";
-        quizResult.innerHTML = `⏳ Você já respondeu o quiz hoje. Volte amanhã!`;
+        quizResult.innerHTML = `⏳ Você já garantiu sua Arrasa do Quiz de hoje, mulher! Volte amanhã para novos desafios. 🐾`;
         quizResult.style.display = "block";
-        currentPerguntaTxt.style.display = "none";
-        currentOpcoesQuiz.style.display = "none";
+        document.getElementById("quiz-question-area").style.display = "none";
         return;
     }
 
-    if (!currentData.quizDiario && DADOS_QUIZ_LOCAL.length === 0) {
-        currentPerguntaTxt.innerText = "Nenhuma pergunta de quiz disponível no momento.";
+    // 2. Coleta a pergunta gerada pela IA vinda do Apps Script (ou usa o Fallback local se falhar)
+    if (currentData.quizDiario) {
+        console.log("🚀 Carregando pergunta mestre gerada via Gemini IA no backend.");
+        quizData = currentData.quizDiario;
+    } else {
+        console.warn("⚠️ Sem retorno da IA. Carregando banco de dados de contingência local.");
+        quizData = DADOS_QUIZ_LOCAL[Math.floor(Math.random() * DADOS_QUIZ_LOCAL.length)];
+    }
+
+    if (!quizData || !quizData.pergunta) {
+        currentPerguntaTxt.innerText = "Nenhuma pergunta de quiz disponível no momento. Tente atualizar a página.";
         return;
     }
 
-    quizData = currentData.quizDiario || DADOS_QUIZ_LOCAL[Math.floor(Math.random() * DADOS_QUIZ_LOCAL.length)];
-
+    // 3. Renderiza a pergunta e as alternativas na tela
     currentPerguntaTxt.innerText = quizData.pergunta;
     currentOpcoesQuiz.innerHTML = "";
+    
     quizData.opcoes.forEach(opcao => {
         const button = document.createElement("button");
-        button.className = "btn-glow quiz-option-btn";
-        button.style.background = "#f1f5f9";
-        button.style.color = "var(--pet-text-main)";
-        button.style.boxShadow = "none";
-        button.style.borderColor = "#e2e8f0";
-        button.style.border = "1px solid";
+        button.className = "quiz-option-btn";
+        button.style.cssText = "width: 100%; text-align: left; padding: 14px 18px; background: #ffffff; color: var(--pet-text-main); border: 1px solid #e2e8f0; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s ease;";
         button.innerText = opcao;
+        
+        // Efeito simples de hover via JS para evitar dependência de CSS externo
+        button.onmouseenter = () => { if(!button.disabled) button.style.borderColor = "var(--pet-purple)"; };
+        button.onmouseleave = () => { if(!button.disabled) button.style.borderColor = "#e2e8f0"; };
+        
         button.onclick = () => checkQuizAnswer(opcao, currentOpcoesQuiz, quizResult);
         currentOpcoesQuiz.appendChild(button);
     });
