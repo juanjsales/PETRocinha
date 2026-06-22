@@ -575,6 +575,10 @@ function initImpactoCharts() {
   const ods5 = SOCIO.filter(s => s.filhos === 'Sim').length;
   const ods8 = SOCIO.filter(s => !s.trabalhando).length;
 
+  const alunasSemVinculo = SOCIO.filter(s => !s.trabalhando).length;
+  const potencialRenda = alunasSemVinculo * SALARIO_MINIMO;
+  document.getElementById('sroi-renda-potencial').textContent = potencialRenda.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  document.getElementById('sroi-renda-sub').textContent = `Considerando ${alunasSemVinculo} alunas sem vínculo empregatício empregadas com 1 S.M.`;
   document.getElementById('ods-1-val').textContent = `${ods1} alunas`;
   document.getElementById('ods-4-val').textContent = `${ods4} alunas`;
   document.getElementById('ods-5-val').textContent = `${ods5} alunas`;
@@ -600,14 +604,32 @@ function initImpactoCharts() {
   document.getElementById('sroi-renda-sub').textContent = `Considerando ${alunasSemVinculo} alunas sem vínculo empregatício empregadas com 1 S.M.`;
 
   // 💡 RECALIBRADO: Métrica do sROI de Valor Social da Educação (Proxy baseada em minutos convertidos)
-  const totalMinutosCurso = CONFIG
-    .filter(item => item.Tipo === 'Curso')
-    .reduce((sum, curso) => sum + (Number(curso.Horas) || 0), 0);
+const totalMinutosCurso = CONFIG.reduce((sum, item) => {
+    const tipo = String(item.Tipo || '').toLowerCase().trim();
+    const minutos = Number(item.Horas || item.horas || 0);
+    
+    // Filtra independente de espaços ou letras maiúsculas na planilha Config
+    if (tipo === 'curso' && minutos > 0) {
+      return sum + minutos;
+    }
+    return sum;
+  }, 0);
   
-  const totalHorasLíquidasCurso = totalMinutosCurso / 60; // 🎯 Converte a base de minutos da configuração
-  const valorEducacao = totalHorasLíquidasCurso * MEMBROS.length * VALOR_HORA_AULA_SOCIAL;
-  document.getElementById('sroi-valor-educacao').textContent = valorEducacao.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  // Se o filtro estrito falhar, calcula com base em todas as cargas horárias registradas como plano B
+  const minutosLiquidos = totalMinutosCurso > 0 
+    ? totalMinutosCurso 
+    : CONFIG.reduce((sum, item) => sum + (Number(item.Horas || item.horas || 0)), 0);
 
+  const totalHorasLíquidasCurso = minutosLiquidos / 60;
+  
+  // Multiplicação do sROI baseada nas diretrizes de custeio/h da Bolsa-Formação PRONATEC/MEC
+  const valorEducacao = totalHorasLíquidasCurso * MEMBROS.length * VALOR_HORA_AULA_SOCIAL;
+  
+  // Atualiza com segurança o Card Proxy na tela
+  const cardProxy = document.getElementById('sroi-valor-educacao');
+  if (cardProxy) {
+    cardProxy.textContent = valorEducacao.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  }
   const situacaoProf = countBy(SOCIO, s => s.ocupacao);
   const sitLabels = Object.keys(situacaoProf);
   const sitData = Object.values(situacaoProf);
@@ -694,13 +716,18 @@ function renderConfigTabela() {
     tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><i class="fa-solid fa-magnifying-glass"></i>Nenhuma configuração encontrada.</div></td></tr>`;
     return;
   }
+  
   tbody.innerHTML = filteredConfig.map(c => {
+    // 💡 PADRONIZAÇÃO VISUAL: Transforma o Tipo em formato Title/Capitalize (Ex: "CURSO" vira "Curso")
+    const tipoCru = String(c.Tipo || '').toLowerCase().trim();
+    const tipoFormatado = tipoCru.charAt(0).toUpperCase() + tipoCru.slice(1);
+
     return `<tr>
       <td><input type="text" class="table-input" value="${c.Codigo}" readonly style="background:#eee; border:none; font-family:monospace;"></td>
       <td><input type="text" class="table-input" value="${c['Descrição'] || ''}"></td>
-      <td><input type="text" class="table-input" value="${c.Tipo || ''}"></td>
+      <td><span class="pill b-curiosa" style="text-transform: capitalize !important; font-weight: 700; font-size: 11px;">${tipoFormatado}</span></td>
       <td><input type="text" class="table-input" value="${c['Fase pedagogica'] || ''}"></td>
-      <td><input type="number" class="table-input" value="${c.Horas || 0}" style="width: 70px;" placeholder="Ex: 60"> <small style="color:var(--muted); font-size:10px; font-weight:700;">minutos</small></td>
+      <td><input type="number" class="table-input" value="${c.Horas || 0}" style="width: 70px;"> <small style="color:var(--muted); font-size:10px;">min</small></td>
       <td><input type="number" class="table-input" value="${c.Valor || 0}" style="width: 70px;"></td>
     </tr>`;
   }).join('');
