@@ -898,66 +898,70 @@ document.getElementById("cpf-input").addEventListener("keypress", (e) => {
     if(e.key === "Enter") verificarCPF(); 
 });
 
-function renderQuiz() {
+async function renderQuiz() {
     const quizContent = document.getElementById("quiz-content");
 
     quizContent.innerHTML = `
-        <h4 style="color: var(--pet-purple); font-weight: 800; display: flex; align-items: center; gap: 6px;">
+        <h4 style="color: var(--pet-purple); font-weight: 800; display: flex; align-items: center; gap: 6px; margin-bottom: 15px;">
             🧠 Quiz Diário da Embaixadora 
-            <span style="font-size: 10px; background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 8px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em;">IA ✨</span>
+            <span style="font-size: 10px; background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 8px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em;">IA DIRETA ⚡</span>
         </h4>
-        <div id="quiz-question-area" style="margin-top: 15px;">
+        <div id="quiz-question-area">
             <p id="pergunta-txt" style="font-size: 16px; font-weight: 700; margin-bottom: 20px; color: var(--pet-indigo); line-height: 1.4;"></p>
             <div id="opcoes-quiz" style="display: flex; flex-direction: column; gap: 12px;"></div>
         </div>
-        <div id="quiz-result" style="margin-top: 25px; font-weight: 700; text-align: center; padding: 16px; border-radius: 12px; display: none;"></div>
+        <div id="quiz-result" style="margin-top: 20px; font-weight: 700; text-align: center; padding: 16px; border-radius: 12px; display: none;"></div>
     `;
 
     const currentPerguntaTxt = document.getElementById("pergunta-txt");
     const currentOpcoesQuiz = document.getElementById("opcoes-quiz");
     const quizResult = document.getElementById("quiz-result");
 
-    // 1. Validação: Verifica se ela já respondeu o quiz hoje (Histórico gravado no Sheets)
+    // 1. Bloqueio padrão: Se ela já jogou hoje, nem chama a IA
     if (currentData.jaRespondeuQuiz) {
         quizResult.style.background = "#f1f5f9";
         quizResult.style.color = "var(--pet-text-sub)";
-        quizResult.innerHTML = `⏳ Você já garantiu sua Arrasa do Quiz de hoje, mulher! Volte amanhã para novos desafios. 🐾`;
+        quizResult.innerHTML = `⏳ Você já respondeu o quiz hoje, mulher! Volte amanhã! 🐾`;
         quizResult.style.display = "block";
         document.getElementById("quiz-question-area").style.display = "none";
         return;
     }
 
-    // 2. Coleta a pergunta gerada pela IA vinda do Apps Script (ou usa o Fallback local se falhar)
-    if (currentData.quizDiario) {
-        console.log("🚀 Carregando pergunta mestre gerada via Gemini IA no backend.");
-        quizData = currentData.quizDiario;
-    } else {
-        console.warn("⚠️ Sem retorno da IA. Carregando banco de dados de contingência local.");
-        quizData = DADOS_QUIZ_LOCAL[Math.floor(Math.random() * DADOS_QUIZ_LOCAL.length)];
-    }
+    // Mostra o loader do componente de quiz
+    const loaderQuiz = document.getElementById("loader-quiz");
+    if (loaderQuiz) loaderQuiz.style.display = "flex";
 
-    if (!quizData || !quizData.pergunta) {
-        currentPerguntaTxt.innerText = "Nenhuma pergunta de quiz disponível no momento. Tente atualizar a página.";
-        return;
-    }
+    try {
+        // 🚀 CHAMADA DIRETA AO WEBHOOK GERADOR DO MAKE
+        // ⚠️ Substitua pela URL do novo webhook que você criou no Passo 1
+        const urlGeradorMake = "SUA_URL_DO_WEBHOOK_AQUI"; 
+        
+        const response = await fetch(urlGeradorMake, { method: "POST" });
+        const perguntaIA = await response.json();
 
-    // 3. Renderiza a pergunta e as alternativas na tela
-    currentPerguntaTxt.innerText = quizData.pergunta;
-    currentOpcoesQuiz.innerHTML = "";
-    
-    quizData.opcoes.forEach(opcao => {
-        const button = document.createElement("button");
-        button.className = "quiz-option-btn";
-        button.style.cssText = "width: 100%; text-align: left; padding: 14px 18px; background: #ffffff; color: var(--pet-text-main); border: 1px solid #e2e8f0; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s ease;";
-        button.innerText = opcao;
+        if (loaderQuiz) loaderQuiz.style.display = "none";
+
+        // Salva os dados na memória global para a validação do clique usar depois
+        quizData = perguntaIA;
+
+        // 2. Renderização dinâmica na tela da aluna
+        currentPerguntaTxt.innerText = quizData.pergunta;
+        currentOpcoesQuiz.innerHTML = "";
         
-        // Efeito simples de hover via JS para evitar dependência de CSS externo
-        button.onmouseenter = () => { if(!button.disabled) button.style.borderColor = "var(--pet-purple)"; };
-        button.onmouseleave = () => { if(!button.disabled) button.style.borderColor = "#e2e8f0"; };
-        
-        button.onclick = () => checkQuizAnswer(opcao, currentOpcoesQuiz, quizResult);
-        currentOpcoesQuiz.appendChild(button);
-    });
+        quizData.opcoes.forEach(opcao => {
+            const button = document.createElement("button");
+            button.className = "btn-glow quiz-option-btn";
+            button.style.cssText = "width: 100%; text-align: left; padding: 14px 18px; background: #ffffff; color: var(--pet-text-main); border: 1px solid #e2e8f0; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s ease;";
+            button.innerText = opcao;
+            button.onclick = () => checkQuizAnswer(opcao, currentOpcoesQuiz, quizResult);
+            currentOpcoesQuiz.appendChild(button);
+        });
+
+    } catch (error) {
+        console.error("⚠️ Falha ao buscar pergunta em tempo real na IA do Make:", error);
+        if (loaderQuiz) loaderQuiz.style.display = "none";
+        currentPerguntaTxt.innerText = "Não consegui carregar o quiz gerado por IA agora. Verifique sua conexão ou tente novamente em instantes.";
+    }
 }
 
 async function checkQuizAnswer(selectedOption, opcoesQuizElement, quizResultElement) {
