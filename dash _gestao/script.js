@@ -1108,22 +1108,24 @@ function updateDashboardUI(metrics) {
   document.getElementById('m-xp').textContent = totalXP.toLocaleString('pt-BR') + ' XP';
 
   // 🛡️ CORREÇÃO E BLINDAGEM DO CÁLCULO DE HORAS TOTAIS
-  const totalMinutosCurso = CONFIG.reduce((sum, item) => {
-    // Pega o tipo de forma segura e limpa
-    const tipo = String(item.Tipo || '').toLowerCase().trim();
-    
-    // Pega o valor das horas independente se a chave veio maiúscula ou minúscula
-    const minutos = Number(item.Horas || item.horas || 0);
-    
-    // Soma se for do tipo 'curso' ou se for qualquer configuração válida que possua minutos
-    if (tipo === 'curso' && minutos > 0) {
-      return sum + minutos;
-    }
-    return sum;
-  }, 0);
+ const totalMinutosCurso = CONFIG.reduce((sum, item) => {
+  const tipo = String(item.Tipo || '').toLowerCase().trim();
+  const minutos = Number(item.Horas || item.horas || 0);
+  
+  if (tipo === 'curso' && minutos > 0) {
+    return sum + minutos;
+  }
+  return sum;
+}, 0);
   
   const totalHorasLíquidasDisplay = totalMinutosCurso / 60;
-  
+  const valorSocialProxy = totalHorasLíquidasDisplay * 25; 
+  const elementoProxy = document.getElementById('m-proxy') || document.getElementById('v-proxy');
+if (elementoProxy) {
+  elementoProxy.textContent = valorSocialProxy > 0 
+    ? `R$ ${valorSocialProxy.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+    : 'R$ 0,00';
+}// Substitua o 25 pelo seu valor multiplicador caso seja outro
   // Se o cálculo ainda der 0 por falta de dados com a tag "Curso", 
   // ele tenta somar absolutamente tudo que tem minutos na aba Config como plano B
   if (totalHorasLíquidasDisplay === 0 && CONFIG.length > 0) {
