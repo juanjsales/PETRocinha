@@ -424,40 +424,74 @@ function changeLeafletStyle() {
 
 // ── GEOCODIFICAÇÃO GRATUITA (VIACEP + NOMINATIM) ──────────────────────────
 async function geocodeSocioDataBackground() {
-  let updated = false;
-  for (const m of MEMBROS) {
-    const cepStr = m.cep || m.CEP || (m.dadosSocio && (m.dadosSocio.cep || m.dadosSocio.CEP)); 
-    
-    if ((!m.lat && !m.latitude) && cepStr) {
-      const cleanCep = String(cepStr).replace(/\D/g, ''); 
-      const cacheKey = `geo_os_${cleanCep || cepStr}`;
-      const cached = localStorage.getItem(cacheKey);
+  const membrosParaGeocodificar = MEMBROS.filter(m => {
+    const cepStr = m.cep || m.CEP || (m.dadosSocio && (m.dadosSocio.cep || m.dadosSocio.CEP));
+    return cepStr && !m.lat && !m.latitude;
+  });
 
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        m.lat = parsed.lat; m.lng = parsed.lon;
-        updated = true;
-      } else {
-        try {
-          await new Promise(resolve => setTimeout(resolve, 1500));
-          let query = cleanCep.length === 8 ? `${cleanCep}, Rio de Janeiro, Brasil` : `${cepStr}, Rio de Janeiro, Brasil`;
-          
-          const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`;
-          const response = await fetch(url);
-          const data = await response.json();
-          
-          if (data && data.length > 0) {
-            m.lat = parseFloat(data[0].lat); m.lng = parseFloat(data[0].lon);
-            localStorage.setItem(cacheKey, JSON.stringify({ lat: m.lat, lon: m.lng }));
-            updated = true; initLeafletMap();
-          }
-        } catch (error) {
-          console.warn(`Erro ao converter CEP ${cepStr}:`, error);
+  if (membrosParaGeocodificar.length === 0) return;
+
+  let updated = false;
+  const membrosParaBuscarNaApi = [];
+
+  // 1. Separa o trabalho: verifica o cache primeiro para todos
+  membrosParaGeocodificar.forEach(m => {
+    const cepStr = m.cep || m.CEP || (m.dadosSocio && (m.dadosSocio.cep || m.dadosSocio.CEP));
+    const cleanCep = String(cepStr).replace(/\D/g, '');
+    const cacheKey = `geo_v2_${cleanCep}`;
+    const cached = localStorage.getItem(cacheKey);
+
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      m.lat = parsed.lat;
+      m.lng = parsed.lon;
+      updated = true;
+    } else {
+      membrosParaBuscarNaApi.push(m);
+    }
+  });
+
+  // 2. Processa em paralelo apenas os que precisam de busca na API
+  // 💡 ESTRATÉGIA ALTERADA: De paralelo para sequencial para respeitar os limites da API (1 req/s)
+  // Isso evita os erros de "Failed to fetch" por sobrecarga.
+  for (const m of membrosParaBuscarNaApi) {
+    try {
+      const cepStr = m.cep || m.CEP || (m.dadosSocio && (m.dadosSocio.cep || m.dadosSocio.CEP));
+      if (!cepStr) continue; // Pula para o próximo membro se não houver CEP
+
+      const cleanCep = String(cepStr).replace(/\D/g, '');
+      const cacheKey = `geo_v2_${cleanCep}`;
+
+      // Pausa de 1.1 segundos ANTES de cada requisição para garantir o limite da API
+      await new Promise(resolve => setTimeout(resolve, 1100));
+
+      let addressQuery = `${cepStr}, Rio de Janeiro, Brasil`;
+      if (cleanCep.length === 8) {
+        const viaCepRes = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
+        const viaCepData = await viaCepRes.json();
+        if (viaCepData && !viaCepData.erro) {
+          addressQuery = `${viaCepData.logradouro || ''}, ${viaCepData.bairro || ''}, ${viaCepData.localidade} - ${viaCepData.uf}, Brasil`;
         }
       }
+
+      const nominatimUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(addressQuery)}&format=json&limit=1`;
+      const response = await fetch(nominatimUrl);
+      const data = await response.json();
+
+      if (data && data.length > 0) {
+        m.lat = parseFloat(data[0].lat);
+        m.lng = parseFloat(data[0].lon);
+        localStorage.setItem(cacheKey, JSON.stringify({ lat: m.lat, lon: m.lng }));
+        updated = true;
+      }
+    } catch (error) {
+      console.warn(`Falha na geocodificação para o membro ${m.nome || m.cpf}. Erro:`, error);
+      // Continua para o próximo membro mesmo em caso de erro
     }
   }
-  if (updated) initLeafletMap();
+
+  // 3. Redesenha o mapa uma única vez no final, se houver qualquer atualização
+  if (updated) initLeafletMap(); 
 }
 
 // ── GRÁFICOS: VISÃO GERAL ──────────────────────────────────────────────────
@@ -482,24 +516,24 @@ function initGeraisCharts(membros) {
 
   // 💡 RECALIBRADO: Gráfico de Média de Horas por Fase (Minutos convertidos para Horas Decimais)
   if (LOG.length > 0 && CONFIG.length > 0 && membros.length > 0) {
-    const configMap = new Map(CONFIG.map(item => [
-      item.Codigo, 
-      { minutos: Number(item.Horas) || 0, fase: item['Fase pedagogica'] }
-    ]));
-    
-    const totalMinutosPorFase = LOG.reduce((acc, logEntry) => {
-      const configItem = configMap.get(logEntry.codigo_evento);
-      if (configItem && configItem.fase) {
-        acc[configItem.fase] = (acc[configItem.fase] || 0) + configItem.minutos;
-      }
-      return acc;
-    }, {});
+    const totalMinutosPorFase = { 'Acreditar': 0, 'Aprender': 0, 'Agir': 0 };
+    membros.forEach(membro => {
+      // Garante que a propriedade existe antes de tentar iterar sobre ela
+      if (!membro.minutosPorFase) return;
+
+      membro.minutosPorFase.forEach((minutos, fase) => {
+        if (totalMinutosPorFase.hasOwnProperty(fase)) {
+          totalMinutosPorFase[fase] += minutos;
+        }
+      });
+    });
 
     const fases = ['Acreditar', 'Aprender', 'Agir'];
     const avgHorasData = fases.map(fase => {
       const totalMinutos = totalMinutosPorFase[fase] || 0;
       const totalHorasLíquidas = totalMinutos / 60; // 🎯 Conversão explícita de Minutos para Horas
-      return totalHorasLíquidas / membros.length;
+      // Evita divisão por zero se não houver membros
+      return membros.length > 0 ? totalHorasLíquidas / membros.length : 0;
     });
 
     barChart('chartAvgHorasFase', fases, avgHorasData, ['#378add', '#1d9e75', '#ef9f27']);
@@ -520,11 +554,34 @@ function initSocioCharts() {
   donutChart('chartGenero', genL, genD, PIE_PALETTE.slice(0, genL.length));
   makeLegend('legend-genero', genL.map((l, i) => `${l} (${genD[i]})`), PIE_PALETTE.slice(0, genL.length));
 
+  // 💡 ORDENAÇÃO PERSONALIZADA: Garante que o gráfico de escolaridade siga uma ordem lógica crescente.
   const escl = countBy(s, r => r.escolaridade);
-  hBarChart('chartEscola', Object.keys(escl), Object.values(escl), '#185fa5');
+  const escolaridadeOrder = {
+    'Analfabeta': 1, 'Fundamental Incompleto': 2, 'Fundamental Completo': 3,
+    'Ensino Médio Incompleto': 4, 'Ensino Médio Completo': 5, 'Superior Incompleto': 6,
+    'Superior Completo': 7, 'Pós-graduação': 8, 'Não informado': 9
+  };
+  const esclLabels = Object.keys(escl).sort((a, b) => (escolaridadeOrder[a] || 99) - (escolaridadeOrder[b] || 99));
+  const esclData = esclLabels.map(label => escl[label]);
+  hBarChart('chartEscola', esclLabels, esclData, '#185fa5');
 
+  // 💡 ORDENAÇÃO PERSONALIZADA: Garante que o gráfico de renda siga uma ordem lógica crescente.
   const renda = countBy(s, r => r.ganhos);
-  hBarChart('chartRenda', Object.keys(renda), Object.values(renda), '#0f6e56');
+  const rendaOrder = {
+    'Até R$ 500': 1,
+    'De R$ 501 a R$ 1.412': 2,
+    'De R$ 1.413 a R$ 2.000': 3,
+    'Acima de R$ 2.001': 4,
+    'Não informado': 5
+  };
+  // A função de ordenação agora encontra a chave correspondente no mapa de ordem
+  const rendaLabels = Object.keys(renda).sort((a, b) => {
+    const orderA = Object.keys(rendaOrder).find(key => a.includes(key)) || 'Não informado';
+    const orderB = Object.keys(rendaOrder).find(key => b.includes(key)) || 'Não informado';
+    return (rendaOrder[orderA] || 99) - (rendaOrder[orderB] || 99);
+  });
+  const rendaData = rendaLabels.map(label => renda[label]);
+  hBarChart('chartRenda', rendaLabels, rendaData, '#0f6e56');
 
   const civil = countBy(s, r => r.estadoCivil);
   const civL = Object.keys(civil), civD = Object.values(civil);
@@ -580,6 +637,11 @@ function initImpactoCharts() {
   document.getElementById('ods-5-val').textContent = `${ods5} alunas`;
   document.getElementById('ods-8-val').textContent = `${ods8} alunas`;
 
+  // 💡 CORREÇÃO: Garante que a instância anterior do gráfico seja destruída antes de recriá-la.
+  if (chartInstances['chartOdsCobertura']) {
+    chartInstances['chartOdsCobertura'].destroy();
+  }
+
   const totalAlunas = MEMBROS.length;
   const odsCoberturaData = [(ods1 / totalAlunas) * 100, (ods4 / totalAlunas) * 100, (ods5 / totalAlunas) * 100, (ods8 / totalAlunas) * 100];
   const odsCoberturaLabels = ["ODS 1", "ODS 4", "ODS 5", "ODS 8"];
@@ -601,8 +663,8 @@ function initImpactoCharts() {
 
   // 💡 RECALIBRADO: Métrica do sROI de Valor Social da Educação (Proxy baseada em minutos convertidos)
   const totalMinutosCurso = CONFIG
-    .filter(item => item.Tipo === 'Curso')
-    .reduce((sum, curso) => sum + (Number(curso.Horas) || 0), 0);
+    // CORREÇÃO: Soma as horas de TODAS as atividades, não apenas 'Curso', para um cálculo abrangente.
+    .reduce((sum, item) => sum + (Number(item.Horas) || 0), 0);
   
   const totalHorasLíquidasCurso = totalMinutosCurso / 60; // 🎯 Converte a base de minutos da configuração
   const valorEducacao = totalHorasLíquidasCurso * MEMBROS.length * VALOR_HORA_AULA_SOCIAL;
@@ -650,21 +712,20 @@ function initImpactoCharts() {
 function initConfigCharts() {
   if (CONFIG.length === 0) return;
 
-  // 💡 RECALIBRADO: Gráfico de Carga Horária (Minutos convertidos para Horas na exibição gráfica)
-  const horasPorFase = CONFIG.reduce((acc, item) => {
+  // 💡 LÓGICA REFINADA: Soma os minutos primeiro e converte para horas apenas na exibição.
+  const minutosPorFase = CONFIG.reduce((acc, item) => {
     const fase = item['Fase pedagogica'] || 'Não Definida';
     const minutos = Number(item.Horas) || 0;
     if (minutos > 0) {
-      acc[fase] = (acc[fase] || 0) + (minutos / 60); // 🎯 Converte minutos para horas decimais
+      acc[fase] = (acc[fase] || 0) + minutos;
     }
     return acc;
   }, {});
 
-  const faseLabels = Object.keys(horasPorFase);
-  const faseData = Object.values(horasPorFase).map(h => parseFloat(h.toFixed(1))); // Limita a 1 casa decimal
-
-  donutChart('chartConfigFase', faseLabels, faseData, PIE_PALETTE);
-  makeLegend('legend-config-fase', faseLabels.map((l, i) => `${l} (${faseData[i]}h)`), PIE_PALETTE);
+  const faseLabels = Object.keys(minutosPorFase);
+  const faseDataEmHoras = faseLabels.map(fase => parseFloat((minutosPorFase[fase] / 60).toFixed(1)));
+  donutChart('chartConfigFase', faseLabels, faseDataEmHoras, PIE_PALETTE);
+  makeLegend('legend-config-fase', faseLabels.map((l, i) => `${l} (${faseDataEmHoras[i]}h)`), PIE_PALETTE);
 
   const tipos = countBy(CONFIG, item => item.Tipo);
   const tipoLabels = Object.keys(tipos);
@@ -700,7 +761,7 @@ function renderConfigTabela() {
       <td><input type="text" class="table-input" value="${c['Descrição'] || ''}"></td>
       <td><input type="text" class="table-input" value="${c.Tipo || ''}"></td>
       <td><input type="text" class="table-input" value="${c['Fase pedagogica'] || ''}"></td>
-      <td><input type="number" class="table-input" value="${c.Horas || 0}" style="width: 70px;" placeholder="Ex: 60"> <small style="color:var(--muted); font-size:10px; font-weight:700;">minutos</small></td>
+      <td><input type="number" class="table-input" value="${c.Horas || 0}" style="width: 70px;"> <small style="color:var(--muted); font-size:10px;">min</small></td>
       <td><input type="number" class="table-input" value="${c.Valor || 0}" style="width: 70px;"></td>
     </tr>`;
   }).join('');
@@ -726,7 +787,7 @@ function renderTabela() {
     const bClass = badgeIdx >= 0 ? BADGE_CLASS[badgeIdx] : 'b-curiosa';
     
     // 💡 FORMATADO: Exibe com precisão matemática em formato de horas decimais líquidas (Ex: 1.5h em vez de 90h)
-    const horasExibidas = m.horasConcluidas ? m.horasConcluidas.toFixed(1) : 0;
+    const horasExibidas = m.horasConcluidas ? m.horasConcluidas.toFixed(1) : '0.0';
 
     return `<tr>
       <td data-label="Nome">
@@ -969,7 +1030,7 @@ function showSocioModal(cpf) {
     const endId = 'end-' + Date.now(); 
 
     // 💡 FORMATADO: Exibição unificada das horas decimais em vez de minutos no modal individual
-    const horasLíquidasAluna = aluna.horasConcluidas ? aluna.horasConcluidas.toFixed(1) + 'h' : '0h';
+    const horasLíquidasAluna = aluna.horasConcluidas ? aluna.horasConcluidas.toFixed(1) + 'h' : '0.0h';
 
     const programDetails = [
       { label: 'E-mail', value: aluna.email },
@@ -1010,17 +1071,38 @@ function showSocioModal(cpf) {
       <h4><i class="fa-solid fa-users"></i> Perfil Socioeconômico</h4>
       <div class="detail-grid">${renderGrid(socioDetails)}</div>`;
 
-    const cleanCep = String(aluna.cep || s.cep || s.CEP).replace(/\D/g, '');
-    if (cleanCep.length === 8) {
-      fetch(`https://viacep.com.br/ws/${cleanCep}/json/`)
-        .then(res => res.json())
-        .then(data => {
-          const el = document.getElementById(endId);
-          if (el) el.textContent = data.erro ? 'CEP não encontrado' : (data.logradouro ? `${data.logradouro}, ${data.bairro}` : `${data.localidade} - ${data.uf}`);
-        })
-        .catch(() => { const el = document.getElementById(endId); if (el) el.textContent = 'Erro ao buscar endereço'; });
-    } else {
-      const el = document.getElementById(endId); if (el) el.textContent = cleanCep ? 'CEP inválido' : 'Não informado';
+    // 💡 LÓGICA DE BUSCA DE ENDEREÇO EM CASCATA (VIA-CEP + NOMINATIM)
+    const cepCompleto = aluna.cep || s.cep || s.CEP;
+    const elEndereco = document.getElementById(endId);
+
+    if (cepCompleto && elEndereco) {
+      const cleanCep = String(cepCompleto).replace(/\D/g, '');
+      
+      (async () => {
+        try {
+          if (cleanCep.length === 8) {
+            const viaCepRes = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
+            const viaCepData = await viaCepRes.json();
+            if (!viaCepData.erro) {
+              elEndereco.textContent = `${viaCepData.logradouro}, ${viaCepData.bairro} - ${viaCepData.localidade}/${viaCepData.uf}`;
+              return; // Endereço encontrado, encerra a função
+            }
+          }
+          
+          // Se o ViaCEP falhar ou o CEP for inválido, tenta o Nominatim como fallback
+          const nominatimUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(cepCompleto + ', Rio de Janeiro, Brasil')}&format=json&limit=1&addressdetails=1`;
+          const nominatimRes = await fetch(nominatimUrl);
+          const nominatimData = await nominatimRes.json();
+
+          if (nominatimData && nominatimData.length > 0) {
+            elEndereco.textContent = nominatimData[0].display_name.split(',').slice(0, 3).join(',');
+          } else {
+            elEndereco.textContent = 'Endereço não encontrado';
+          }
+        } catch (error) {
+          elEndereco.textContent = 'Erro ao buscar endereço';
+        }
+      })();
     }
   }
   document.getElementById('socio-modal').style.display = 'flex';
@@ -1043,26 +1125,38 @@ function mergeDataSources(socioMap) {
   });
 
   // 🎯 O MAPA AGORA ARMAZENA CARGA HORÁRIA EM MINUTOS DIRETAMENTE DO SHEETS
-  const configMap = new Map(CONFIG.map(item => [item.Codigo, Number(item.Horas) || 0]));
+  // 💡 CORREÇÃO: A variável configMap não estava sendo declarada, causando falha no cálculo de horas.
+  const configMap = new Map(CONFIG.map(item => [
+    item.Codigo, 
+    { minutos: Number(item.Horas) || 0, fase: item['Fase pedagogica'] }
+  ]));
 
   const logPorAluna = LOG.reduce((acc, logEntry) => {
     const email = logEntry.Email;
     if (email) {
       if (!acc[email]) acc[email] = [];
-      acc[email].push(logEntry.codigo_evento);
+      acc[email].push(logEntry.codigo_evento); // Armazena os códigos dos eventos/atividades concluídos
     }
     return acc;
   }, {});
 
   MEMBROS.forEach(membro => {
-    const alunaLogs = logPorAluna[membro.email] || [];
+    const alunaLogs = [...new Set(logPorAluna[membro.email] || [])]; // Remove códigos duplicados
+    const minutosPorFase = new Map();
     
-    // 🧠 SOMA DOS MINUTOS ACUMULADOS:
-    const acumuladoMinutos = alunaLogs.reduce((totalMinutos, codigo) => totalMinutos + (configMap.get(codigo) || 0), 0);
+    // 🧠 SOMA DOS MINUTOS ACUMULADOS E AGRUPADOS POR FASE:
+    const acumuladoMinutos = alunaLogs.reduce((totalMinutos, codigo) => {
+      const configItem = configMap.get(codigo);
+      if (configItem) {
+        if (configItem.fase) minutosPorFase.set(configItem.fase, (minutosPorFase.get(configItem.fase) || 0) + configItem.minutos);
+        return totalMinutos + configItem.minutos;
+      }
+      return totalMinutos;
+    }, 0);
     
     // 🎯 TRANSFORMAÇÃO MATEMÁTICA: Minutos convertidos explicitamente para Horas Decimais Líquidas
     membro.horasConcluidas = acumuladoMinutos / 60; 
-    
+    membro.minutosPorFase = minutosPorFase; // Armazena o mapa de minutos por fase no objeto da aluna
     membro.formada = alunaLogs.includes('course_completed');
   });
 }
@@ -1109,10 +1203,10 @@ function updateDashboardUI(metrics) {
 
   // 💡 RECALIBRADO: Total de horas brutas da configuração de cursos convertidas de minutos para horas decimais
   const totalMinutosCurso = CONFIG
-    .filter(item => item.Tipo === 'Curso')
-    .reduce((sum, curso) => sum + (Number(curso.Horas) || 0), 0);
+    // CORREÇÃO: Soma as horas de TODAS as atividades, não apenas 'Curso'.
+    .reduce((sum, item) => sum + (Number(item.Horas) || 0), 0);
   
-  const totalHorasLíquidasDisplay = totalMinutosCurso / 60;
+  const totalHorasLíquidasDisplay = (totalMinutosCurso / 60);
   document.getElementById('m-horas-curso').textContent = `${totalHorasLíquidasDisplay.toFixed(0)}h`;
 
   document.querySelectorAll('.mcard-diff').forEach(el => el.remove());
@@ -1176,6 +1270,22 @@ function renderAllCharts() {
 }
 
 function fetchData() {
+  // 💡 ESTRATÉGIA DE CACHE INTELIGENTE
+  const cachedData = localStorage.getItem('dashboardCache');
+  if (cachedData) {
+    try {
+      const parsedData = JSON.parse(cachedData);
+      // Carrega os dados do cache imediatamente para uma experiência de usuário mais rápida
+      processarTudo(parsedData.data);
+      console.log('Dados carregados do cache. Verificando atualizações em segundo plano...');
+      // Esconde o loading principal, pois a UI já foi renderizada
+      document.getElementById('loading-overlay').style.display = 'none';
+    } catch (e) {
+      console.error("Erro ao ler cache, buscando dados frescos.", e);
+      localStorage.removeItem('dashboardCache');
+    }
+  }
+
   document.querySelectorAll('.jsonp-script').forEach(el => el.remove());
   const s1 = document.createElement('script');
   s1.src = `${API_BASE}?callback=processarTudo&endpoint=all`;
@@ -1244,33 +1354,13 @@ function initApp() {
 async function saveConfigChanges() {
   const tableRows = document.querySelectorAll('#tbody-config tr');
   const newConfigData = [];
-  let alertaMinutos = false;
 
   tableRows.forEach(row => {
     const inputs = row.querySelectorAll('input');
-    const codigo = inputs[0].value;
-    const horasEmMinutos = Number(inputs[4].value) || 0;
-
-    // Se for um tipo Curso e o valor for muito baixo (ex: menor que 5), pode indicar que digitaram em horas brutas
-    if (inputs[2].value === 'Curso' && horasEmMinutos > 0 && horasEmMinutos < 10) {
-      alertaMinutos = true;
-    }
-
     newConfigData.push({
-      'Codigo': codigo, 
-      'Descrição': inputs[1].value, 
-      'Tipo': inputs[2].value, 
-      'Fase pedagogica': inputs[3].value, 
-      'Horas': horasEmMinutos, 
-      'Valor': inputs[5].value
+      'Codigo': inputs[0].value, 'Descrição': inputs[1].value, 'Tipo': inputs[2].value, 'Fase pedagogica': inputs[3].value, 'Horas': inputs[4].value, 'Valor': inputs[5].value
     });
   });
-
-  // 🛡️ TRAVA DE SEGURANÇA INTERATIVA
-  if (alertaMinutos) {
-    const confirmar = confirm("⚠️ Atenção detectada!\n\nVocê inseriu valores de carga horária menores que 10 minutos em alguns cursos. Lembre-se de que a planilha armazena os dados em MINUTOS (ex: 2 horas = 120).\n\nDeseja salvar assim mesmo?");
-    if (!confirmar) return; // Cancela a operação de salvamento
-  }
 
   const saveButton = document.querySelector('#panel-config .btn-primary');
   if (!saveButton.dataset.originalText) saveButton.dataset.originalText = saveButton.innerHTML;
