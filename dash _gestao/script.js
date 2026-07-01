@@ -991,10 +991,17 @@ async function saveEventAndAttendance() {
         'Data do registro': p.Data_do_registro, 'Evento': p.Evento, 'Nome': p.Nome, 'Email': p.Email, 'CPF': p.CPF, 'Celular': p.Celular, 'Localidade': p.Localidade, 'Perfil': p.Perfil, 'Classificação': p.Classificacao, 'Comentario Geral': p.Comentario_Geral, 'Conteudo': p.Conteudo, 'Comentario conteudo': p.Comentario_conteudo, 'Estrutura': p.Estrutura, 'Comentario estrutura': p.Comentario_estrutura
       }));
 
+      const urlParams = new URLSearchParams(window.location.search);
+      const email = urlParams.get('email') || "";
+      let pin = "";
+      try {
+        pin = sessionStorage.getItem('adminPin') || "";
+      } catch (e) {}
+
       await fetch(API_BASE, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ endpoint: 'presencas', data: payload })
+        body: JSON.stringify({ endpoint: 'presencas', data: payload, email: email, pin: pin })
       });
       novasPresencas.forEach(p => delete p.novo);
     }
@@ -1235,23 +1242,107 @@ function updateDashboardUI(metrics) {
 }
 
 // ── CARREGAMENTO DE DADOS ────────────────────────────────────────────────────────
+let lastAttemptedPin = "";
+
+function submitPinLogin() {
+  const pinInput = document.getElementById('pin-input');
+  const errorMsg = document.getElementById('login-error-msg');
+  if (!pinInput) return;
+  const pin = pinInput.value.trim();
+  if (!pin) {
+    alert("Por favor, insira o PIN.");
+    return;
+  }
+  lastAttemptedPin = pin;
+  if (errorMsg) errorMsg.style.display = 'none';
+  
+  const btn = document.querySelector('#login-overlay .btn-primary');
+  let originalText = "";
+  if (btn) {
+    originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Entrando...';
+    btn.disabled = true;
+  }
+  
+  document.querySelectorAll('.jsonp-script').forEach(el => el.remove());
+  const s = document.createElement('script');
+  s.src = `${API_BASE}?callback=processarTudo&endpoint=all&pin=${encodeURIComponent(pin)}`;
+  s.className = 'jsonp-script';
+  s.onerror = function() {
+    if (btn) {
+      btn.innerHTML = originalText || '<i class="fa-solid fa-unlock-keyhole"></i> Entrar no Painel';
+      btn.disabled = false;
+    }
+    alert("Erro de conexão ao tentar validar PIN.");
+  };
+  document.body.appendChild(s);
+}
+
 function processarTudo(dados) {
   try {
     if (!dados || dados.erro) {
+      if (dados?.erro && dados.erro.includes("Acesso negado")) {
+        const overlay = document.getElementById('login-overlay');
+        if (overlay) overlay.style.display = 'flex';
+        document.getElementById('loading-overlay').style.display = 'none';
+        setReloadButtonState(false);
+        
+        if (lastAttemptedPin) {
+          const errorMsg = document.getElementById('login-error-msg');
+          if (errorMsg) errorMsg.style.display = 'block';
+          lastAttemptedPin = "";
+        }
+        
+        const btn = document.querySelector('#login-overlay .btn-primary');
+        if (btn) {
+          btn.innerHTML = '<i class="fa-solid fa-unlock-keyhole"></i> Entrar no Painel';
+          btn.disabled = false;
+        }
+        return;
+      }
+      
       document.getElementById('tbody-alunas').innerHTML = `<tr><td colspan="6"><div class="empty-state"><i class="fa-solid fa-triangle-exclamation"></i>Erro: ${dados?.erro || 'Desconhecido'}</div></td></tr>`;
       document.getElementById('loading-overlay').style.display = 'none';
       setReloadButtonState(false); 
       return;
     }
+
+    // Login com sucesso!
+    if (lastAttemptedPin) {
+      try {
+        sessionStorage.setItem('adminPin', lastAttemptedPin);
+      } catch (e) {
+        console.warn("sessionStorage bloqueado no iframe: ", e);
+      }
+      lastAttemptedPin = "";
+    }
+    
+    // Oculta tela de bloqueio
+    const overlay = document.getElementById('login-overlay');
+    if (overlay) overlay.style.display = 'none';
+
+    // Grava cache inteligente
+    try {
+      localStorage.setItem('dashboardCache', JSON.stringify({
+        timestamp: Date.now(),
+        data: dados
+      }));
+    } catch (e) {
+      console.warn("localStorage bloqueado no iframe, cache não gravado: ", e);
+    }
+    
     MEMBROS = dados.membros || [];
     SOCIO   = dados.socio   || [];
     CONFIG  = dados.config  || [];
     LOG     = dados.log     || [];
+    PRESENCAS = dados.presencas || []; // Atribui presencas
+    
     tentarMergeEProcessar();
   } catch (erro) {
     document.getElementById('loading-overlay').style.display = 'none';
     setReloadButtonState(false);
     alert("Erro ao renderizar gráficos. Verifique o console.");
+    console.error(erro);
   }
 }
 
@@ -1266,29 +1357,49 @@ function renderAllCharts() {
   initConfigCharts();
   populateConfigFilter();
   renderTabela();
+  renderMuralAndNps(); // Renderiza aba do mural e nps
   if (typeof renderEventos === 'function') renderEventos();
 }
 
 function fetchData() {
-  // 💡 ESTRATÉGIA DE CACHE INTELIGENTE
-  const cachedData = localStorage.getItem('dashboardCache');
-  if (cachedData) {
-    try {
+  const urlParams = new URLSearchParams(window.location.search);
+  const urlEmail = urlParams.get('email') || "";
+  
+  let savedPin = "";
+  try {
+    savedPin = sessionStorage.getItem('adminPin') || "";
+  } catch (e) {
+    console.warn("sessionStorage indisponível:", e);
+  }
+
+  // Tenta ler o cache inteligente
+  try {
+    const cachedData = localStorage.getItem('dashboardCache');
+    if (cachedData) {
       const parsedData = JSON.parse(cachedData);
-      // Carrega os dados do cache imediatamente para uma experiência de usuário mais rápida
-      processarTudo(parsedData.data);
-      console.log('Dados carregados do cache. Verificando atualizações em segundo plano...');
-      // Esconde o loading principal, pois a UI já foi renderizada
-      document.getElementById('loading-overlay').style.display = 'none';
-    } catch (e) {
-      console.error("Erro ao ler cache, buscando dados frescos.", e);
-      localStorage.removeItem('dashboardCache');
+      // Só exibe cache se as credenciais originais baterem (ou se tivermos PIN de sessão ativo)
+      if (urlEmail || savedPin) {
+        processarTudo(parsedData.data);
+        console.log('Dados carregados do cache. Verificando atualizações em segundo plano...');
+        document.getElementById('loading-overlay').style.display = 'none';
+      }
     }
+  } catch (e) {
+    console.error("Erro ao ler cache, buscando dados frescos.", e);
   }
 
   document.querySelectorAll('.jsonp-script').forEach(el => el.remove());
   const s1 = document.createElement('script');
-  s1.src = `${API_BASE}?callback=processarTudo&endpoint=all`;
+  
+  let apiUrl = `${API_BASE}?callback=processarTudo&endpoint=all`;
+  if (urlEmail) {
+    apiUrl += `&email=${encodeURIComponent(urlEmail.toLowerCase().trim())}`;
+  }
+  if (savedPin) {
+    apiUrl += `&pin=${encodeURIComponent(savedPin)}`;
+  }
+  
+  s1.src = apiUrl;
   s1.className = 'jsonp-script';
   s1.onerror = function() {
     document.getElementById('loading-overlay').style.display = 'none';
@@ -1331,6 +1442,127 @@ function reloadData() {
   fetchData();
 }
 
+function renderMuralAndNps() {
+  if (PRESENCAS.length === 0) return;
+
+  // 1. Calcula as médias globais de satisfação
+  const ratings = PRESENCAS.filter(p => p['Classificação']);
+  const totalFeedbacks = ratings.length;
+  
+  const mediaGeral = totalFeedbacks ? (ratings.reduce((acc, p) => acc + Number(p['Classificação']), 0) / totalFeedbacks) : 0;
+  
+  const conteudos = PRESENCAS.map(p => Number(p.Conteudo)).filter(n => !isNaN(n) && n > 0);
+  const mediaConteudo = conteudos.length ? (conteudos.reduce((a, b) => a + b, 0) / conteudos.length) : 0;
+  
+  const estruturas = PRESENCAS.map(p => Number(p.Estrutura)).filter(n => !isNaN(n) && n > 0);
+  const mediaEstrutura = estruturas.length ? (estruturas.reduce((a, b) => a + b, 0) / estruturas.length) : 0;
+
+  // Comentários válidos (exclui vazios)
+  const comentariosValidos = PRESENCAS.filter(p => p['Comentario Geral'] && String(p['Comentario Geral']).trim().length > 0);
+
+  // 2. Preenche os cartões na UI
+  const elGeral = document.getElementById('nps-geral');
+  const elConteudo = document.getElementById('nps-conteudo');
+  const elEstrutura = document.getElementById('nps-estrutura');
+  const elCount = document.getElementById('nps-feedbacks-count');
+
+  if (elGeral) elGeral.textContent = mediaGeral ? `${mediaGeral.toFixed(1)}/5.0` : '—';
+  if (elConteudo) elConteudo.textContent = mediaConteudo ? `${mediaConteudo.toFixed(1)}/5.0` : '—';
+  if (elEstrutura) elEstrutura.textContent = mediaEstrutura ? `${mediaEstrutura.toFixed(1)}/5.0` : '—';
+  if (elCount) elCount.textContent = comentariosValidos.length;
+
+  // 3. Renderiza o Mural de Depoimentos
+  const container = document.getElementById('mural-depoimentos-container');
+  if (container) {
+    if (comentariosValidos.length === 0) {
+      container.innerHTML = `<div class="empty-state"><i class="fa-regular fa-comments"></i>Nenhum depoimento com comentário ainda.</div>`;
+    } else {
+      const ordenados = [...comentariosValidos].sort((a, b) => {
+        return new Date(b['Data do registro'] || 0) - new Date(a['Data do registro'] || 0);
+      });
+
+      container.innerHTML = ordenados.map(p => {
+        const iniciais = initials(p.Nome || 'Aluna');
+        const dataFormatada = p['Data do registro'] ? new Date(p['Data do registro']).toLocaleDateString('pt-BR') : '';
+        return `
+          <div class="testimonial-card">
+            <div class="testimonial-header">
+              <div class="testimonial-author">
+                <span class="testimonial-avatar">${iniciais}</span>
+                <span>${p.Nome || 'Aluna Anônima'}</span>
+              </div>
+              <span style="color:var(--muted);">${dataFormatada}</span>
+            </div>
+            <p class="testimonial-text">"${p['Comentario Geral'].trim()}"</p>
+            <span class="testimonial-event"><i class="fa-regular fa-calendar-days"></i> ${p.Evento || 'Atividade'}</span>
+          </div>
+        `;
+      }).join('');
+    }
+  }
+
+  // 4. Desenha o gráfico de Satisfação por Curso
+  const presencasPorEvento = {};
+  PRESENCAS.forEach(p => {
+    const evento = p.Evento || 'Evento sem Nome';
+    if (!presencasPorEvento[evento]) presencasPorEvento[evento] = { geral: [], conteudo: [], estrutura: [] };
+    
+    if (p['Classificação']) presencasPorEvento[evento].geral.push(Number(p['Classificação']));
+    if (p.Conteudo) presencasPorEvento[evento].conteudo.push(Number(p.Conteudo));
+    if (p.Estrutura) presencasPorEvento[evento].estrutura.push(Number(p.Estrutura));
+  });
+
+  const labels = Object.keys(presencasPorEvento).slice(0, 8);
+  const datasetGeral = [];
+  const datasetConteudo = [];
+  const datasetEstrutura = [];
+
+  labels.forEach(evt => {
+    const data = presencasPorEvento[evt];
+    
+    const avgGeral = data.geral.length ? (data.geral.reduce((a, b) => a + b, 0) / data.geral.length) : 0;
+    const avgConteudo = data.conteudo.length ? (data.conteudo.reduce((a, b) => a + b, 0) / data.conteudo.length) : 0;
+    const avgEstrutura = data.estrutura.length ? (data.estrutura.reduce((a, b) => a + b, 0) / data.estrutura.length) : 0;
+
+    datasetGeral.push(parseFloat(avgGeral.toFixed(1)));
+    datasetConteudo.push(parseFloat(avgConteudo.toFixed(1)));
+    datasetEstrutura.push(parseFloat(avgEstrutura.toFixed(1)));
+  });
+
+  // Atualiza a cor global do Chart.js para combinar com o tema escuro/claro
+  Chart.defaults.color = document.body.classList.contains('dark-mode') ? '#d1d5db' : '#4a5568';
+
+  groupedBarChart('chartNpsCursos', labels, [
+    { label: 'Geral', data: datasetGeral, backgroundColor: '#f97316', borderRadius: 4 },
+    { label: 'Conteúdo', data: datasetConteudo, backgroundColor: '#7c3aed', borderRadius: 4 },
+    { label: 'Estrutura', data: datasetEstrutura, backgroundColor: '#16a34a', borderRadius: 4 }
+  ]);
+}
+
+function toggleDarkMode() {
+  const body = document.body;
+  body.classList.toggle('dark-mode');
+  const isDark = body.classList.contains('dark-mode');
+  
+  try {
+    localStorage.setItem('darkMode', isDark ? 'true' : 'false');
+  } catch (e) {
+    console.warn("localStorage bloqueado no iframe, não salvando preferência de tema.");
+  }
+  
+  const btn = document.getElementById('dark-mode-btn');
+  if (btn) {
+    if (isDark) {
+      btn.innerHTML = '<i class="fa-solid fa-sun"></i> <span>Modo Claro</span>';
+    } else {
+      btn.innerHTML = '<i class="fa-solid fa-moon"></i> <span>Modo Escuro</span>';
+    }
+  }
+
+  // Redesenha todos os gráficos para atualizar cores de eixos/fontes
+  renderAllCharts();
+}
+
 function initApp() {
   document.getElementById('socio-modal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
   document.getElementById('pdf-options-modal').addEventListener('click', function(e) { if (e.target === this) closePdfOptionsModal(); });
@@ -1340,7 +1572,13 @@ function initApp() {
     attendanceModal.addEventListener('click', function(e) { if (e.target === this && typeof closeAttendanceModal === 'function') closeAttendanceModal(); });
   }
 
-  if (window.innerWidth <= 860) document.querySelector('.sidebar').classList.remove('expanded');
+  // Se estiver rodando dentro de um iframe (ex: Circle.so), minimiza a barra lateral por padrão
+  if (window.self !== window.top) {
+    const sidebar = document.querySelector('.sidebar');
+    if (sidebar) sidebar.classList.remove('expanded');
+  } else {
+    if (window.innerWidth <= 860) document.querySelector('.sidebar').classList.remove('expanded');
+  }
 
   document.addEventListener('click', function(event) {
     const sidebar = document.querySelector('.sidebar');
@@ -1348,6 +1586,21 @@ function initApp() {
       sidebar.classList.remove('expanded');
     }
   });
+
+  // Inicializa o tema salvo (Dark Mode)
+  let isDarkMode = false;
+  try {
+    isDarkMode = localStorage.getItem('darkMode') === 'true';
+  } catch (e) {
+    console.warn("localStorage bloqueado no iframe.");
+  }
+  
+  if (isDarkMode) {
+    document.body.classList.add('dark-mode');
+    const btn = document.getElementById('dark-mode-btn');
+    if (btn) btn.innerHTML = '<i class="fa-solid fa-sun"></i> <span>Modo Claro</span>';
+  }
+
   fetchData(); 
 }
 
@@ -1368,10 +1621,17 @@ async function saveConfigChanges() {
   saveButton.disabled = true;
 
   try {
+    const urlParams = new URLSearchParams(window.location.search);
+    const email = urlParams.get('email') || "";
+    let pin = "";
+    try {
+      pin = sessionStorage.getItem('adminPin') || "";
+    } catch (e) {}
+
     await fetch(API_BASE, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' }, 
-      body: JSON.stringify({ endpoint: 'config', data: newConfigData })
+      body: JSON.stringify({ endpoint: 'config', data: newConfigData, email: email, pin: pin })
     });
     alert('Alterações salvas com sucesso!');
     saveButton.innerHTML = saveButton.dataset.originalText;

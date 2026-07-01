@@ -1,9 +1,6 @@
 /**
  * ══════════════════════════════════════════════════════════════════
- *  SISTEMA PROFISSÃO PET 2026 — v2.0 (PAINEL GERENCIAL) - Estrutura Clássica
- *  Instituto Impacto Criativo
- *  Endpoints: membros, socioeconomico, config
- *  Deploy como: Web App > Acesso: Qualquer pessoa
+ *  SISTEMA PROFISSÃO PET 2026 — v2.0 (PAINEL GERENCIAL)
  * ══════════════════════════════════════════════════════════════════
  */
 
@@ -12,103 +9,83 @@ const CONFIG = {
 
   MEMBROS: {
     ABA:     "community_members",
-    ID:      0,   // A
-    NOME:    1,   // B
-    EMAIL:   2,   // C
-    IMG_URL: 3,   // D
-    CRIADO_EM: 4, // E
-    ULTIMA_VISITA: 5, // F
-    TAGS:    6,   // G
-    CPF:     7,   // H — ajuste se diferente
-    WPP:     8,   // I
-    NASC:    9,   // J — Data de Nascimento
-    ARRASAS: 10,  // K
-    BADGE:   11,  // L
-    ALERTAS: 12,  // M
-    XP:      13,  // N
+    ID:      0,   NOME:    1,   EMAIL:   2,   IMG_URL: 3,
+    CRIADO_EM: 4, ULTIMA_VISITA: 5, TAGS:    6,   CPF:     7,
+    WPP:     8,   NASC:    9,   ARRASAS: 10,  BADGE:   11,
+    ALERTAS: 12,  XP:      13,  CEP:     14,
   },
 
   SOCIO: {
     ABA:           "Socioeconomico",
-    DATA:          0,   // A
-    CPF:           1,   // B
-    NIS:           2,   // C
-    GENERO:        3,   // D
-    RACA:          4,   // E
-    ORIENTACAO:    5,   // F
-    ESTADO_CIVIL:  6,   // G
-    FILHOS:        7,   // H
-    QUANTOS:       8,   // I
-    ESCOLARIDADE:  9,   // J
-    OCUPACAO:      10,  // K
-    TRABALHANDO:   11,  // L
-    GANHOS:        12,  // M
-    PESSOAS_DOM:   13,  // N  — "Pessoas que moram na mesma casa"
-    ORG_FIN:       14,  // O
-    RENDA_EXTRA:   15,  // P
-    RENDA_EXTRA_OQ:16,  // Q
-    GASTOS:        17,  // R
-    INTERESSE:     18,  // S
-    HORARIO:       19,  // T
-    INDICACAO:     20,  // U
-    MOTIVACAO:     21,  // V
-    SITUACAO_PROF: 25,  // Z
+    DATA:          0,   CPF:           1,   NIS:           2,
+    GENERO:        3,   RACA:          4,   ORIENTACAO:    5,
+    ESTADO_CIVIL:  6,   FILHOS:        7,   QUANTOS:       8,
+    ESCOLARIDADE:  9,   OCUPACAO:      10,  TRABALHANDO:   11,
+    GANHOS:        12,  PESSOAS_DOM:   13,  ORG_FIN:       14,
+    RENDA_EXTRA:   15,  RENDA_EXTRA_OQ:16,  GASTOS:        17,
+    INTERESSE:     18,  HORARIO:       19,  INDICACAO:     20,
+    MOTIVACAO:     21,  SITUACAO_PROF: 25,
   },
   
   CONFIG: {
     ABA: "Config",
-    CODIGO: 0,
-    VALOR: 1,
-    DESCRICAO: 2,
-    FASE: 3,
-    HORAS: 4,
-    TIPO: 5
-  }
-  ,
-  LOG: {
-    ABA: "Log"
-    // As colunas serão lidas dinamicamente pelos cabeçalhos
-  }
+    CODIGO: 0, VALOR: 1, DESCRICAO: 2, FASE: 3, HORAS: 4, TIPO: 5
+  },
+  
+  LOG: { ABA: "Log" },
+  PRESENCAS: { ABA: "Lista de Presença" }
 };
 
-// ══════════════════════════════════════════════════════════════════
-//  ROTEADOR PRINCIPAL (PONTO DE ENTRADA)
-// ══════════════════════════════════════════════════════════════════
 function doGet(e) {
   try {
     const callback = e.parameter.callback || "";
+    const email = e.parameter.email || "";
+    const pin = e.parameter.pin || "";
+
+    // Validação de segurança admin
+    if (!isAuthorized_(email, pin)) {
+      return responder_({ erro: "Acesso negado. Apenas administradores autorizados." }, callback);
+    }
+
     const endpoint = (e.parameter.endpoint || "membros").toLowerCase();
 
-    if (endpoint === "socioeconomico") {
+    if (endpoint === "all") {
+      return responder_({
+        membros: getDadosMembros_(),
+        socio:   getDadosSocio_(),
+        config:  getDadosConfig_(),
+        log:     getDadosLog_(),
+        presencas: getDadosPresencas_()
+      }, callback);
+    } else if (endpoint === "socioeconomico") {
       return responder_(getDadosSocio_(), callback);
     } else if (endpoint === "config") {
       return responder_(getDadosConfig_(), callback);
     } else if (endpoint === "log") {
       return responder_(getDadosLog_(), callback);
+    } else if (endpoint === "presencas") {
+      return responder_(getDadosPresencas_(), callback);
     } else {
       return responder_(getDadosMembros_(), callback);
     }
-
   } catch (err) {
-    return responder_({ error: err.toString() }, e.parameter.callback || "");
+    return responder_({ erro: err.toString() }, e.parameter.callback || "");
   }
 }
 
-// ══════════════════════════════════════════════════════════════════
-//  BUSCA DE DADOS: MEMBROS
-// ══════════════════════════════════════════════════════════════════
 function getDadosMembros_() {
   const ss = SpreadsheetApp.openById(CONFIG.SS_ID);
-  const sheetMembros = ss.getSheetByName(CONFIG.MEMBROS.ABA);
-  if (!sheetMembros) return { erro: "Aba '" + CONFIG.MEMBROS.ABA + "' não encontrada." };
+  const sheet = ss.getSheetByName(CONFIG.MEMBROS.ABA);
+  if (!sheet) return { erro: "Aba '" + CONFIG.MEMBROS.ABA + "' não encontrada." };
  
-  const dataMembros = sheetMembros.getDataRange().getValues();
-  const lista = [];
+  const data = sheet.getDataRange().getValues();
+  if (data.length <= 1) return []; // Trava de segurança para aba vazia
 
-  for (let i = 1; i < dataMembros.length; i++) {
-    const linha = dataMembros[i];
+  const lista = [];
+  for (let i = 1; i < data.length; i++) {
+    const linha = data[i];
     const nome  = String(linha[CONFIG.MEMBROS.NOME] || "").trim();
-    if (!nome) continue;
+    if (!nome || nome === "undefined") continue;
 
     lista.push({
       id:            String(linha[CONFIG.MEMBROS.ID] || "").trim(),
@@ -125,24 +102,21 @@ function getDadosMembros_() {
       badge:         String(linha[CONFIG.MEMBROS.BADGE]  || " ").trim(),
       alertas:       String(linha[CONFIG.MEMBROS.ALERTAS] || "").trim(),
       xp:            Number(linha[CONFIG.MEMBROS.XP])     || 0,
+      cep:           String(linha[CONFIG.MEMBROS.CEP] || "").trim(),
     });
-
   }
- 
   return lista;
 }
 
-// ══════════════════════════════════════════════════════════════════
-//  BUSCA DE DADOS: SOCIOECONÔMICO
-// ══════════════════════════════════════════════════════════════════
 function getDadosSocio_() {
   const ss = SpreadsheetApp.openById(CONFIG.SS_ID);
   const sheet = ss.getSheetByName(CONFIG.SOCIO.ABA);
   if (!sheet) return { erro: "Aba '" + CONFIG.SOCIO.ABA + "' não encontrada." };
 
-  const data  = sheet.getDataRange().getValues();
-  const lista = [];
+  const data = sheet.getDataRange().getValues();
+  if (data.length <= 1) return [];
 
+  const lista = [];
   for (let i = 1; i < data.length; i++) {
     const r = data[i];
     if (!r[CONFIG.SOCIO.CPF]) continue;
@@ -172,25 +146,21 @@ function getDadosSocio_() {
       situacaoProf:   normalizar_(r[CONFIG.SOCIO.SITUACAO_PROF]),
     });
   }
-
   return lista;
 }
 
-// ══════════════════════════════════════════════════════════════════
-//  BUSCA DE DADOS: CONFIG
-// ══════════════════════════════════════════════════════════════════
 function getDadosConfig_() {
   const ss = SpreadsheetApp.openById(CONFIG.SS_ID);
   const sheet = ss.getSheetByName(CONFIG.CONFIG.ABA);
   if (!sheet) return { erro: "Aba '" + CONFIG.CONFIG.ABA + "' não encontrada." };
 
   const data = sheet.getDataRange().getValues();
-  const lista = [];
+  if (data.length <= 1) return [];
 
-  // Começa em i = 1 para pular a linha do cabeçalho
+  const lista = [];
   for (let i = 1; i < data.length; i++) {
     const r = data[i];
-    if (!r[CONFIG.CONFIG.CODIGO]) continue; // Pula linhas sem código
+    if (!r[CONFIG.CONFIG.CODIGO]) continue; 
 
     lista.push({
       'Codigo': r[CONFIG.CONFIG.CODIGO],
@@ -204,15 +174,14 @@ function getDadosConfig_() {
   return lista;
 }
 
-// ══════════════════════════════════════════════════════════════════
-//  BUSCA DE DADOS: LOG
-// ══════════════════════════════════════════════════════════════════
 function getDadosLog_() {
   const ss = SpreadsheetApp.openById(CONFIG.SS_ID);
   const sheet = ss.getSheetByName(CONFIG.LOG.ABA);
   if (!sheet) return { erro: "Aba '" + CONFIG.LOG.ABA + "' não encontrada." };
 
   const data = sheet.getDataRange().getValues();
+  if (data.length <= 1) return []; // Evita erro se não houver cabeçalhos
+
   const headers = data[0];
   const lista = [];
 
@@ -227,52 +196,117 @@ function getDadosLog_() {
   return lista;
 }
 
-// ══════════════════════════════════════════════════════════════════
-//  FUNÇÕES AUXILIARES (HELPERS)
-// ══════════════════════════════════════════════════════════════════
+function getDadosPresencas_() {
+  const ss = SpreadsheetApp.openById(CONFIG.SS_ID);
+  const sheet = ss.getSheetByName(CONFIG.PRESENCAS.ABA);
+  if (!sheet) return { erro: "Aba '" + CONFIG.PRESENCAS.ABA + "' não encontrada." };
+
+  const data = sheet.getDataRange().getValues();
+  if (data.length <= 1) return [];
+
+  const headers = data[0];
+  const lista = [];
+
+  for (let i = 1; i < data.length; i++) {
+    const r = data[i];
+    let rowObject = {};
+    for (let j = 0; j < headers.length; j++) {
+      rowObject[headers[j]] = r[j];
+    }
+    lista.push(rowObject);
+  }
+  return lista;
+}
+
 function responder_(data, cb) {
   const json = JSON.stringify(data);
   if (cb) {
     return ContentService
-      .createTextOutput(cb + "(" + json + ")")
+      .createTextOutput(cb + "(" + json + ");")
       .setMimeType(ContentService.MimeType.JAVASCRIPT);
   }
   return ContentService
     .createTextOutput(json)
-    .setMimeType(ContentService.MimeType.JSON)
-    .addHeader("Access-Control-Allow-Origin", "*");
+    .setMimeType(ContentService.MimeType.JSON);
 }
 
 function limparCpf_(val) {
-  return String(val || "").replace(/\D/g, "").trim();
+  if (val == null) return "";
+  return String(val).replace(/\D/g, "").trim();
 }
 
 function normalizar_(val) {
-  const s = String(val || "").trim();
+  if (val == null) return null;
+  const s = String(val).trim();
   return s || null;
 }
 
 function temValor_(val) {
-  const s = String(val || "").toLowerCase().trim();
+  if (val == null) return false;
+  const s = String(val).toLowerCase().trim();
   return s === "sim" || s === "yes" || s === "true" || s === "1" || (s.length > 0 && s !== "não" && s !== "nao" && s !== "no" && s !== "false");
 }
 
-// ══════════════════════════════════════════════════════════════════
-//  PONTO DE ENTRADA PARA ESCRITA DE DADOS (requisições POST)
-// ══════════════════════════════════════════════════════════════════
+function isAuthorized_(email, pin) {
+  try {
+    const ss = SpreadsheetApp.openById(CONFIG.SS_ID);
+    const sheet = ss.getSheetByName(CONFIG.CONFIG.ABA);
+    if (!sheet) return false;
+    const data = sheet.getDataRange().getValues();
+    
+    let adminEmails = ["profissaopet@j3lab.com.br"]; // Fallback padrão
+    let adminPin = "123456"; // Fallback padrão
+    
+    for (let i = 1; i < data.length; i++) {
+      const cod = String(data[i][CONFIG.CONFIG.CODIGO]).trim();
+      const val = String(data[i][CONFIG.CONFIG.VALOR]).trim();
+      if (cod === "ADMIN_EMAILS" && val) {
+        adminEmails = val.toLowerCase().split(",").map(e => e.trim());
+      } else if (cod === "ADMIN_PIN" && val) {
+        adminPin = val;
+      }
+    }
+
+    if (email) {
+      const cleanEmail = email.toLowerCase().trim();
+      if (adminEmails.indexOf(cleanEmail) !== -1) {
+        return true;
+      }
+    }
+
+    if (pin) {
+      if (String(pin).trim() === adminPin) {
+        return true;
+      }
+    }
+  } catch (err) {
+    // Em caso de erro ao abrir planilha na verificação, falha por segurança
+    console.error("Erro na validação isAuthorized_: " + err.toString());
+  }
+  return false;
+}
+
 function doPost(e) {
   try {
     const payload = JSON.parse(e.postData.contents);
     const endpoint = payload.endpoint;
     const data = payload.data;
+    const email = payload.email || "";
+    const pin = payload.pin || "";
+
+    if (!isAuthorized_(email, pin)) {
+      throw new Error("Acesso negado. Ação não autorizada.");
+    }
 
     if (endpoint === 'config') {
       updateConfigSheet_(data);
       return ContentService.createTextOutput(JSON.stringify({ status: 'success' })).setMimeType(ContentService.MimeType.JSON);
     }
-
+    if (endpoint === 'presencas') {
+      appendPresencas_(data);
+      return ContentService.createTextOutput(JSON.stringify({ status: 'success' })).setMimeType(ContentService.MimeType.JSON);
+    }
     throw new Error("Endpoint de POST inválido.");
-
   } catch (err) {
     return ContentService.createTextOutput(JSON.stringify({ status: 'error', message: err.message })).setMimeType(ContentService.MimeType.JSON);
   }
@@ -282,13 +316,27 @@ function updateConfigSheet_(data) {
   const sheet = SpreadsheetApp.openById(CONFIG.SS_ID).getSheetByName(CONFIG.CONFIG.ABA);
   if (!sheet) throw new Error("Aba 'Config' não encontrada.");
 
-  // Prepara os dados para serem escritos na planilha (formato: array de arrays)
   const headers = ['Codigo', 'Valor', 'Descrição', 'Fase pedagogica', 'Horas', 'Tipo'];
   const dataArray = data.map(row => headers.map(header => row[header]));
 
-  // Limpa a planilha (exceto a linha do cabeçalho) e escreve os novos dados
-  sheet.getRange(2, 1, sheet.getMaxRows() - 1, sheet.getMaxColumns()).clearContent();
+  const maxRows = sheet.getMaxRows();
+  if (maxRows > 1) {
+    sheet.getRange(2, 1, maxRows - 1, sheet.getMaxColumns()).clearContent();
+  }
+  
   if (dataArray.length > 0) {
     sheet.getRange(2, 1, dataArray.length, headers.length).setValues(dataArray);
+  }
+}
+
+function appendPresencas_(data) {
+  const sheet = SpreadsheetApp.openById(CONFIG.SS_ID).getSheetByName(CONFIG.PRESENCAS.ABA);
+  if (!sheet) throw new Error("Aba '" + CONFIG.PRESENCAS.ABA + "' não encontrada.");
+
+  const headers = ['Data do registro', 'Evento', 'Nome', 'Email', 'CPF', 'Celular', 'Localidade', 'Perfil', 'Classificação', 'Comentario Geral', 'Conteudo', 'Comentario conteudo', 'Estrutura', 'Comentario estrutura'];
+  
+  const rows = data.map(row => headers.map(header => row[header] || ""));
+  if (rows.length > 0) {
+    sheet.getRange(sheet.getLastRow() + 1, 1, rows.length, headers.length).setValues(rows);
   }
 }

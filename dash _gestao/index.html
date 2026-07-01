@@ -62,9 +62,16 @@
     <a class="nav-item" data-panel="sroi" onclick="switchPanel('sroi', this)">
       <i class="fa-solid fa-hand-holding-dollar"></i> <span>sROI</span>
     </a>
+    <a class="nav-item" data-panel="depoimentos" onclick="switchPanel('depoimentos', this)">
+      <i class="fa-regular fa-comments"></i> <span>Mural & NPS</span>
+    </a>
     <div class="nav-section">Admin</div>
     <a class="nav-item" data-panel="config" onclick="switchPanel('config', this)">
       <i class="fa-solid fa-gear"></i> <span>Configurações</span>
+    </a>
+    <div class="nav-section">Aparência</div>
+    <a class="nav-item" id="dark-mode-btn" onclick="toggleDarkMode()">
+      <i class="fa-solid fa-moon"></i> <span>Modo Escuro</span>
     </a>
     <div class="sidebar-footer">
           <div class="sponsors-section">
@@ -639,6 +646,88 @@
       </div>
     </div>
 
+    <!-- ══ MURAL DE DEPOIMENTOS & NPS ══ -->
+    <div class="panel" id="panel-depoimentos">
+      <div class="topbar">
+        <div class="topbar-left">
+          <button class="menu-toggle" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
+          <div class="page-title">Mural & NPS</div>
+          <div class="page-sub">Avaliações consolidadas e depoimentos das alunas</div>
+        </div>
+        <div class="topbar-actions">
+          <button class="btn btn-outline" onclick="reloadData()">
+            <i class="fa-solid fa-rotate-right"></i> Recarregar
+          </button>
+          <button class="btn btn-primary" onclick="showPdfOptionsModal()">
+            <i class="fa-solid fa-print"></i> Exportar relatório
+          </button>
+        </div>
+      </div>
+
+      <!-- NPS Cards -->
+      <div class="metrics-grid">
+        <div class="mcard">
+          <div class="mcard-icon" style="background:#fff7ed; color:var(--orange)"><i class="fa-solid fa-star"></i></div>
+          <div class="mcard-body">
+            <div class="mcard-label">Satisfação Geral</div>
+            <div class="mcard-val" id="nps-geral" style="color:var(--orange)">—</div>
+            <div class="mcard-sub">média das avaliações gerais</div>
+          </div>
+        </div>
+        <div class="mcard">
+          <div class="mcard-icon" style="background:#ede9fe; color:var(--purple)"><i class="fa-solid fa-book-open"></i></div>
+          <div class="mcard-body">
+            <div class="mcard-label">Conteúdo do Curso</div>
+            <div class="mcard-val" id="nps-conteudo" style="color:var(--purple)">—</div>
+            <div class="mcard-sub">média da qualidade do conteúdo</div>
+          </div>
+        </div>
+        <div class="mcard">
+          <div class="mcard-icon" style="background:#dcfce7; color:var(--green)"><i class="fa-solid fa-building"></i></div>
+          <div class="mcard-body">
+            <div class="mcard-label">Estrutura Física</div>
+            <div class="mcard-val" id="nps-estrutura" style="color:var(--green)">—</div>
+            <div class="mcard-sub">média da infraestrutura e suporte</div>
+          </div>
+        </div>
+        <div class="mcard">
+          <div class="mcard-icon" style="background:#e0f2fe; color:var(--blue)"><i class="fa-solid fa-comments"></i></div>
+          <div class="mcard-body">
+            <div class="mcard-label">Total de Feedbacks</div>
+            <div class="mcard-val" id="nps-feedbacks-count" style="color:var(--blue)">—</div>
+            <div class="mcard-sub">comentários recebidos</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="charts-2col">
+        <!-- Gráfico Satisfação por Curso -->
+        <div class="chart-card">
+          <div class="chart-title">
+            Satisfação Média por Evento/Curso
+            <i class="fa-solid fa-circle-info info-icon" data-tooltip="Notas médias de 1 a 5 atribuídas pelas alunas para cada evento específico."></i>
+          </div>
+          <div class="chart-sub">Desempenho de satisfação nas atividades e oficinas</div>
+          <div style="position:relative;height:250px">
+            <canvas id="chartNpsCursos" role="img" aria-label="Gráfico de satisfação por curso">Carregando...</canvas>
+          </div>
+        </div>
+        
+        <!-- Mural de Depoimentos -->
+        <div class="chart-card" style="display: flex; flex-direction: column;">
+          <div class="chart-title" style="margin-bottom: 4px;">
+            Mural de Depoimentos
+            <i class="fa-solid fa-circle-info info-icon" data-tooltip="Feedbacks qualitativos reais digitados pelas alunas no credenciamento."></i>
+          </div>
+          <div class="chart-sub" style="margin-bottom: 16px;">Voz da aluna · Depoimentos e comentários</div>
+          <div id="mural-depoimentos-container" class="testimonials-wall" style="flex: 1; overflow-y: auto; max-height: 320px; display: flex; flex-direction: column; gap: 12px; padding-right: 4px;">
+            <!-- Preenchido via Javascript -->
+            <div class="empty-state"><i class="fa-regular fa-comments"></i>Nenhum depoimento carregado.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- ══ CONFIG ══ -->
     <div class="panel" id="panel-config">
       <div class="topbar">
@@ -772,6 +861,28 @@
       </div>
     </div>
   </div>
+</div>
+<!-- LOGIN BLOCKED OVERLAY -->
+<div id="login-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:var(--navy); z-index:9999; align-items:center; justify-content:center; flex-direction:column; padding:20px;">
+  <div style="background:var(--surface); padding:40px; border-radius:24px; box-shadow:0 12px 32px rgba(0,0,0,0.15); width:100%; max-width:400px; text-align:center; display:flex; flex-direction:column; gap:20px;">
+    <div>
+      <img src="https://github.com/juanjsales/PETRocinha/blob/main/pet%20(1).png?raw=true" alt="Logo Pet Rocinha" style="height:64px; margin-bottom:12px;">
+      <h3 style="font-size:20px; font-weight:700; color:var(--navy); margin-bottom:4px;">Acesso Restrito</h3>
+      <p style="font-size:12px; color:var(--muted);">Este painel é exclusivo para administradores do projeto Profissão Pet Rocinha.</p>
+    </div>
+    
+    <div style="display:flex; flex-direction:column; gap:12px; text-align:left;">
+      <label for="pin-input" style="font-size:11px; font-weight:600; text-transform:uppercase; color:var(--muted); letter-spacing:0.5px;">Código PIN de Acesso</label>
+      <input type="password" id="pin-input" placeholder="Digite o PIN de 6 dígitos" maxlength="12" style="width:100%; padding:14px; border-radius:12px; border:1px solid var(--border); font-size:16px; text-align:center; letter-spacing:4px; font-family:monospace; outline:none; transition:all 0.2s;" oninput="this.value = this.value.replace(/\D/g, '')">
+    </div>
+    
+    <div id="login-error-msg" style="color:var(--pink); font-size:12px; font-weight:600; display:none;">PIN incorreto. Tente novamente.</div>
+    
+    <button class="btn btn-primary" onclick="submitPinLogin()" style="justify-content:center; padding:14px; border-radius:12px; font-size:14px;">
+      <i class="fa-solid fa-unlock-keyhole"></i> Entrar no Painel
+    </button>
+  </div>
+  <p style="color:rgba(255,255,255,0.4); font-size:11px; margin-top:20px;">FAPERJ 2026 · Instituto Impacto Criativo</p>
 </div>
 
 <script src="script.js" defer></script>

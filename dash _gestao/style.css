@@ -1269,3 +1269,95 @@ tr:hover td {
 .iic-lgpd-container input[type="checkbox"] { width: 20px !important; height: 20px !important; margin: 0 !important; cursor: pointer !important; flex-shrink: 0 !important; accent-color: var(--verde-iic) !important; }
 .iic-lgpd-container label { font-size: 12px !important; color: #4a5568 !important; font-weight: 500 !important; cursor: pointer !important; line-height: 1.5 !important; }
 .iic-lgpd-footer { font-size: 11px; color: #94a3b8; text-align: center; margin-top: 24px; line-height: 1.5; border-top: 1px solid var(--cinza-borda); padding-top: 16px; }
+
+/* ════════════════════════════════════════════════════════════════════════
+   5. MURAL & NPS AND LOGIN OVERLAY STYLES
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* Testimonials Wall (Cards) */
+.testimonials-wall {
+  padding-right: 4px;
+}
+.testimonial-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: relative;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  text-align: left;
+}
+.testimonial-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+.testimonial-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+}
+.testimonial-author {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.testimonial-avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  color: var(--navy);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: 700;
+}
+.testimonial-text {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-light);
+  font-style: italic;
+  white-space: pre-wrap;
+}
+.testimonial-event {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--navy);
+  margin-top: auto;
+  align-self: flex-start;
+  background: #e8effa;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+/* PIN Login Input & Overlay adjustments */
+#pin-input:focus {
+  border-color: var(--navy);
+  box-shadow: 0 0 0 3px rgba(0, 51, 102, 0.15);
+}
+
+/* Dark Mode Variables Toggle */
+body.dark-mode .testimonial-card {
+  background: var(--surface);
+  border-color: var(--border);
+}
+body.dark-mode .testimonial-avatar {
+  background: var(--border);
+  color: #fff;
+}
+body.dark-mode .testimonial-event {
+  background: rgba(0, 51, 102, 0.3);
+  color: #93c5fd;
+}
+body.dark-mode #login-overlay {
+  background: #0b0f19 !important;
+}
