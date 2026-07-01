@@ -40,7 +40,7 @@ let mockBackendData = {
     nome: "Profissão Pet",
     email: "teste@sandbox.com",
     cpf: "00000000000",
-    foto: "pet (1).png",
+    foto: "assets/pet (1).png",
     arrasas: 0,
     xp_total: 0,
     badge: "Aprendiz Curiosa 🐾",
@@ -389,11 +389,11 @@ async function jsonpRequest(params) {
 }
 
 const configMapa = [
-    { id: "Aprendiz Curiosa 🐾", nome: "1. Aprendiz Curiosa 🐾", stage: "acreditar", icon: "🐾", img: "https://raw.githubusercontent.com/juanjsales/PETRocinha/main/Aprendiz.webp", desc: "Primeiros passos no curso." },
-    { id: "Mulher de Propósito ✨", nome: "2. Mulher de Propósito ✨", stage: "acreditar", icon: "✨", img: "https://raw.githubusercontent.com/juanjsales/PETRocinha/main/Mulher.webp", desc: "Conexão com seu \'porquê\'." },
-    { id: "Fera da Técnica 🎓", nome: "3. Fera da Técnica 🎓", stage: "aprender", icon: "🎓", img: "https://raw.githubusercontent.com/juanjsales/PETRocinha/main/Fera.webp", desc: "Domínio do manejo pet." },
-    { id: "Profissional que Arrasa 💼", nome: "4. Profissional que Arrasa 💼", stage: "agir", icon: "💼", img: "https://raw.githubusercontent.com/juanjsales/PETRocinha/main/Prof.webp", desc: "Atendimento e renda." },
-    { id: "Embaixadora Pet Rocinha 👑", nome: "5. Embaixadora Pet Rocinha 👑", stage: "agir", icon: "👑", img: "https://raw.githubusercontent.com/juanjsales/PETRocinha/main/Embaixadora.webp", desc: "Referência na comunidade." }
+    { id: "Aprendiz Curiosa 🐾", nome: "1. Aprendiz Curiosa 🐾", stage: "acreditar", icon: "🐾", img: "assets/Aprendiz.webp", desc: "Primeiros passos no curso." },
+    { id: "Mulher de Propósito ✨", nome: "2. Mulher de Propósito ✨", stage: "acreditar", icon: "✨", img: "assets/Mulher.webp", desc: "Conexão com seu \'porquê\'." },
+    { id: "Fera da Técnica 🎓", nome: "3. Fera da Técnica 🎓", stage: "aprender", icon: "🎓", img: "assets/Fera.webp", desc: "Domínio do manejo pet." },
+    { id: "Profissional que Arrasa 💼", nome: "4. Profissional que Arrasa 💼", stage: "agir", icon: "💼", img: "assets/Prof.webp", desc: "Atendimento e renda." },
+    { id: "Embaixadora Pet Rocinha 👑", nome: "5. Embaixadora Pet Rocinha 👑", stage: "agir", icon: "👑", img: "assets/Embaixadora.webp", desc: "Referência na comunidade." }
 ];
 
 function parseNestedCSV(str) {

@@ -1174,7 +1174,7 @@ function showSocioModal(cpf) {
 
     body.innerHTML = `
       <div class="modal-profile-header">
-        <img src="${aluna.imgUrl || 'https://github.com/juanjsales/PETRocinha/blob/main/pet%20(1).png?raw=true'}" class="modal-profile-img">
+        <img src="${aluna.imgUrl || '../assets/pet%20(1).png'}" class="modal-profile-img">
         <div><h3>${aluna.nome}</h3><p>${aluna.email}</p></div>
       </div>
       <h4><i class="fa-solid fa-award"></i> Perfil do Programa</h4>
