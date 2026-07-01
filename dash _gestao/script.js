@@ -398,6 +398,7 @@ function initLeafletMap() {
 
   changeLeafletStyle();
   leafletMap.invalidateSize();
+  if (typeof calcularCapilaridadeGeografica === 'function') calcularCapilaridadeGeografica();
 }
 
 function toggleLeafletHeat() {
@@ -426,7 +427,66 @@ function changeLeafletStyle() {
   leafletTileLayer.setUrl(tileUrls[style] || tileUrls['standard']);
 }
 
-// ── GEOCODIFICAÇÃO GRATUITA (VIACEP + NOMINATIM) ──────────────────────────
+// ── GEOCODIFICAÇÃO LOCAL INTELIGENTE & CIRCUIT BREAKER ───────────────────
+function obterCoordenadasLocais(query, cep) {
+  const q = String(query || '').toLowerCase();
+  const c = String(cep || '').replace(/\D/g, '');
+  
+  // Jitter para evitar que marcadores fiquem empilhados no mesmo pixel
+  const jitter = () => (Math.random() - 0.5) * 0.006;
+
+  // 1. Mapeamento por Prefixo de CEP
+  if (c.startsWith('22451') || c.startsWith('22450')) {
+    return { lat: -22.9886 + jitter(), lng: -43.2486 + jitter() };
+  }
+  if (c.startsWith('22452')) {
+    return { lat: -22.9962 + jitter(), lng: -43.2436 + jitter() };
+  }
+  if (c.startsWith('22610') || c.startsWith('22612') || c.startsWith('22611')) {
+    return { lat: -22.9922 + jitter(), lng: -43.2626 + jitter() };
+  }
+  if (c.startsWith('22753') || c.startsWith('22750')) {
+    return { lat: -22.9774 + jitter(), lng: -43.3056 + jitter() };
+  }
+  if (c.startsWith('255')) {
+    return { lat: -22.8039 + jitter(), lng: -43.3722 + jitter() };
+  }
+  if (c.startsWith('230') || c.startsWith('23094')) {
+    return { lat: -22.8682 + jitter(), lng: -43.5132 + jitter() };
+  }
+
+  // 2. Mapeamento por Termos do Endereço
+  if (q.includes('rocinha') || q.includes('esperança') || q.includes('silvia') || q.includes('zacarias')) {
+    return { lat: -22.9886 + jitter(), lng: -43.2486 + jitter() };
+  }
+  if (q.includes('vidigal')) {
+    return { lat: -22.9962 + jitter(), lng: -43.2436 + jitter() };
+  }
+  if (q.includes('são conrado') || q.includes('sao conrado')) {
+    return { lat: -22.9922 + jitter(), lng: -43.2626 + jitter() };
+  }
+  if (q.includes('gávea') || q.includes('gavea') || q.includes('dioneia')) {
+    return { lat: -22.9765 + jitter(), lng: -43.2282 + jitter() };
+  }
+  if (q.includes('meriti') || q.includes('jurujuba') || q.includes('valdir moreira')) {
+    return { lat: -22.8039 + jitter(), lng: -43.3722 + jitter() };
+  }
+  if (q.includes('santíssimo') || q.includes('santissimo') || q.includes('guandu mirim')) {
+    return { lat: -22.8682 + jitter(), lng: -43.5132 + jitter() };
+  }
+  if (q.includes('copacabana')) {
+    return { lat: -22.9698 + jitter(), lng: -43.1862 + jitter() };
+  }
+  if (q.includes('ipanema')) {
+    return { lat: -22.9847 + jitter(), lng: -43.2075 + jitter() };
+  }
+  if (q.includes('jacarepaguá') || q.includes('jacarepagua') || q.includes('itanhangá') || q.includes('itanhanga')) {
+    return { lat: -22.9774 + jitter(), lng: -43.3056 + jitter() };
+  }
+
+  return null;
+}
+
 async function geocodeSocioDataBackground() {
   const membrosParaGeocodificar = MEMBROS.filter(m => {
     const cepStr = m.cep || m.CEP || (m.dadosSocio && (m.dadosSocio.cep || m.dadosSocio.CEP));
@@ -436,66 +496,91 @@ async function geocodeSocioDataBackground() {
   if (membrosParaGeocodificar.length === 0) return;
 
   let updated = false;
-  const membrosParaBuscarNaApi = [];
+  let nominatimBlocked = false; // Circuit Breaker (CORS / 429)
 
-  // 1. Separa o trabalho: verifica o cache primeiro para todos
-  membrosParaGeocodificar.forEach(m => {
-    const cepStr = m.cep || m.CEP || (m.dadosSocio && (m.dadosSocio.cep || m.dadosSocio.CEP));
-    const cleanCep = String(cepStr).replace(/\D/g, '');
-    const cacheKey = `geo_v2_${cleanCep}`;
-    const cached = localStorage.getItem(cacheKey);
-
-    if (cached) {
-      const parsed = JSON.parse(cached);
-      m.lat = parsed.lat;
-      m.lng = parsed.lon;
-      updated = true;
-    } else {
-      membrosParaBuscarNaApi.push(m);
-    }
-  });
-
-  // 2. Processa em paralelo apenas os que precisam de busca na API
-  // 💡 ESTRATÉGIA ALTERADA: De paralelo para sequencial para respeitar os limites da API (1 req/s)
-  // Isso evita os erros de "Failed to fetch" por sobrecarga.
-  for (const m of membrosParaBuscarNaApi) {
+  for (const m of membrosParaGeocodificar) {
     try {
       const cepStr = m.cep || m.CEP || (m.dadosSocio && (m.dadosSocio.cep || m.dadosSocio.CEP));
-      if (!cepStr) continue; // Pula para o próximo membro se não houver CEP
+      if (!cepStr) continue;
 
       const cleanCep = String(cepStr).replace(/\D/g, '');
       const cacheKey = `geo_v2_${cleanCep}`;
 
-      // Pausa de 1.1 segundos ANTES de cada requisição para garantir o limite da API
-      await new Promise(resolve => setTimeout(resolve, 1100));
+      // 1. Tenta Cache LocalStorage
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          m.lat = parsed.lat;
+          m.lng = parsed.lon;
+          updated = true;
+          continue;
+        } catch (e) {}
+      }
 
+      // 2. Tenta Geocodificação Local Inteligente (Sem requisições de rede)
       let addressQuery = `${cepStr}, Rio de Janeiro, Brasil`;
-      if (cleanCep.length === 8) {
-        const viaCepRes = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
-        const viaCepData = await viaCepRes.json();
-        if (viaCepData && !viaCepData.erro) {
-          addressQuery = `${viaCepData.logradouro || ''}, ${viaCepData.bairro || ''}, ${viaCepData.localidade} - ${viaCepData.uf}, Brasil`;
+      if (m.dadosSocio && m.dadosSocio.logradouro) {
+        addressQuery = `${m.dadosSocio.logradouro}, ${m.dadosSocio.bairro || ''}, Rio de Janeiro, Brasil`;
+      }
+      
+      const coordLocal = obterCoordenadasLocais(addressQuery, cleanCep);
+      if (coordLocal) {
+        m.lat = coordLocal.lat;
+        m.lng = coordLocal.lng;
+        localStorage.setItem(cacheKey, JSON.stringify({ lat: m.lat, lon: m.lng }));
+        updated = true;
+        continue;
+      }
+
+      // 3. Fallback Nominatim (Apenas se não bloqueado por CORS/429)
+      if (!nominatimBlocked) {
+        try {
+          // Se for CEP de 8 dígitos, tenta ViaCEP primeiro (não sofre de CORS)
+          if (cleanCep.length === 8) {
+            const viaCepRes = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
+            const viaCepData = await viaCepRes.json();
+            if (viaCepData && !viaCepData.erro) {
+              addressQuery = `${viaCepData.logradouro || ''}, ${viaCepData.bairro || ''}, ${viaCepData.localidade} - ${viaCepData.uf}, Brasil`;
+            }
+          }
+
+          // Respeita limite da API Nominatim
+          await new Promise(resolve => setTimeout(resolve, 1100));
+
+          const nominatimUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(addressQuery)}&format=json&limit=1&email=profissaopet@j3lab.com.br`;
+          const response = await fetch(nominatimUrl);
+          
+          if (response.status === 429) {
+            nominatimBlocked = true;
+            throw new Error('429 Too Many Requests');
+          }
+          
+          const data = await response.json();
+          if (data && data.length > 0) {
+            m.lat = parseFloat(data[0].lat);
+            m.lng = parseFloat(data[0].lon);
+            localStorage.setItem(cacheKey, JSON.stringify({ lat: m.lat, lon: m.lng }));
+            updated = true;
+            continue;
+          }
+        } catch (netErr) {
+          nominatimBlocked = true; // Aciona o circuit breaker para silenciar erros futuros no loop
         }
       }
 
-      const nominatimUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(addressQuery)}&format=json&limit=1`;
-      const response = await fetch(nominatimUrl);
-      const data = await response.json();
-
-      if (data && data.length > 0) {
-        m.lat = parseFloat(data[0].lat);
-        m.lng = parseFloat(data[0].lon);
-        localStorage.setItem(cacheKey, JSON.stringify({ lat: m.lat, lon: m.lng }));
-        updated = true;
-      }
+      // 4. Fallback Seguro & Silencioso (Centróide de Rocinha com Jitter)
+      const fallbackJitter = () => (Math.random() - 0.5) * 0.008;
+      m.lat = -22.9886 + fallbackJitter();
+      m.lng = -43.2486 + fallbackJitter();
+      localStorage.setItem(cacheKey, JSON.stringify({ lat: m.lat, lon: m.lng }));
+      updated = true;
     } catch (error) {
-      console.warn(`Falha na geocodificação para o membro ${m.nome || m.cpf}. Erro:`, error);
-      // Continua para o próximo membro mesmo em caso de erro
+      // Falha silenciosa para evitar entupir o console do usuário
     }
   }
 
-  // 3. Redesenha o mapa uma única vez no final, se houver qualquer atualização
-  if (updated) initLeafletMap(); 
+  if (updated) initLeafletMap();
 }
 
 // ── GRÁFICOS: VISÃO GERAL ──────────────────────────────────────────────────
@@ -710,6 +795,7 @@ function initImpactoCharts() {
     return acc;
   }, {});
   barChart('chartSroiIncentivos', Object.keys(pontosPorFase), Object.values(pontosPorFase), '#003366');
+  if (typeof calcularSimulacaoSroi === 'function') calcularSimulacaoSroi();
 }
 
 // ── GRÁFICOS E TABELA: CONFIGURAÇÕES ───────────────────────────────────────────────
@@ -884,20 +970,27 @@ function loadEventosData() {
   document.body.appendChild(s1);
 }
 
-function processarEventos(dados) {
-  isLoadingEventos = false;
-  PRESENCAS = dados || [];
-  
+function agruparPresencasEmEventos() {
   const presencasPorEvento = {};
   PRESENCAS.forEach(p => {
     const eventoNome = p.Evento || "Evento não identificado";
     if (!presencasPorEvento[eventoNome]) presencasPorEvento[eventoNome] = [];
     presencasPorEvento[eventoNome].push({
-      Data_do_registro: p['Data do registro'], Evento: p.Evento, Nome: p.Nome, Email: p.Email,
-      CPF: p.CPF, Celular: p.Celular, Localidade: p.Localidade, Perfil: p.Perfil,
-      Classificacao: p['Classificação'], Comentario_Geral: p['Comentario Geral'], Conteudo: p.Conteudo,
-      Comentario_conteudo: p['Comentario conteudo'], Estrutura: p.Estrutura, Comentario_estrutura: p['Comentario estrutura'],
-      cpf: p.CPF
+      Data_do_registro: p['Data do registro'] || p.Data_do_registro, 
+      Evento: p.Evento, 
+      Nome: p.Nome || p.nome, 
+      Email: p.Email || p.email,
+      CPF: p.CPF || p.cpf, 
+      Celular: p.Celular || p.celular || p.wpp, 
+      Localidade: p.Localidade || p.localidade || p.cep, 
+      Perfil: p.Perfil || p.perfil || p.badge, 
+      Classificacao: p['Classificação'] || p.Classificacao, 
+      Comentario_Geral: p['Comentario Geral'] || p.Comentario_Geral, 
+      Conteudo: p.Conteudo,
+      Comentario_conteudo: p['Comentario conteudo'] || p.Comentario_conteudo, 
+      Estrutura: p.Estrutura, 
+      Comentario_estrutura: p['Comentario estrutura'] || p.Comentario_estrutura,
+      cpf: p.CPF || p.cpf
     });
   });
 
@@ -910,6 +1003,12 @@ function processarEventos(dados) {
     }
     return { id: 'ev_' + index, title: nome, date: evDate, desc: 'Registros extraídos da aba Lista de Presença.', presentes: presentes };
   });
+}
+
+function processarEventos(dados) {
+  isLoadingEventos = false;
+  PRESENCAS = dados || [];
+  agruparPresencasEmEventos();
   renderEventos();
 }
 
@@ -1342,6 +1441,7 @@ function processarTudo(dados) {
     CONFIG  = dados.config  || [];
     LOG     = dados.log     || [];
     PRESENCAS = dados.presencas || []; // Atribui presencas
+    agruparPresencasEmEventos();
     
     tentarMergeEProcessar();
   } catch (erro) {
@@ -1648,6 +1748,83 @@ async function saveConfigChanges() {
     saveButton.innerHTML = saveButton.dataset.originalText;
     saveButton.disabled = false;
   }
+}
+
+function calcularCapilaridadeGeografica() {
+  let totalComCep = 0;
+  let rocinhaCount = 0;
+  let vidigalCount = 0;
+  let saoConradoCount = 0;
+  let outrosCount = 0;
+
+  MEMBROS.forEach(m => {
+    const cep = m.cep || (m.dadosSocio && m.dadosSocio.cep);
+    if (cep) {
+      totalComCep++;
+      const clean = String(cep).replace(/\D/g, '');
+      if (clean.startsWith('22451') || clean.startsWith('22450')) {
+        rocinhaCount++;
+      } else if (clean.startsWith('22452')) {
+        vidigalCount++;
+      } else if (clean.startsWith('22610') || clean.startsWith('22612')) {
+        saoConradoCount++;
+      } else {
+        outrosCount++;
+      }
+    }
+  });
+
+  const totalMembros = MEMBROS.length;
+  
+  const elCount = document.getElementById('geo-mapeadas-count');
+  if (elCount) elCount.textContent = `${totalComCep} / ${totalMembros}`;
+
+  const setBarAndPct = (idPct, idBar, count) => {
+    const pct = totalComCep ? Math.round((count / totalComCep) * 100) : 0;
+    const elPct = document.getElementById(idPct);
+    const elBar = document.getElementById(idBar);
+    if (elPct) elPct.textContent = `${pct}% (${count})`;
+    if (elBar) elBar.style.width = `${pct}%`;
+  };
+
+  setBarAndPct('geo-pct-rocinha', 'geo-bar-rocinha', rocinhaCount);
+  setBarAndPct('geo-pct-vidigal', 'geo-bar-vidigal', vidigalCount);
+  setBarAndPct('geo-pct-sconrado', 'geo-bar-sconrado', saoConradoCount);
+  setBarAndPct('geo-pct-outros', 'geo-bar-outros', outrosCount);
+}
+
+function calcularSimulacaoSroi() {
+  const elInvest = document.getElementById('sim-investimento');
+  const elTaxa = document.getElementById('sim-taxa-emprego');
+  const elRenda = document.getElementById('sim-renda-media');
+  
+  if (!elInvest || !elTaxa || !elRenda) return;
+  
+  const investimento = parseFloat(elInvest.value) || 0;
+  const taxaEmprego = (parseFloat(elTaxa.value) || 0) / 100;
+  const rendaMedia = parseFloat(elRenda.value) || 0;
+
+  // Filtra as alunas sem vínculo empregatício que serão beneficiadas pela recolocação
+  const alunasSemVinculo = SOCIO.filter(s => !s.trabalhando).length || 1; 
+  
+  // Retorno financeiro anual estimado: Número de alunas sem vínculo x taxa de sucesso x renda média obtida x 12 meses
+  const alunasEmpregadasSimuladas = alunasSemVinculo * taxaEmprego;
+  const retornoAnual = alunasEmpregadasSimuladas * rendaMedia * 12;
+
+  // Valor Social da Educação (Proxy): Total de Horas de Cursos x Nº de Alunas x Valor/Hora
+  const totalMinutosCurso = CONFIG.reduce((sum, item) => sum + (Number(item.Horas) || 0), 0);
+  const totalHorasLíquidasCurso = totalMinutosCurso / 60;
+  const valorEducacao = totalHorasLíquidasCurso * MEMBROS.length * VALOR_HORA_AULA_SOCIAL;
+
+  const totalRetornoSocialSimulado = retornoAnual + valorEducacao;
+
+  // Razão SROI: (Retorno Financeiro + Valor Educação) / Investimento
+  const sroiRatio = investimento > 0 ? (totalRetornoSocialSimulado / investimento).toFixed(2) : '0.00';
+
+  // Atualiza UI
+  document.getElementById('sim-retorno-anual-val').textContent = retornoAnual.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  document.getElementById('sim-retorno-educ-val').textContent = valorEducacao.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  document.getElementById('sim-sroi-ratio').textContent = `1 : ${sroiRatio}`;
 }
 
 function setupSponsorMarquee() {

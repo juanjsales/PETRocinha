@@ -1361,3 +1361,83 @@ body.dark-mode .testimonial-event {
 body.dark-mode #login-overlay {
   background: #0b0f19 !important;
 }
+
+/* ── Tooltips Customizados ── */
+.info-icon {
+  margin-left: 6px;
+  font-size: 11px;
+  color: var(--muted);
+  cursor: help;
+  position: relative;
+  transition: color 0.2s;
+}
+
+.info-icon:hover {
+  color: var(--navy);
+}
+
+/* Tooltip container */
+[data-tooltip] {
+  position: relative;
+}
+
+/* Tooltip text bubble */
+[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%) scale(0.9);
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(4px);
+  color: #ffffff;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-family: var(--font), sans-serif;
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: normal;
+  width: 220px;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: center;
+}
+
+/* Tooltip arrow */
+[data-tooltip]::before {
+  content: "";
+  position: absolute;
+  bottom: 115%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 5px;
+  border-style: solid;
+  border-color: rgba(15, 23, 42, 0.95) transparent transparent transparent;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Hover effects */
+[data-tooltip]:hover::after {
+  opacity: 1;
+  transform: translateX(-50%) scale(1);
+}
+
+[data-tooltip]:hover::before {
+  opacity: 1;
+}
+
+/* Dark mode adjustments for tooltips */
+body.dark-mode [data-tooltip]::after {
+  background: rgba(255, 255, 255, 0.95);
+  color: #0f172a;
+}
+body.dark-mode [data-tooltip]::before {
+  border-color: rgba(255, 255, 255, 0.95) transparent transparent transparent;
+}

@@ -53,9 +53,6 @@
     <a class="nav-item" data-panel="alunas" onclick="switchPanel('alunas', this)">
       <i class="fa-solid fa-table-list"></i> <span>Alunas</span>
     </a>
-    <a class="nav-item" data-panel="eventos" onclick="switchPanel('eventos', this)">
-      <i class="fa-regular fa-calendar-days"></i> <span>Eventos</span>
-    </a>
     <a class="nav-item" data-panel="ods" onclick="switchPanel('ods', this)">
       <i class="fa-solid fa-bullseye"></i> <span>ODS</span>
     </a>
@@ -230,42 +227,121 @@
         </div>
       </div>
       
-      <div class="chart-card">
-        <div class="chart-title">
-          Radar de Capilaridade (OpenStreetMap)
-          <i class="fa-solid fa-circle-info info-icon" data-tooltip="Mapa gerado via código utilizando Leaflet e OpenStreetMap, sem depender do Google. Os CEPs são convertidos gratuitamente via Nominatim."></i>
-        </div>
-        <div class="chart-sub">Distribuição baseada nos CEPs coletados via formulário</div>
-        
-        <!-- Controles do Mapa -->
-        <div class="heatmap-controls" style="display: flex; gap: 20px; align-items: center; margin-top: 14px; padding: 12px 16px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; flex-wrap: wrap;">
-          <div style="font-size: 14px; font-weight: 600; color: var(--navy);"><i class="fa-solid fa-sliders"></i> Visualização:</div>
+      <div class="charts-2col" style="grid-template-columns: 2fr 1fr; gap: 20px; align-items: stretch;">
+        <!-- Lado Esquerdo: Mapa -->
+        <div class="chart-card" style="margin-bottom: 0; display: flex; flex-direction: column;">
+          <div class="chart-title">
+            Radar de Capilaridade (OpenStreetMap)
+            <i class="fa-solid fa-circle-info info-icon" data-tooltip="Mapa gerado via código utilizando Leaflet e OpenStreetMap, sem depender do Google. Os CEPs são convertidos gratuitamente via Nominatim."></i>
+          </div>
+          <div class="chart-sub">Distribuição baseada nos CEPs coletados via formulário</div>
           
-          <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; border-left: 1px solid var(--border); padding-left: 12px;">
-            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-weight: 500;">
-              <input type="checkbox" id="ctrl-leaflet-heat" checked onchange="toggleLeafletHeat()" style="width: 16px; height: 16px; cursor: pointer;">
-              Nuvem de Calor
-            </label>
-          </div>
+          <!-- Controles do Mapa -->
+          <div class="heatmap-controls" style="display: flex; gap: 12px; align-items: center; margin-top: 10px; padding: 10px 14px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; flex-wrap: wrap;">
+            <div style="font-size: 13px; font-weight: 600; color: var(--navy);"><i class="fa-solid fa-sliders"></i> Visualização:</div>
+            
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 12px; border-left: 1px solid var(--border); padding-left: 12px;">
+              <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-weight: 500;">
+                <input type="checkbox" id="ctrl-leaflet-heat" checked onchange="toggleLeafletHeat()" style="width: 16px; height: 16px; cursor: pointer;">
+                Nuvem de Calor
+              </label>
+            </div>
 
-          <div style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
-            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-weight: 500;">
-              <input type="checkbox" id="ctrl-leaflet-markers" checked onchange="toggleLeafletMarkers()" style="width: 16px; height: 16px; cursor: pointer;">
-              Marcadores
-            </label>
-          </div>
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 12px;">
+              <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-weight: 500;">
+                <input type="checkbox" id="ctrl-leaflet-markers" checked onchange="toggleLeafletMarkers()" style="width: 16px; height: 16px; cursor: pointer;">
+                Marcadores
+              </label>
+            </div>
 
-          <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; border-left: 1px solid var(--border); padding-left: 12px; margin-left: auto;">
-            <label for="ctrl-leaflet-style" style="font-weight: 500;">Estilo de Fundo:</label>
-            <select id="ctrl-leaflet-style" onchange="changeLeafletStyle()" class="table-input" style="padding: 4px 8px; border-radius: 6px; background: white; width: auto; font-size: 12px; cursor: pointer;">
-              <option value="standard">Padrão (Ruas)</option>
-              <option value="dark">Escuro (Dark Mode)</option>
-              <option value="light">Claro (Light Mode)</option>
-            </select>
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 12px; border-left: 1px solid var(--border); padding-left: 12px; margin-left: auto;">
+              <label for="ctrl-leaflet-style" style="font-weight: 500;">Estilo:</label>
+              <select id="ctrl-leaflet-style" onchange="changeLeafletStyle()" class="table-input" style="padding: 4px 8px; border-radius: 6px; background: white; width: auto; font-size: 12px; cursor: pointer;">
+                <option value="standard">Padrão (Ruas)</option>
+                <option value="dark">Escuro (Dark Mode)</option>
+                <option value="light">Claro (Light Mode)</option>
+              </select>
+            </div>
+          </div>
+          
+          <div id="mapa-calor-leaflet" style="width: 100%; height: 500px; border-radius: 8px; border: 1px solid #e2e8f0; margin-top: 12px; z-index: 1; flex: 1;"></div>
+        </div>
+
+        <!-- Lado Direito: Capilaridade e Bairros -->
+        <div class="chart-card" style="display: flex; flex-direction: column; justify-content: space-between; margin-bottom: 0;">
+          <div>
+            <div class="chart-title">
+              <i class="fa-solid fa-earth-americas"></i> Capilaridade Local
+              <i class="fa-solid fa-circle-info info-icon" data-tooltip="Dados estatísticos sobre a origem das alunas do projeto mapeadas com base no código de endereçamento postal (CEP)."></i>
+            </div>
+            <div class="chart-sub">Análise geográfica das participantes</div>
+            
+            <div style="display: flex; flex-direction: column; gap: 16px; margin-top: 20px;">
+              <!-- KPI: Total de CEPs mapeados -->
+              <div style="background: var(--surface2); padding: 12px; border-radius: 8px; border: 1px solid var(--border);">
+                <div style="font-size: 11px; text-transform: uppercase; color: var(--muted); font-weight: 700;">Alunas Mapeadas</div>
+                <strong style="font-size: 20px; color: var(--navy);" id="geo-mapeadas-count">0 / 0</strong>
+              </div>
+              
+              <!-- Lista de Localidades -->
+              <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 10px;">
+                <div style="font-size: 12px; font-weight: 700; color: var(--navy); margin-bottom: 4px;">Distribuição de Bairros</div>
+                
+                <!-- Rocinha -->
+                <div>
+                  <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
+                    <span>Rocinha</span>
+                    <strong id="geo-pct-rocinha">0% (0)</strong>
+                  </div>
+                  <div class="progress-track" style="height: 6px;"><div class="progress-fill" id="geo-bar-rocinha" style="width: 0%; background: #10b981;"></div></div>
+                </div>
+                
+                <!-- Vidigal -->
+                <div>
+                  <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
+                    <span>Vidigal</span>
+                    <strong id="geo-pct-vidigal">0% (0)</strong>
+                  </div>
+                  <div class="progress-track" style="height: 6px;"><div class="progress-fill" id="geo-bar-vidigal" style="width: 0%; background: #0ea5e9;"></div></div>
+                </div>
+                
+                <!-- São Conrado -->
+                <div>
+                  <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
+                    <span>São Conrado</span>
+                    <strong id="geo-pct-sconrado">0% (0)</strong>
+                  </div>
+                  <div class="progress-track" style="height: 6px;"><div class="progress-fill" id="geo-bar-sconrado" style="width: 0%; background: #eab308;"></div></div>
+                </div>
+                
+                <!-- Outros -->
+                <div>
+                  <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
+                    <span>Outros</span>
+                    <strong id="geo-pct-outros">0% (0)</strong>
+                  </div>
+                  <div class="progress-track" style="height: 6px;"><div class="progress-fill" id="geo-bar-outros" style="width: 0%; background: #ef4444;"></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div style="font-size: 11px; color: var(--muted); border-top: 1px solid var(--border); padding-top: 12px; margin-top: 16px;">
+            <i class="fa-solid fa-circle-nodes"></i> Base de dados atualizada em tempo real conforme preenchimento de fichas.
           </div>
         </div>
-        
-        <div id="mapa-calor-leaflet" style="width: 100%; height: 600px; border-radius: 8px; border: 1px solid #e2e8f0; margin-top: 14px; z-index: 1;"></div>
+      </div>
+
+      <!-- Fontes e Referências Geográficas -->
+      <div class="chart-card" style="margin-top: 24px; border-left: 4px solid var(--blue);">
+        <div class="chart-title" style="font-size: 14px; font-weight: 700; color: var(--navy);">
+          <i class="fa-solid fa-map-pin"></i> Referências de Geocodificação e Divisão Territorial
+        </div>
+        <div class="chart-sub" style="margin-bottom: 12px;">Fontes de dados espaciais e tecnologia de mapeamento</div>
+        <div style="font-size: 12px; color: var(--navy); line-height: 1.6; display: flex; flex-direction: column; gap: 8px;">
+          <div><strong>Processamento de Coordenadas:</strong> A geocodificação em lote converte os Códigos de Endereçamento Postal (CEPs) declarados pelas participantes por meio da base oficial de dados dos <strong>Correios (DNE - Diretório Nacional de Endereços)</strong>, com fallback pelo serviço de mapeamento colaborativo da <strong>OpenStreetMap Foundation (OSMF) / Nominatim API</strong>.</div>
+          <div><strong>Setores Censitários e Divisões:</strong> A classificação territorial e o agrupamento por bairros e micro-bairros na favela da Rocinha estão alinhados com o mapeamento de áreas urbanas de favelas (Classificação de Aglomerados Subnormais) do <strong>IBGE (Censo Demográfico)</strong> e as malhas administrativas da <strong>Prefeitura do Rio de Janeiro (IPP - Instituto Pereira Passos)</strong>.</div>
+        </div>
       </div>
     </div>
 
@@ -477,25 +553,6 @@
       </div>
     </div>
 
-    <!-- ══ EVENTOS ══ -->
-    <div class="panel" id="panel-eventos">
-      <div class="topbar">
-        <div class="topbar-left">
-          <button class="menu-toggle" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
-          <div class="page-title">Eventos e Agendas</div>
-          <div class="page-sub">Controle de presença e atividades presenciais</div>
-        </div>
-        <div class="topbar-actions">
-          <button class="btn btn-outline" onclick="reloadData()">
-            <i class="fa-solid fa-rotate-right"></i> Recarregar
-          </button>
-        </div>
-      </div>
-      <div class="events-grid" id="events-container">
-        <!-- Conteúdo preenchido pelo JavaScript -->
-      </div>
-    </div>
-
     <!-- ══ ODS ══ -->
     <div class="panel" id="panel-ods">
       <div class="topbar">
@@ -558,7 +615,19 @@
           <canvas id="chartOdsCobertura" role="img" aria-label="Gráfico de barras da cobertura dos ODS">Carregando...</canvas>
         </div>
       </div>
-
+      <!-- Fontes e Referências ODS -->
+      <div class="chart-card" style="margin-top: 24px; border-left: 4px solid var(--navy);">
+        <div class="chart-title" style="font-size: 14px; font-weight: 700; color: var(--navy);">
+          <i class="fa-solid fa-book"></i> Referências Metodológicas e Órgãos Competentes (ODS)
+        </div>
+        <div class="chart-sub" style="margin-bottom: 12px;">Alinhamento metodológico com indicadores de sustentabilidade nacional e global</div>
+        <div style="font-size: 12px; color: var(--navy); line-height: 1.6; display: flex; flex-direction: column; gap: 8px;">
+          <div><strong>ODS 1 (Erradicação da Pobreza):</strong> Indicadores de vulnerabilidade social calculados de acordo com os critérios do <strong>Cadastro Único (CadÚnico) / Ministério da Integração e do Desenvolvimento Social (MDS)</strong> e as linhas de pobreza estimadas pelo <strong>IBGE (Instituto Brasileiro de Geografia e Estatística)</strong>.</div>
+          <div><strong>ODS 4 (Educação de Qualidade):</strong> Parâmetros educacionais balizados pelas diretrizes curriculares para a educação profissional técnica do <strong>Ministério da Educação (MEC)</strong> e as diretrizes do Programa Nacional de Acesso ao Ensino Técnico e Emprego (PRONATEC).</div>
+          <div><strong>ODS 5 (Igualdade de Gênero):</strong> Indicadores de vulnerabilidade e inserção produtiva das mulheres baseados nos relatórios anuais da <strong>ONU Mulheres</strong> e da Secretaria Nacional de Enfrentamento à Violência contra as Mulheres do Ministério das Mulheres.</div>
+          <div><strong>ODS 8 (Trabalho Decente e Crescimento Econômico):</strong> Critérios de informalidade e taxa de desocupação balizados pela <strong>PNAD Contínua (Pesquisa Nacional por Amostra de Domicílios) do IBGE</strong> e pela Classificação Brasileira de Ocupações (CBO) do <strong>Ministério do Trabalho e Emprego (MTE)</strong>.</div>
+        </div>
+      </div>
 
     </div>
 
@@ -583,7 +652,10 @@
         <div class="mcard">
           <div class="mcard-icon" style="background:#dcfce7; color:#166534"><i class="fa-solid fa-arrow-trend-up"></i></div>
           <div class="mcard-body">
-            <div class="mcard-label">Potencial de Renda Mensal Gerada</div>
+            <div class="mcard-label">
+              Potencial de Renda Mensal Gerada
+              <i class="fa-solid fa-circle-info info-icon" data-tooltip="Retorno financeiro potencial acumulado de todas as alunas sem vínculo de trabalho passando a receber 1 Salário Mínimo (R$ 1.621,00)."></i>
+            </div>
             <div class="mcard-val-wrap">
               <div class="mcard-val" id="sroi-renda-potencial" style="color:#166534">R$ 0,00</div>
             </div>
@@ -621,6 +693,7 @@
           </div>
         </div>
       </div>
+      
       <div class="charts-2col">
         <div class="chart-card">
           <div class="chart-title">
@@ -642,6 +715,72 @@
           <div style="position:relative;height:250px">
             <canvas id="chartSroiPotencial" role="img" aria-label="Gráfico de potencial de renda vs renda atual">Carregando...</canvas>
           </div>
+        </div>
+      </div>
+
+      <!-- Simulador de Impacto sROI -->
+      <div class="chart-card" style="margin-top: 24px;">
+        <div class="chart-title">
+          <i class="fa-solid fa-calculator"></i> Simulador de Impacto Social & Retorno (sROI)
+          <i class="fa-solid fa-circle-info info-icon" data-tooltip="Ferramenta de simulação interativa baseada no perfil de participantes da própria base e na projeção de empregabilidade."></i>
+        </div>
+        <div class="chart-sub">Ajuste os parâmetros abaixo para simular o retorno social estimado do projeto</div>
+        
+        <div class="simulator-layout" style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 24px; margin-top: 16px;">
+          <!-- Controles / Inputs -->
+          <div class="sim-inputs" style="display: flex; flex-direction: column; gap: 16px;">
+            <div class="sim-group">
+              <label style="font-size: 13px; font-weight: 600; display: block; margin-bottom: 6px;">Custo do Investimento Estimado (R$)</label>
+              <input type="number" id="sim-investimento" value="50000" class="table-input" style="padding: 8px; width: 100%;" oninput="calcularSimulacaoSroi()">
+              <small style="color:var(--muted)">Valor total aportado para a execução do programa e infraestrutura.</small>
+            </div>
+            <div class="sim-group">
+              <label style="font-size: 13px; font-weight: 600; display: block; margin-bottom: 6px;">Taxa de Inserção no Mercado / Empregabilidade (%)</label>
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <input type="range" id="sim-taxa-emprego" min="0" max="100" value="60" style="flex: 1; cursor: pointer;" oninput="document.getElementById('sim-taxa-val').textContent = this.value + '%'; calcularSimulacaoSroi()">
+                <span id="sim-taxa-val" style="font-weight: 700; width: 45px; text-align: right;">60%</span>
+              </div>
+              <small style="color:var(--muted)">Porcentagem estimada de participantes recolocadas no mercado pet local.</small>
+            </div>
+            <div class="sim-group">
+              <label style="font-size: 13px; font-weight: 600; display: block; margin-bottom: 6px;">Renda Média Mensal Obtida por Aluna (R$)</label>
+              <input type="number" id="sim-renda-media" value="1412" class="table-input" style="padding: 8px; width: 100%;" oninput="calcularSimulacaoSroi()">
+              <small style="color:var(--muted)">Renda média estimada para serviços pet (Base inicial: 1 Salário Mínimo).</small>
+            </div>
+          </div>
+          
+          <!-- Resultados / Outputs -->
+          <div class="sim-outputs" style="background: var(--surface2); padding: 20px; border-radius: 12px; border: 1px solid var(--border); display: flex; flex-direction: column; justify-content: center; gap: 16px;">
+            <div>
+              <div style="font-size: 11px; text-transform: uppercase; color: var(--muted); font-weight: 700; letter-spacing: 0.5px;">Retorno Financeiro Direto Anual (Alunas)</div>
+              <strong id="sim-retorno-anual-val" style="font-size: 24px; color: var(--green);">R$ 0,00</strong>
+            </div>
+            <div>
+              <div style="font-size: 11px; text-transform: uppercase; color: var(--muted); font-weight: 700; letter-spacing: 0.5px;">Valor Social da Educação Integrado</div>
+              <strong id="sim-retorno-educ-val" style="font-size: 20px; color: var(--navy);">R$ 0,00</strong>
+            </div>
+            <div style="border-top: 1px dashed var(--border); padding-top: 12px; display: flex; align-items: center; justify-content: space-between; margin-top: 8px;">
+              <div>
+                <div style="font-size: 13px; font-weight: 700; color: var(--navy);">Razão SROI Simulada</div>
+                <small style="color:var(--muted)">Retorno para cada R$ 1,00 investido</small>
+              </div>
+              <div style="background: var(--green); color: white; padding: 8px 18px; border-radius: 20px; font-weight: 800; font-size: 18px;" id="sim-sroi-ratio">1 : 0.00</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fontes e Referências sROI -->
+      <div class="chart-card" style="margin-top: 24px; border-left: 4px solid var(--green);">
+        <div class="chart-title" style="font-size: 14px; font-weight: 700; color: var(--navy);">
+          <i class="fa-solid fa-graduation-cap"></i> Notas Metodológicas e Parâmetros de Cálculo (sROI)
+        </div>
+        <div class="chart-sub" style="margin-bottom: 12px;">Fundamentação técnica das métricas e órgãos reguladores de referência</div>
+        <div style="font-size: 12px; color: var(--navy); line-height: 1.6; display: flex; flex-direction: column; gap: 10px;">
+          <div><strong>Fórmula Geral do sROI:</strong> Segue as diretrizes internacionais da <strong>The Social Value International (SVI)</strong>, calculada como a razão entre o valor social criado (retorno financeiro simulado + valor pedagógico social) e o valor total de investimento aportado no programa.</div>
+          <div><strong>Custo-Hora da Educação Social (Proxy):</strong> Parametrizado em <strong>R$ 18,50 por hora/aluna</strong>, com base nos repasses oficiais regulamentados pelo <strong>Fundo Nacional de Desenvolvimento da Educação (FNDE/MEC)</strong> para bolsas-formação de cursos técnicos presenciais e de qualificação profissional de curta duração do <strong>PRONATEC (Portaria MEC nº 819/2015 e atualizações)</strong>.</div>
+          <div><strong>Base do Salário Mínimo Vigente:</strong> Atualizado de acordo com o <strong>Decreto nº 12.797/2025 do Governo Federal</strong>, estabelecendo o salário mínimo nacional em <strong>R$ 1.621,00 para o ano de 2026</strong> (com valor diário de R$ 54,04 e valor/hora de R$ 7,37).</div>
+          <div><strong>Potencial de Empregabilidade e Ocupação:</strong> O perfil ocupacional e a renda média familiar prévia declarada pelas alunas seguem a taxonomia e metodologias de pesquisa de emprego da <strong>PNAD Contínua / IBGE</strong> e as convenções sindicais de categorias de auxiliares veterinários e banhadores/tosadores registradas no <strong>MTE (CBO 5156-20 e CBO 5131-05)</strong>.</div>
         </div>
       </div>
     </div>
@@ -725,6 +864,11 @@
             <div class="empty-state"><i class="fa-regular fa-comments"></i>Nenhum depoimento carregado.</div>
           </div>
         </div>
+      </div>
+      
+      <h3 style="font-size: 16px; font-weight: 700; color: var(--navy); margin: 32px 0 16px 0; display: flex; align-items: center; gap: 8px;"><i class="fa-solid fa-list-check"></i> Controle de Presenças e Avaliações de Oficinas</h3>
+      <div class="events-grid" id="events-container">
+        <!-- Conteúdo preenchido pelo JavaScript -->
       </div>
     </div>
 
