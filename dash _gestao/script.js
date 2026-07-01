@@ -220,11 +220,12 @@ function executePdfExport() {
 
 // ── GRÁFICOS ──────────────────────────────────────────────────────────────
 function donutChart(id, labels, data, colors) {
-  if (chartInstances[id]) {
-    chartInstances[id].destroy();
-  }
   const ctx = document.getElementById(id);
   if (!ctx) return;
+  const existingChart = Chart.getChart(ctx);
+  if (existingChart) {
+    existingChart.destroy();
+  }
   const total = data.reduce((a, b) => a + b, 0);
   chartInstances[id] = new Chart(ctx, {
     type: 'doughnut',
@@ -247,11 +248,12 @@ function donutChart(id, labels, data, colors) {
 }
 
 function hBarChart(id, labels, data, color) {
-  if (chartInstances[id]) {
-    chartInstances[id].destroy();
-  }
   const ctx = document.getElementById(id);
   if (!ctx) return;
+  const existingChart = Chart.getChart(ctx);
+  if (existingChart) {
+    existingChart.destroy();
+  }
   const wrap = ctx.parentElement;
   wrap.style.height = Math.max(labels.length * 40 + 60, 160) + 'px';
   chartInstances[id] = new Chart(ctx, {
@@ -273,11 +275,12 @@ function hBarChart(id, labels, data, color) {
 }
 
 function barChart(id, labels, data, color) {
-  if (chartInstances[id]) {
-    chartInstances[id].destroy();
-  }
   const ctx = document.getElementById(id);
   if (!ctx) return;
+  const existingChart = Chart.getChart(ctx);
+  if (existingChart) {
+    existingChart.destroy();
+  }
   chartInstances[id] = new Chart(ctx, {
     type: 'bar',
     data: {
@@ -296,11 +299,12 @@ function barChart(id, labels, data, color) {
 }
 
 function groupedBarChart(id, labels, datasets) {
-  if (chartInstances[id]) {
-    chartInstances[id].destroy();
-  }
   const ctx = document.getElementById(id);
   if (!ctx) return;
+  const existingChart = Chart.getChart(ctx);
+  if (existingChart) {
+    existingChart.destroy();
+  }
   chartInstances[id] = new Chart(ctx, {
     type: 'bar',
     data: {
@@ -749,9 +753,11 @@ function populateConfigFilter() {
 function renderConfigTabela() {
   const tbody = document.getElementById('tbody-config');
   const filterValue = document.getElementById('filter-config-tipo').value;
-  const filteredConfig = filterValue ? CONFIG.filter(c => c.Tipo === filterValue) : CONFIG;
+  
+  // FILTRADO: Esconde configurações de segurança da tabela de cursos
+  const filteredConfig = CONFIG.filter(c => c.Codigo !== "ADMIN_EMAILS" && c.Codigo !== "ADMIN_PIN" && (!filterValue || c.Tipo === filterValue));
 
-  if (!CONFIG.length) {
+  if (!filteredConfig.length) {
     tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><i class="fa-solid fa-magnifying-glass"></i>Nenhuma configuração encontrada.</div></td></tr>`;
     return;
   }
