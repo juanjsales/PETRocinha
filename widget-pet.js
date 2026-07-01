@@ -296,11 +296,11 @@
             const getBadgeImg = (b) => {
                 if (!b) return "";
                 const s = String(b).toLowerCase();
-                if (s.includes("mulher")) return "https://raw.githubusercontent.com/juanjsales/PETRocinha/main/Mulher.webp";
-                if (s.includes("fera")) return "https://raw.githubusercontent.com/juanjsales/PETRocinha/main/Fera.webp";
-                if (s.includes("profissional")) return "https://raw.githubusercontent.com/juanjsales/PETRocinha/main/Prof.webp";
-                if (s.includes("embaixadora")) return "https://raw.githubusercontent.com/juanjsales/PETRocinha/main/Embaixadora.webp";
-                if (s.includes("aprendiz")) return "https://raw.githubusercontent.com/juanjsales/PETRocinha/main/Aprendiz.webp";
+                if (s.includes("mulher")) return "https://raw.githubusercontent.com/juanjsales/PETRocinha/main/assets/Mulher.webp";
+                if (s.includes("fera")) return "https://raw.githubusercontent.com/juanjsales/PETRocinha/main/assets/Fera.webp";
+                if (s.includes("profissional")) return "https://raw.githubusercontent.com/juanjsales/PETRocinha/main/assets/Prof.webp";
+                if (s.includes("embaixadora")) return "https://raw.githubusercontent.com/juanjsales/PETRocinha/main/assets/Embaixadora.webp";
+                if (s.includes("aprendiz")) return "https://raw.githubusercontent.com/juanjsales/PETRocinha/main/assets/Aprendiz.webp";
                 return "";
             };
             const badge = getBadgeImg(data?.badge);
